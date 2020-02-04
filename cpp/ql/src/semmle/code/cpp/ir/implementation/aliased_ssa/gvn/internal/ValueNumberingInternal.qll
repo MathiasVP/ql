@@ -37,6 +37,9 @@ newtype TValueNumber =
   ) {
     inheritanceConversionValueNumber(_, irFunc, opcode, baseClass, derivedClass, operand)
   } or
+  TLoadValueNumber(IRFunction irFunc, Type type, TValueNumber addressOperand) {
+    loadValueNumber(_, irFunc, type, addressOperand)
+  } or
   TUniqueValueNumber(IRFunction irFunc, Instruction instr) { uniqueValueNumber(instr, irFunc) }
 
 /**
@@ -81,6 +84,8 @@ private predicate numberableInstruction(Instruction instr) {
   instr instanceof UnaryInstruction and not instr instanceof CopyInstruction
   or
   instr instanceof PointerArithmeticInstruction
+  or
+  instr instanceof LoadInstruction
   or
   instr instanceof CongruentCopyInstruction
 }
@@ -175,6 +180,14 @@ private predicate inheritanceConversionValueNumber(
   tvalueNumber(instr.getUnary()) = operand
 }
 
+private predicate loadValueNumber(
+  LoadInstruction instr, IRFunction irFunc, Type type, TValueNumber addressOperand
+) {
+  instr.getEnclosingIRFunction() = irFunc and
+  instr.getResultType() = type and
+  tvalueNumber(instr.getSourceAddress()) = addressOperand
+}
+
 /**
  * Holds if `instr` should be assigned a unique value number because this library does not know how
  * to determine if two instances of that instruction are equivalent.
@@ -257,6 +270,11 @@ private TValueNumber nonUniqueValueNumber(Instruction instr) {
           rightOperand) and
         result =
           TPointerArithmeticValueNumber(irFunc, opcode, type, elementSize, leftOperand, rightOperand)
+      )
+      or
+      exists(Type type, TValueNumber addressOperand |
+        loadValueNumber(instr, irFunc, type, addressOperand) and
+        result = TLoadValueNumber(irFunc, type, addressOperand)
       )
       or
       // The value number of a copy is just the value number of its source value.
