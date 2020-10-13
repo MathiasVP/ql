@@ -385,7 +385,14 @@ private Instruction skipOneCopyValueInstruction(Instruction instr) {
 }
 
 private Instruction skipCopyValueInstructions(Instruction instr) {
-  result = skipOneCopyValueInstruction*(instr) and not result instanceof CopyValueInstruction
+  instr = any(LoadInstruction load).getSourceAddress() and
+  result = skipOneCopyValueInstruction*(instr) and
+  not result instanceof CopyValueInstruction and
+  (
+    result instanceof LoadInstruction or
+    result instanceof ArrayToPointerConvertInstruction or
+    result instanceof PointerOffsetInstruction
+  )
 }
 
 private predicate arrayReadStep(Node node1, ArrayContent a, Node node2) {
