@@ -7,11 +7,13 @@
 
 import semmle.code.cpp.models.interfaces.FormattingFunction
 import semmle.code.cpp.models.interfaces.Alias
+import semmle.code.cpp.models.interfaces.ArrayFunction
+import semmle.code.cpp.models.interfaces.SideEffect
 
 /**
  * The standard functions `printf`, `wprintf` and their glib variants.
  */
-private class Printf extends FormattingFunction, AliasFunction {
+private class Printf extends FormattingFunction, AliasFunction, ArrayFunction, SideEffectFunction {
   Printf() {
     this instanceof TopLevelFunction and
     (
@@ -35,12 +37,28 @@ private class Printf extends FormattingFunction, AliasFunction {
   override predicate parameterEscapesOnlyViaReturn(int n) { none() }
 
   override predicate parameterIsAlwaysReturned(int n) { none() }
+
+  override predicate hasArrayWithNullTerminator(int bufParam) {
+    bufParam = this.getFormatParameterIndex()
+  }
+
+  override predicate hasArrayInput(int bufParam) { hasArrayWithNullTerminator(bufParam) }
+
+  override predicate hasOnlySpecificReadSideEffects() { any() }
+
+  override predicate hasOnlySpecificWriteSideEffects() { any() }
+
+  override predicate hasSpecificReadSideEffect(ParameterIndex i, boolean buffer) {
+    i = this.getFormatParameterIndex() and buffer = true
+    or
+    i >= this.getFirstFormatArgumentIndex() and buffer = true
+  }
 }
 
 /**
  * The standard functions `fprintf`, `fwprintf` and their glib variants.
  */
-private class Fprintf extends FormattingFunction {
+private class Fprintf extends FormattingFunction, AliasFunction, ArrayFunction, SideEffectFunction {
   Fprintf() {
     this instanceof TopLevelFunction and
     (
@@ -55,12 +73,40 @@ private class Fprintf extends FormattingFunction {
   deprecated override predicate isWideCharDefault() { hasGlobalOrStdName("fwprintf") }
 
   override int getOutputParameterIndex(boolean isStream) { result = 0 and isStream = true }
+
+  override predicate parameterNeverEscapes(int index) {
+    index = [0 .. this.getACallToThisFunction().getNumberOfArguments()]
+  }
+
+  override predicate parameterEscapesOnlyViaReturn(int index) { none() }
+
+  override predicate parameterIsAlwaysReturned(int index) { none() }
+
+  override predicate hasArrayWithNullTerminator(int bufParam) {
+    bufParam = this.getFormatParameterIndex()
+  }
+
+  override predicate hasArrayInput(int bufParam) { this.hasArrayWithNullTerminator(bufParam) }
+
+  override predicate hasOnlySpecificReadSideEffects() { any() }
+
+  override predicate hasOnlySpecificWriteSideEffects() { any() }
+
+  override predicate hasSpecificWriteSideEffect(ParameterIndex i, boolean buffer, boolean mustWrite) {
+    i = this.getOutputParameterIndex(true) and buffer = false and mustWrite = true
+  }
+
+  override predicate hasSpecificReadSideEffect(ParameterIndex i, boolean buffer) {
+    i = this.getFormatParameterIndex() and buffer = true
+    or
+    i >= this.getFirstFormatArgumentIndex() and buffer = true
+  }
 }
 
 /**
  * The standard function `sprintf` and its Microsoft and glib variants.
  */
-private class Sprintf extends FormattingFunction {
+private class Sprintf extends FormattingFunction, AliasFunction, ArrayFunction, SideEffectFunction {
   Sprintf() {
     this instanceof TopLevelFunction and
     (
@@ -107,12 +153,42 @@ private class Sprintf extends FormattingFunction {
     then result = 4
     else result = getNumberOfParameters()
   }
+
+  override predicate parameterNeverEscapes(int index) {
+    index = [0 .. this.getACallToThisFunction().getNumberOfArguments()]
+  }
+
+  override predicate parameterEscapesOnlyViaReturn(int index) { none() }
+
+  override predicate parameterIsAlwaysReturned(int index) { none() }
+
+  override predicate hasArrayWithNullTerminator(int bufParam) {
+    bufParam = [this.getOutputParameterIndex(false), this.getFormatParameterIndex()]
+  }
+
+  override predicate hasArrayInput(int bufParam) { bufParam = this.getFormatParameterIndex() }
+
+  override predicate hasArrayOutput(int bufParam) { bufParam = this.getOutputParameterIndex(false) }
+
+  override predicate hasOnlySpecificReadSideEffects() { any() }
+
+  override predicate hasOnlySpecificWriteSideEffects() { any() }
+
+  override predicate hasSpecificWriteSideEffect(ParameterIndex i, boolean buffer, boolean mustWrite) {
+    i = getOutputParameterIndex(false) and buffer = true and mustWrite = true
+  }
+
+  override predicate hasSpecificReadSideEffect(ParameterIndex i, boolean buffer) {
+    i = this.getFormatParameterIndex() and buffer = true
+    or
+    i >= this.getFirstFormatArgumentIndex() and buffer = true
+  }
 }
 
 /**
  * Implements `Snprintf`.
  */
-private class SnprintfImpl extends Snprintf {
+private class SnprintfImpl extends Snprintf, AliasFunction, ArrayFunction, SideEffectFunction {
   SnprintfImpl() {
     this instanceof TopLevelFunction and
     (
@@ -171,12 +247,43 @@ private class SnprintfImpl extends Snprintf {
   }
 
   override int getSizeParameterIndex() { result = 1 }
+
+  override predicate parameterNeverEscapes(int index) {
+    index = [0 .. this.getACallToThisFunction().getNumberOfArguments()]
+  }
+
+  override predicate parameterEscapesOnlyViaReturn(int index) { none() }
+
+  override predicate parameterIsAlwaysReturned(int index) { none() }
+
+  override predicate hasArrayInput(int bufParam) { bufParam = getFormatParameterIndex() }
+
+  override predicate hasArrayOutput(int bufParam) { bufParam = getOutputParameterIndex(false) }
+
+  override predicate hasOnlySpecificReadSideEffects() { any() }
+
+  override predicate hasOnlySpecificWriteSideEffects() { any() }
+
+  override predicate hasSpecificWriteSideEffect(ParameterIndex i, boolean buffer, boolean mustWrite) {
+    i = this.getOutputParameterIndex(false) and buffer = true and mustWrite = true
+  }
+
+  override predicate hasSpecificReadSideEffect(ParameterIndex i, boolean buffer) {
+    i = this.getFormatParameterIndex() and buffer = true
+    or
+    i >= this.getFirstFormatArgumentIndex() and buffer = true
+  }
+
+  override ParameterIndex getParameterSizeIndex(ParameterIndex i) {
+    i = this.getOutputParameterIndex(false) and result = this.getSizeParameterIndex()
+  }
 }
 
 /**
  * The Microsoft `StringCchPrintf` function and variants.
  */
-private class StringCchPrintf extends FormattingFunction {
+private class StringCchPrintf extends FormattingFunction, AliasFunction, ArrayFunction,
+  SideEffectFunction {
   StringCchPrintf() {
     this instanceof TopLevelFunction and
     hasGlobalName([
@@ -202,12 +309,42 @@ private class StringCchPrintf extends FormattingFunction {
   override int getOutputParameterIndex(boolean isStream) { result = 0 and isStream = false }
 
   override int getSizeParameterIndex() { result = 1 }
+
+  override predicate parameterNeverEscapes(int index) {
+    index = [0 .. this.getACallToThisFunction().getNumberOfArguments()]
+  }
+
+  override predicate parameterEscapesOnlyViaReturn(int index) { none() }
+
+  override predicate parameterIsAlwaysReturned(int index) { none() }
+
+  override predicate hasArrayInput(int bufParam) { bufParam = getFormatParameterIndex() }
+
+  override predicate hasArrayOutput(int bufParam) { bufParam = getOutputParameterIndex(false) }
+
+  override predicate hasOnlySpecificReadSideEffects() { any() }
+
+  override predicate hasOnlySpecificWriteSideEffects() { any() }
+
+  override predicate hasSpecificWriteSideEffect(ParameterIndex i, boolean buffer, boolean mustWrite) {
+    i = this.getOutputParameterIndex(false) and buffer = true and mustWrite = false
+  }
+
+  override predicate hasSpecificReadSideEffect(ParameterIndex i, boolean buffer) {
+    i = this.getFormatParameterIndex() and buffer = true
+    or
+    i >= this.getFirstFormatArgumentIndex() and buffer = true
+  }
+
+  override ParameterIndex getParameterSizeIndex(ParameterIndex i) {
+    i = this.getOutputParameterIndex(false) and result = this.getSizeParameterIndex()
+  }
 }
 
 /**
  * The standard function `syslog`.
  */
-private class Syslog extends FormattingFunction {
+private class Syslog extends FormattingFunction, AliasFunction {
   Syslog() {
     this instanceof TopLevelFunction and
     hasGlobalName("syslog") and
@@ -217,4 +354,12 @@ private class Syslog extends FormattingFunction {
   override int getFormatParameterIndex() { result = 1 }
 
   override predicate isOutputGlobal() { any() }
+
+  override predicate parameterNeverEscapes(int index) {
+    index = [0 .. this.getACallToThisFunction().getNumberOfArguments()]
+  }
+
+  override predicate parameterEscapesOnlyViaReturn(int index) { none() }
+
+  override predicate parameterIsAlwaysReturned(int index) { none() }
 }
