@@ -49,7 +49,8 @@ class Operand extends TStageOperand {
   }
 
   /** Gets a textual representation of this element. */
-  string toString() { result = "Operand" }
+  // string toString() { result = "Operand" }
+  string toString() { result = this.getDumpString() + " @ " + this.getUse().getDumpString() }
 
   /**
    * Gets the location of the source code for this operand.
@@ -277,7 +278,7 @@ class RegisterOperand extends NonPhiOperand, TRegisterOperand {
   cached
   RegisterOperand() { this = registerOperand(useInstr, tag, defInstr) }
 
-  final override string toString() { result = tag.toString() }
+  // final override string toString() { result = tag.toString() }
 
   // most `RegisterOperands` have a more meaningful location at the definition
   // the only exception are specific cases of `ThisArgumentOperand`
@@ -304,7 +305,7 @@ class NonPhiMemoryOperand extends NonPhiOperand, MemoryOperand, TNonPhiMemoryOpe
     this = chiOperand(useInstr, tag)
   }
 
-  final override string toString() { result = tag.toString() }
+  // final override string toString() { result = tag.toString() }
 
   final override Instruction getAnyDef() {
     result = unique(Instruction defInstr | this.hasDefinition(defInstr, _))
@@ -465,7 +466,7 @@ class PhiInputOperand extends MemoryOperand, TPhiOperand {
     this = reusedPhiOperand(useInstr, defInstr, predecessorBlock, overlap)
   }
 
-  override string toString() { result = "Phi" }
+  // override string toString() { result = "Phi" }
 
   final override PhiInstruction getUse() { result = useInstr }
 

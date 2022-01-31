@@ -165,6 +165,8 @@ private module Cached {
       Alias::MemoryLocation defLocation, OldBlock defBlock, int defRank, int defOffset,
       Alias::MemoryLocation actualDefLocation
     |
+      oldOperand = oldInstruction.getAnOperand() and
+      oldOperand instanceof OldIR::NonPhiMemoryOperand and
       useLocation = Alias::getOperandMemoryLocation(oldOperand) and
       hasUseAtRank(useLocation, useBlock, useRank, oldInstruction) and
       definitionReachesUse(useLocation, defBlock, defRank, useBlock, useRank) and

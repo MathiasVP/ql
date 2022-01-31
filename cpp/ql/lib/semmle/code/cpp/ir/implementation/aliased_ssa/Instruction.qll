@@ -41,7 +41,8 @@ class Instruction extends Construction::TStageInstruction {
   }
 
   /** Gets a textual representation of this element. */
-  final string toString() { result = this.getOpcode().toString() + ": " + this.getAST().toString() }
+  // final string toString() { result = this.getOpcode().toString() + ": " + this.getAST().toString() }
+  final string toString() { result = this.getDumpString() }
 
   /**
    * Gets a string showing the result, opcode, and operands of the instruction, equivalent to what

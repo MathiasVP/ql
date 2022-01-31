@@ -828,13 +828,14 @@ private module Cached {
       fromPre = fromNode.getPreUpdateNode() and
       toPre = toNode.getPreUpdateNode()
     |
-      exists(DataFlowCall c |
-        // Does the language-specific simpleLocalFlowStep already model flow
-        // from function input to output?
-        fromPre = getAnOutNode(c, _) and
-        toPre.(ArgNode).argumentOf(c, _) and
-        simpleLocalFlowStep(toPre.(ArgNode), fromPre)
-      )
+      // exists(DataFlowCall c |
+      //   // Does the language-specific simpleLocalFlowStep already model flow
+      //   // from function input to output?
+      //   fromPre = getAnOutNode(c, _) and
+      //   toPre.(ArgNode).argumentOf(c, _) and
+      //   simpleLocalFlowStep(toPre.(ArgNode), fromPre)
+      // )
+      none()
       or
       argumentValueFlowsThrough(toPre, TReadStepTypesNone(), fromPre)
     )

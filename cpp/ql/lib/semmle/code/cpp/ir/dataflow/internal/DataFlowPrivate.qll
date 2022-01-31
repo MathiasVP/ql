@@ -3,6 +3,7 @@ private import DataFlowUtil
 private import semmle.code.cpp.ir.IR
 private import DataFlowDispatch
 private import DataFlowImplConsistency
+private import SsaInternals as Ssa
 
 /** Gets the callable in which this node occurs. */
 DataFlowCallable nodeGetEnclosingCallable(Node n) { result = n.getEnclosingCallable() }
@@ -38,56 +39,30 @@ abstract class ArgumentNode extends OperandNode {
  * implicit `this` pointer argument.
  */
 private class PrimaryArgumentNode extends ArgumentNode {
-  override ArgumentOperand op;
+  ArgumentOperand arg;
 
-  PrimaryArgumentNode() { exists(CallInstruction call | op = call.getAnArgumentOperand()) }
+  PrimaryArgumentNode() {
+    arg = this.getOperand() and exists(CallInstruction call | arg = call.getAnArgumentOperand())
+  }
 
   override predicate argumentOf(DataFlowCall call, ArgumentPosition pos) {
-    op = call.getArgumentOperand(pos.(DirectPosition).getIndex())
+    arg = call.getArgumentOperand(pos.getIndex()) and
+    pos.getIndirection() = this.getSSAOperand().getSourceVariable().getIndirection()
   }
 
   override string toString() {
     exists(Expr unconverted |
-      unconverted = op.getDef().getUnconvertedResultExpression() and
+      unconverted = arg.getDef().getUnconvertedResultExpression() and
       result = unconverted.toString()
     )
     or
     // Certain instructions don't map to an unconverted result expression. For these cases
     // we fall back to a simpler naming scheme. This can happen in IR-generated constructors.
-    not exists(op.getDef().getUnconvertedResultExpression()) and
+    not exists(arg.getDef().getUnconvertedResultExpression()) and
     (
-      result = "Argument " + op.(PositionalArgumentOperand).getIndex()
+      result = "Argument " + arg.(PositionalArgumentOperand).getIndex()
       or
-      op instanceof ThisArgumentOperand and result = "Argument this"
-    )
-  }
-}
-
-/**
- * A data flow node representing the read side effect of a call on a
- * specific parameter.
- */
-private class SideEffectArgumentNode extends ArgumentNode {
-  override SideEffectOperand op;
-  ReadSideEffectInstruction read;
-
-  SideEffectArgumentNode() { op = read.getSideEffectOperand() }
-
-  override predicate argumentOf(DataFlowCall call, ArgumentPosition pos) {
-    read.getPrimaryInstruction() = call and
-    pos.(IndirectionPosition).getIndex() = read.getIndex()
-  }
-
-  override string toString() {
-    result = read.getArgumentDef().getUnconvertedResultExpression().toString() + " indirection"
-    or
-    // Some instructions don't map to an unconverted result expression. For these cases
-    // we fall back to a simpler naming scheme. This can happen in IR-generated constructors.
-    not exists(read.getArgumentDef().getUnconvertedResultExpression()) and
-    (
-      if read.getIndex() = -1
-      then result = "Argument this indirection"
-      else result = "Argument " + read.getIndex() + " indirection"
+      arg instanceof ThisArgumentOperand and result = "Argument this"
     )
   }
 }
@@ -98,51 +73,42 @@ class ParameterPosition = Position;
 /** An argument position represented by an integer. */
 class ArgumentPosition = Position;
 
-class Position extends TPosition {
-  abstract string toString();
-}
-
-class DirectPosition extends TDirectPosition {
+class Position extends TMkPosition {
   int index;
+  int ind;
 
-  DirectPosition() { this = TDirectPosition(index) }
+  Position() { this = TMkPosition(index, ind) }
 
   string toString() {
-    index = -1 and
-    result = "this"
-    or
-    index != -1 and
-    result = index.toString()
+    exists(string suffix |
+      index = -1 and
+      suffix = "this"
+      or
+      index != -1 and
+      suffix = index.toString()
+    |
+      result = "*********".prefix(ind) + suffix
+    )
   }
 
   int getIndex() { result = index }
-}
 
-class IndirectionPosition extends TIndirectionPosition {
-  int index;
-
-  IndirectionPosition() { this = TIndirectionPosition(index) }
-
-  string toString() {
-    index = -1 and
-    result = "this"
-    or
-    index != -1 and
-    result = index.toString()
-  }
-
-  int getIndex() { result = index }
+  int getIndirection() { result = ind }
 }
 
 newtype TPosition =
-  TDirectPosition(int index) { exists(any(CallInstruction c).getArgument(index)) } or
-  TIndirectionPosition(int index) {
-    exists(ReadSideEffectInstruction instr | instr.getIndex() = index)
+  TMkPosition(int index, int ind) {
+    exists(Type type, CallInstruction c |
+      c.getArgument(index).getResultLanguageType().hasType(type, _) and
+      ind = [0 .. Ssa::getMaxIndirectionsForType(type)]
+    )
   }
 
 private newtype TReturnKind =
   TNormalReturnKind() or
-  TIndirectReturnKind(ParameterIndex index)
+  TIndirectReturnKind(ParameterIndex index, int ind) {
+    ind = [0 .. 10] // TODO
+  }
 
 /**
  * A return kind. A return kind describes how a value can be returned
@@ -159,70 +125,120 @@ private class NormalReturnKind extends ReturnKind, TNormalReturnKind {
 
 private class IndirectReturnKind extends ReturnKind, TIndirectReturnKind {
   ParameterIndex index;
+  int ind;
 
-  IndirectReturnKind() { this = TIndirectReturnKind(index) }
+  IndirectReturnKind() { this = TIndirectReturnKind(index, ind) }
 
-  override string toString() { result = "outparam[" + index.toString() + "]" }
+  override string toString() {
+    result = "************".prefix(ind) + "outparam[" + index.toString() + "]"
+  }
 }
 
-/** A data flow node that occurs as the result of a `ReturnStmt`. */
-class ReturnNode extends InstructionNode {
-  Instruction primary;
-
-  ReturnNode() {
-    exists(ReturnValueInstruction ret | instr = ret and primary = ret)
-    or
-    exists(ReturnIndirectionInstruction rii | instr = rii and primary = rii)
+newtype TReturnNodeImpl =
+  TReturnValueNodeImpl(ReturnValueInstruction ret) or
+  TReturnIndirectionNodeImpl(Ssa::SSAOperand operand, ReturnIndirectionInstruction rii) {
+    operand.getUse().getInstruction() = rii
   }
+
+/** A data flow node that occurs as the result of a `ReturnStmt`. */
+class ReturnNodeImpl extends TReturnNodeImpl {
+  abstract string toString();
 
   /** Gets the kind of this returned value. */
   abstract ReturnKind getKind();
+
+  abstract Function getEnclosingFunction();
+
+  abstract Location getLocation();
 }
 
-class ReturnValueNode extends ReturnNode {
-  override ReturnValueInstruction primary;
+class ReturnValueNode extends ReturnNodeImpl, TReturnValueNodeImpl {
+  ReturnValueInstruction ret;
+
+  ReturnValueNode() { this = TReturnValueNodeImpl(ret) }
+
+  override string toString() { result = ret.toString() }
 
   override ReturnKind getKind() { result = TNormalReturnKind() }
+
+  override Function getEnclosingFunction() { result = ret.getEnclosingFunction() }
+
+  override Location getLocation() { result = ret.getLocation() }
 }
 
-class ReturnIndirectionNode extends ReturnNode {
-  override ReturnIndirectionInstruction primary;
+class ReturnIndirectionNode extends ReturnNodeImpl, TReturnIndirectionNodeImpl {
+  Ssa::SSAOperand use;
+  ReturnIndirectionInstruction rii;
+
+  ReturnIndirectionNode() { this = TReturnIndirectionNodeImpl(use, rii) }
+
+  override string toString() { result = use.toString() }
 
   override ReturnKind getKind() {
     exists(int index |
-      primary.hasIndex(index) and
-      result = TIndirectReturnKind(index)
+      rii.hasIndex(index) and
+      result = TIndirectReturnKind(index, use.getSourceVariable().getIndirection())
     )
   }
+
+  override Function getEnclosingFunction() { result = rii.getEnclosingFunction() }
+
+  override Location getLocation() { result = rii.getLocation() }
 }
 
-/** A data flow node that represents the output of a call. */
-class OutNode extends InstructionNode {
-  OutNode() {
-    instr instanceof CallInstruction or
-    instr instanceof WriteSideEffectInstruction
+newtype TOutNodeImpl =
+  TCallOutNodeImpl(CallInstruction call) or
+  TSideEffectOutNodeImpl(Ssa::SSADefInstruction def, WriteSideEffectInstruction write) {
+    write = def.getInstruction()
   }
 
+/** A data flow node that represents the output of a call. */
+class OutNodeImpl extends TOutNodeImpl {
   /** Gets the underlying call. */
   abstract DataFlowCall getCall();
 
+  abstract string toString();
+
   abstract ReturnKind getReturnKind();
+
+  abstract Function getEnclosingFunction();
+
+  abstract Location getLocation();
 }
 
-private class CallOutNode extends OutNode {
-  override CallInstruction instr;
+private class CallOutNode extends OutNodeImpl, TCallOutNodeImpl {
+  CallInstruction instr;
+
+  CallOutNode() { this = TCallOutNodeImpl(instr) }
+
+  override string toString() { result = instr.toString() }
 
   override DataFlowCall getCall() { result = instr }
 
   override ReturnKind getReturnKind() { result instanceof NormalReturnKind }
+
+  override Function getEnclosingFunction() { result = instr.getEnclosingFunction() }
+
+  override Location getLocation() { result = instr.getLocation() }
 }
 
-private class SideEffectOutNode extends OutNode {
-  override WriteSideEffectInstruction instr;
+private class SideEffectOutNode extends OutNodeImpl, TSideEffectOutNodeImpl {
+  Ssa::SSADefInstruction instr;
+  WriteSideEffectInstruction write;
 
-  override DataFlowCall getCall() { result = instr.getPrimaryInstruction() }
+  SideEffectOutNode() { this = TSideEffectOutNodeImpl(instr, write) }
 
-  override ReturnKind getReturnKind() { result = TIndirectReturnKind(instr.getIndex()) }
+  override string toString() { result = instr.toString() }
+
+  override DataFlowCall getCall() { result = write.getPrimaryInstruction() }
+
+  override ReturnKind getReturnKind() {
+    result = TIndirectReturnKind(write.getIndex(), instr.getSourceVariable().getIndirection())
+  }
+
+  override Function getEnclosingFunction() { result = write.getEnclosingFunction() }
+
+  override Location getLocation() { result = write.getLocation() }
 }
 
 /**
@@ -246,16 +262,48 @@ OutNode getAnOutNode(DataFlowCall call, ReturnKind kind) {
  */
 predicate jumpStep(Node n1, Node n2) { none() }
 
+int indirectionsUntilFirstFieldAddress(Instruction i) {
+  exists(Instruction i0, boolean hasFieldOffset | Ssa::conversionFlow(i0, i, hasFieldOffset) |
+    if hasFieldOffset = true then result = 0 else result = indirectionsUntilFirstFieldAddress(i0)
+  )
+  or
+  result = 1 + indirectionsUntilFirstFieldAddress(i.(LoadInstruction).getSourceAddress())
+}
+
 /**
  * Holds if data can flow from `node1` to `node2` via an assignment to `f`.
  * Thus, `node2` references an object with a field `f` that contains the
  * value of `node1`.
  */
-predicate storeStep(StoreNodeInstr node1, FieldContent f, StoreNodeInstr node2) {
-  exists(FieldAddressInstruction fai |
-    node1.getInstruction() = fai and
-    node2.getInstruction() = fai.getObjectAddress() and
-    f.getField() = fai.getField()
+predicate storeStep(Node node1, FieldContent f, PostFieldUpdateNode node2) {
+  // This is the first field following a store operation.
+  not isNextFieldAddress(node2.getFieldAddressInstruction(), _) and
+  exists(StoreInstruction store |
+    store = node1.asInstruction() and
+    store = node2.getInstruction() and
+    f.getIndirection() = indirectionsUntilFirstFieldAddress(store.getDestinationAddress()) and
+    f.getField() = node2.getFieldAddressInstruction().getField()
+  )
+  or
+  exists(FieldAddressInstruction fai1, FieldAddressInstruction fai2 |
+    node1.(PostFieldUpdateNode).getFieldAddressInstruction() = fai1 and
+    node2.getFieldAddressInstruction() = fai2 and
+    isNextFieldAddress(fai2, fai1) and
+    f.getField() = fai2.getField() and
+    // TODO: I think - 1 should be generalized
+    f.getIndirection() =
+      node1.(PostFieldUpdateNode).getSsaInstruction().getSourceVariable().getIndirection() - 1
+  )
+}
+
+Ssa::SourceVariable incrementMany(Ssa::SourceVariable sv, int n) {
+  n = [0 .. Ssa::getMaxIndirectionsForType(_)] and
+  (
+    n = 0 and
+    result = sv
+    or
+    n > 0 and
+    result = incrementMany(sv.incrementIndirection(), n - 1)
   )
 }
 
@@ -264,11 +312,20 @@ predicate storeStep(StoreNodeInstr node1, FieldContent f, StoreNodeInstr node2) 
  * Thus, `node1` references an object with a field `f` whose value ends up in
  * `node2`.
  */
-predicate readStep(ReadNode node1, FieldContent f, ReadNode node2) {
-  exists(FieldAddressInstruction fai |
-    node1.getInstruction() = fai.getObjectAddress() and
-    node2.getInstruction() = fai and
-    f.getField() = fai.getField()
+predicate readStep(Node node1, FieldContent f, Node node2) {
+  exists(
+    Ssa::SSAInstruction ssaInstr, FieldAddressInstruction fai, Ssa::SSAOperand ssaOperand,
+    Ssa::SSAOperand ssaOperand2
+  |
+    ssaOperand = node1.(OperandNode).getSSAOperand() and
+    ssaInstr.getAnOperand() = ssaOperand and
+    ssaInstr.getInstruction() = fai and
+    f.getIndirection() = ssaOperand.getSourceVariable().getIndirection() and
+    f.getField() = fai.getField() and
+    ssaOperand2.getOperand() = ssaOperand.getOperand() and
+    ssaOperand2.getSourceVariable() =
+      incrementMany(ssaOperand.getSourceVariable(), f.getIndirection()) and
+    Ssa::defUseFlow(ssaOperandNode(ssaOperand2), node2)
   )
 }
 
@@ -344,17 +401,7 @@ class Unit extends TUnit {
 }
 
 /** Holds if `n` should be hidden from path explanations. */
-predicate nodeIsHidden(Node n) {
-  n instanceof OperandNode and not n instanceof ArgumentNode
-  or
-  StoreNodeFlow::flowThrough(n, _) and
-  not StoreNodeFlow::flowOutOf(n, _) and
-  not StoreNodeFlow::flowInto(_, n)
-  or
-  ReadNodeFlow::flowThrough(n, _) and
-  not ReadNodeFlow::flowOutOf(n, _) and
-  not ReadNodeFlow::flowInto(_, n)
-}
+predicate nodeIsHidden(Node n) { n instanceof OperandNode and not n instanceof ArgumentNode }
 
 class LambdaCallKind = Unit;
 
@@ -382,4 +429,86 @@ private class MyConsistencyConfiguration extends Consistency::ConsistencyConfigu
     // complex to model here.
     any()
   }
+}
+
+private predicate step(Node node1, Node node2, string msg) {
+  stepFwd(_, node1) and
+  (
+    simpleLocalFlowStep(node1, node2) and msg = ""
+    or
+    exists(Content c, string after | after = c.toString() |
+      readStep(node1, c, node2) and msg = "Read " + after
+      or
+      storeStep(node1, c, node2) and msg = "Store " + after
+    )
+    // or
+    // exists(CallInstruction call, ParameterPosition pos |
+    //   node1.(ArgumentNode).argumentOf(call, pos) and
+    //   node2.(ParameterNode).isParameterOf(call.getStaticCallTarget(), pos) and
+    //   msg = "into"
+    // )
+    // or
+    // exists(OutNode out, ReturnKind kind |
+    //   out = node2 and
+    //   node1.(ReturnNode).getKind() = kind and
+    //   out.getReturnKind() = kind and
+    //   node1.getEnclosingCallable() = out.getCall().getStaticCallTarget() and
+    //   msg = kind.toString()
+    // )
+  )
+}
+
+private predicate stepFwd(Node node1, Node node2) {
+  // stepRev(node1, _, _, _) and
+  // stepRev(node2, _, _, _) and
+  (
+    node1 = node2 and
+    node1.asExpr().(Call).getTarget().hasName("source")
+    or
+    exists(Node mid |
+      stepFwd(node1, mid) and
+      step(mid, node2, _)
+    )
+  )
+}
+
+private predicate stepRev(Node node1, Node node2) {
+  stepFwd(_, node1) and
+  stepFwd(_, node2) and
+  (
+    node1 = node2 and
+    [node2.asExpr()] = any(Call call | call.getTarget().hasName("sink")).getAnArgument()
+    or
+    exists(Node mid |
+      stepRev(mid, node2) and
+      step(node1, mid, _)
+    )
+  )
+}
+
+private predicate step2(Node node1, Node node2, string msg) {
+  stepRev(node1, _) and
+  (
+    simpleLocalFlowStep(node1, node2) and msg = ""
+    or
+    exists(Content c, string after | after = c.toString() |
+      readStep(node1, c, node2) and msg = "Read " + after
+      or
+      storeStep(node1, c, node2) and msg = "Store " + after
+    )
+    // or
+    // exists(CallInstruction call, ParameterPosition pos |
+    //   node1.(ArgumentNode).argumentOf(call, pos) and
+    //   node2.(ParameterNode).isParameterOf(call.getStaticCallTarget(), pos) and
+    //   msg = "into"
+    // )
+    // or
+    // exists(OutNode out, ReturnKind kind |
+    //   out = node2 and
+    //   node1.(ReturnNode).getKind() = kind and
+    //   out.getReturnKind() = kind and
+    //   node1.getEnclosingCallable() = out.getCall().getStaticCallTarget() and
+    //   msg = kind.toString()
+    // )
+  )
 }
