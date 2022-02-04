@@ -6,6 +6,7 @@ private import DataFlowImplCommon as DataFlowImplCommon
 private import semmle.code.cpp.models.interfaces.Allocation as Alloc
 private import semmle.code.cpp.models.interfaces.DataFlow as DataFlow
 private import semmle.code.cpp.ir.internal.IRCppLanguage
+private import DataFlowPrivate
 
 int getMaxIndirectionsForType(Type type) {
   result = SourceVariables::countIndirectionsForCppType(getTypeForGLValue(type))
@@ -174,7 +175,9 @@ module ExtendedBasicBlock {
 
     override int getIndex() { result = index }
 
-    override string toString() { result = instr.toString() + ": [" + index + ", " + getSourceVariable().toString() + "]" }
+    override string toString() {
+      result = instr.toString() + ": [" + index + ", " + getSourceVariable().toString() + "]"
+    }
 
     override SourceVariable getSourceVariable() { result = getSourceVariable(base, ind) }
 
@@ -578,12 +581,13 @@ predicate adjacentDefRead(DefOrUse defOrUse, Use use) {
   )
 }
 
-SSAOperand decrementUseOperand(SSAOperand operand) {
+SSAOperand incrementUseOperand(SSAOperand operand) {
   result.getOperand() = operand.getOperand() and
-  result.getSourceVariable().decrementIndirection() = operand.getSourceVariable()
+  result.getSourceVariable().incrementIndirection() = operand.getSourceVariable()
 }
 
 predicate defUseFlow(Node nodeFrom, Node nodeTo) {
+  not storeStep(nodeFrom, _, _) and
   exists(DefOrUse defOrUse, Use use | adjacentDefRead(defOrUse, use) |
     (
       defOrUse.(ExplicitDef).getInstruction() = nodeFrom.(InstructionNode).getSSAIntruction()
@@ -591,7 +595,7 @@ predicate defUseFlow(Node nodeFrom, Node nodeTo) {
       // TODO: Also handle flow to ReturnIndirectionNodes here?
       if defOrUse.(UseOperand).getSSAOperand().getUse().getInstruction() instanceof LoadInstruction
       then
-        decrementUseOperand(nodeFrom.(OperandNode).getSSAOperand()) =
+        incrementUseOperand(nodeFrom.(OperandNode).getSSAOperand()) =
           defOrUse.(UseOperand).getSSAOperand()
       else defOrUse.(UseOperand).getSSAOperand() = nodeFrom.(OperandNode).getSSAOperand()
     ) and
@@ -622,6 +626,14 @@ private module Cached {
     nodeTo.hasInputAtRankInBlock(_, _, nodeFrom.(SsaPhiNode).getPhiNode())
   }
 
+  private predicate postNodeDefUseFlow(PostFieldUpdateNode pfun, Node nodeTo) {
+    not isNextFieldAddress(_, pfun.getFieldAddressInstruction()) and
+    exists(DefOrUse defOrUse, Use use | adjacentDefRead(defOrUse, use) |
+      defOrUse.(ExplicitDef).getInstruction() = pfun.getSsaInstruction() and
+      use.(UseOperand).getSSAOperand() = nodeTo.(OperandNode).getSSAOperand()
+    )
+  }
+
   /**
    * Holds if `nodeFrom` is a read or write, and `nTo` is the next subsequent read of the variable
    * written (or read) by `storeOrRead`.
@@ -629,6 +641,8 @@ private module Cached {
   cached
   predicate ssaFlow(Node nodeFrom, Node nodeTo) {
     defUseFlow(nodeFrom, nodeTo)
+    or
+    postNodeDefUseFlow(nodeFrom, nodeTo)
     or
     fromPhiNode(nodeFrom, nodeTo)
     or

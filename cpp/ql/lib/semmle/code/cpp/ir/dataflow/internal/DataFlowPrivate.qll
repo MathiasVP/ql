@@ -320,8 +320,10 @@ predicate readStep(Node node1, FieldContent f, Node node2) {
     ssaOperand = node1.(OperandNode).getSSAOperand() and
     ssaInstr.getAnOperand() = ssaOperand and
     ssaInstr.getInstruction() = fai and
-    f.getIndirection() = ssaOperand.getSourceVariable().getIndirection() and
     f.getField() = fai.getField() and
+    f.getIndirection() =
+      ssaOperand.getSourceVariable().getIndirection() -
+        ssaOperand2.getSourceVariable().getIndirection() and
     ssaOperand2.getOperand() = ssaOperand.getOperand() and
     ssaOperand2.getSourceVariable() =
       decrementMany(ssaOperand.getSourceVariable(), f.getIndirection()) and
