@@ -873,17 +873,10 @@ private predicate simpleOperandLocalFlowStep(Instruction iFrom, Operand opTo) {
 }
 
 private predicate simpleInstructionLocalFlowStep(Ssa::SSAOperand opFrom, Ssa::SSAInstruction iTo) {
-  iTo.getIndex() = opFrom.getIndex() and
   iTo.getAnOperand() = opFrom and
   (
-    exists(int index |
-      iTo.getIndex() = opFrom.getIndex() and
-      iTo.getAnOperand() = opFrom and
-      index = iTo.getIndex() and
-      iTo.getIndex() = opFrom.getIndex() and
-      iTo.getAnOperand() = opFrom and
-      simplInstructionLocalFlowStepImpl(opFrom.getOperand(), iTo.getInstruction())
-    )
+    iTo.getIndex() = opFrom.getIndex() and
+    simplInstructionLocalFlowStepImpl(opFrom.getOperand(), iTo.getInstruction())
     or
     iTo.getInstruction() instanceof LoadInstruction and
     opFrom.getSourceVariable().getIndirection() = 1

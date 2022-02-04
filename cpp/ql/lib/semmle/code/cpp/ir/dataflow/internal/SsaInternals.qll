@@ -107,7 +107,8 @@ module ExtendedBasicBlock {
       exists(int ind0 |
         isExplicitWrite(_, store, base, ind0) and
         // A def of a is also a def of *^n a is also a use of *^(n-1) a, .., &a
-        ind = getSourceVariable(base, ind0).incrementIndirection*().getIndirection() and
+        ind = getSourceVariable(base, 0).incrementIndirection*().getIndirection() and
+        // Only the non-zero indices are actually useful to us. The other ones are for making sure that the correct variables are live.
         index = ind - ind0
       )
     }
@@ -577,9 +578,9 @@ predicate adjacentDefRead(DefOrUse defOrUse, Use use) {
   )
 }
 
-SSAOperand incrementUseOperand(SSAOperand operand) {
+SSAOperand decrementUseOperand(SSAOperand operand) {
   result.getOperand() = operand.getOperand() and
-  result.getSourceVariable().incrementIndirection() = operand.getSourceVariable()
+  result.getSourceVariable().decrementIndirection() = operand.getSourceVariable()
 }
 
 predicate defUseFlow(Node nodeFrom, Node nodeTo) {
@@ -590,7 +591,7 @@ predicate defUseFlow(Node nodeFrom, Node nodeTo) {
       // TODO: Also handle flow to ReturnIndirectionNodes here?
       if defOrUse.(UseOperand).getSSAOperand().getUse().getInstruction() instanceof LoadInstruction
       then
-        incrementUseOperand(nodeFrom.(OperandNode).getSSAOperand()) =
+        decrementUseOperand(nodeFrom.(OperandNode).getSSAOperand()) =
           defOrUse.(UseOperand).getSSAOperand()
       else defOrUse.(UseOperand).getSSAOperand() = nodeFrom.(OperandNode).getSSAOperand()
     ) and

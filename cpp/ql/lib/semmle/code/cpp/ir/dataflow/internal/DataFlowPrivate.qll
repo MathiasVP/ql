@@ -296,14 +296,14 @@ predicate storeStep(Node node1, FieldContent f, PostFieldUpdateNode node2) {
   )
 }
 
-Ssa::SourceVariable incrementMany(Ssa::SourceVariable sv, int n) {
+Ssa::SourceVariable decrementMany(Ssa::SourceVariable sv, int n) {
   n = [0 .. Ssa::getMaxIndirectionsForType(_)] and
   (
     n = 0 and
     result = sv
     or
     n > 0 and
-    result = incrementMany(sv.incrementIndirection(), n - 1)
+    result = decrementMany(sv.decrementIndirection(), n - 1)
   )
 }
 
@@ -324,7 +324,7 @@ predicate readStep(Node node1, FieldContent f, Node node2) {
     f.getField() = fai.getField() and
     ssaOperand2.getOperand() = ssaOperand.getOperand() and
     ssaOperand2.getSourceVariable() =
-      incrementMany(ssaOperand.getSourceVariable(), f.getIndirection()) and
+      decrementMany(ssaOperand.getSourceVariable(), f.getIndirection()) and
     Ssa::defUseFlow(ssaOperandNode(ssaOperand2), node2)
   )
 }
