@@ -626,11 +626,11 @@ private module Cached {
     nodeTo.hasInputAtRankInBlock(_, _, nodeFrom.(SsaPhiNode).getPhiNode())
   }
 
-  private predicate postNodeDefUseFlow(PostFieldUpdateNode pfun, Node nodeTo) {
+  private predicate postNodeDefUseFlow(PostFieldUpdateNode pfun, OperandNode nodeTo) {
     not isNextFieldAddress(_, pfun.getFieldAddressInstruction()) and
-    exists(DefOrUse defOrUse, Use use | adjacentDefRead(defOrUse, use) |
-      defOrUse.(ExplicitDef).getInstruction() = pfun.getSsaInstruction() and
-      use.(UseOperand).getSSAOperand() = nodeTo.(OperandNode).getSSAOperand()
+    exists(ExplicitDef def, UseOperand use | adjacentDefRead(def, use) |
+      def.getInstruction() = pfun.getSsaInstruction() and
+      use.getSSAOperand() = nodeTo.getSSAOperand()
     )
   }
 

@@ -879,7 +879,7 @@ private predicate simpleInstructionLocalFlowStep(Ssa::SSAOperand opFrom, Ssa::SS
     simplInstructionLocalFlowStepImpl(opFrom.getOperand(), iTo.getInstruction())
     or
     iTo.getInstruction() instanceof LoadInstruction and
-    opFrom.getSourceVariable().getIndirection() = 1
+    opFrom.getIndex() = 1 // TODO: I think this is more correct than chcking if indirection = 1?
     or
     // TODO: The same for ReturnInstructions?
     none()

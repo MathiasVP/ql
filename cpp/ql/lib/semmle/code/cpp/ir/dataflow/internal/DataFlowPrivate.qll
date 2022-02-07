@@ -307,6 +307,12 @@ Ssa::SourceVariable decrementMany(Ssa::SourceVariable sv, int n) {
   )
 }
 
+bindingset[ind]
+Node nodeWithRemovedIndirection(Node n, int ind) {
+  result.(OperandNode).getSSAOperand().getOperand() = n.(OperandNode).getOperand() and
+  result.(OperandNode).getSSAOperand().getIndex() = n.(OperandNode).getSSAOperand().getIndex() - ind
+}
+
 /**
  * Holds if data can flow from `node1` to `node2` via a read of `f`.
  * Thus, `node1` references an object with a field `f` whose value ends up in
@@ -314,20 +320,16 @@ Ssa::SourceVariable decrementMany(Ssa::SourceVariable sv, int n) {
  */
 predicate readStep(Node node1, FieldContent f, Node node2) {
   exists(
-    Ssa::SSAInstruction ssaInstr, FieldAddressInstruction fai, Ssa::SSAOperand ssaOperand,
-    Ssa::SSAOperand ssaOperand2
+    Ssa::SSAInstruction ssaInstr, FieldAddressInstruction fai, Ssa::SSAOperand ssaOperand, int diff,
+    Node mid
   |
     ssaOperand = node1.(OperandNode).getSSAOperand() and
     ssaInstr.getAnOperand() = ssaOperand and
     ssaInstr.getInstruction() = fai and
     f.getField() = fai.getField() and
-    f.getIndirection() =
-      ssaOperand.getSourceVariable().getIndirection() -
-        ssaOperand2.getSourceVariable().getIndirection() and
-    ssaOperand2.getOperand() = ssaOperand.getOperand() and
-    ssaOperand2.getSourceVariable() =
-      decrementMany(ssaOperand.getSourceVariable(), f.getIndirection()) and
-    Ssa::defUseFlow(ssaOperandNode(ssaOperand2), node2)
+    f.getIndirection() = diff and
+    Ssa::defUseFlow(ssaOperandNode(ssaOperand), mid) and
+    node2 = nodeWithRemovedIndirection(mid, diff)
   )
 }
 
