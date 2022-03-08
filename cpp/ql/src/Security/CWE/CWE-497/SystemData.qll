@@ -242,68 +242,87 @@ class LogonUser extends SystemData {
  * the `regQuery` predicate concisely.
  */
 private newtype TRegQueryParameter =
-  TSubKeyName(Expr e) or
-  TValueName(Expr e) or
-  TReturnData(Expr e)
+  TSubKeyName(Expr e) { isSubKeyName(e, _) } or
+  TValueName(Expr e) { isValueName(e, _) } or
+  TReturnData(Expr e) { isReturnData(e, _) }
 
-/**
- * Registry query call (`source`) with information about parameters (`param`).
- */
-private predicate regQuery(FunctionCall source, TRegQueryParameter param) {
-  // LONG WINAPI RegQueryValue(
-  //   _In_        HKEY    hKey,
-  //   _In_opt_    LPCTSTR lpSubKey,
-  //   _Out_opt_   LPTSTR  lpValue,
-  //   _Inout_opt_ PLONG   lpcbValue
-  // );
+// LONG WINAPI RegQueryValue(
+//   _In_        HKEY    hKey,
+//   _In_opt_    LPCTSTR lpSubKey,
+//   _Out_opt_   LPTSTR  lpValue,
+//   _Inout_opt_ PLONG   lpcbValue
+// );
+// LONG WINAPI RegQueryMultipleValues(
+//   _In_        HKEY    hKey,
+//   _Out_       PVALENT val_list,
+//   _In_        DWORD   num_vals,
+//   _Out_opt_   LPTSTR  lpValueBuf,
+//   _Inout_opt_ LPDWORD ldwTotsize
+// );
+// LONG WINAPI RegQueryValueEx(
+//   _In_        HKEY    hKey,
+//   _In_opt_    LPCTSTR lpValueName,
+//   _Reserved_  LPDWORD lpReserved,
+//   _Out_opt_   LPDWORD lpType,
+//   _Out_opt_   LPBYTE  lpData,
+//   _Inout_opt_ LPDWORD lpcbData
+// );
+// LONG WINAPI RegGetValue(
+//   _In_        HKEY    hkey,
+//   _In_opt_    LPCTSTR lpSubKey,
+//   _In_opt_    LPCTSTR lpValue,
+//   _In_opt_    DWORD   dwFlags,
+//   _Out_opt_   LPDWORD pdwType,
+//   _Out_opt_   PVOID   pvData,
+//   _Inout_opt_ LPDWORD pcbData
+// );
+private predicate isSubKeyName(Expr e, FunctionCall source) {
   source.getTarget().hasGlobalName(["RegQueryValue", "RegQueryValueA", "RegQueryValueW"]) and
-  (
-    param = TSubKeyName(source.getArgument(1)) or
-    param = TReturnData(source.getArgument(2))
-  )
+  e = source.getArgument(1)
   or
-  // LONG WINAPI RegQueryMultipleValues(
-  //   _In_        HKEY    hKey,
-  //   _Out_       PVALENT val_list,
-  //   _In_        DWORD   num_vals,
-  //   _Out_opt_   LPTSTR  lpValueBuf,
-  //   _Inout_opt_ LPDWORD ldwTotsize
-  // );
+  source.getTarget().hasGlobalName(["RegGetValue", "RegGetValueA", "RegGetValueW"]) and
+  e = source.getArgument(1)
+}
+
+private predicate isValueName(Expr e, FunctionCall source) {
+  source.getTarget().hasGlobalName(["RegQueryValueEx", "RegQueryValueExA", "RegQueryValueExW"]) and
+  e = source.getArgument(1)
+  or
+  source.getTarget().hasGlobalName(["RegGetValue", "RegGetValueA", "RegGetValueW"]) and
+  e = source.getArgument(2)
+}
+
+private predicate isReturnData(Expr e, FunctionCall source) {
+  source.getTarget().hasGlobalName(["RegQueryValue", "RegQueryValueA", "RegQueryValueW"]) and
+  e = source.getArgument(2)
+  or
   source
       .getTarget()
       .hasGlobalName([
           "RegQueryMultipleValues", "RegQueryMultipleValuesA", "RegQueryMultipleValuesW"
         ]) and
-  param = TReturnData(source.getArgument(3))
+  e = source.getArgument(3)
   or
-  // LONG WINAPI RegQueryValueEx(
-  //   _In_        HKEY    hKey,
-  //   _In_opt_    LPCTSTR lpValueName,
-  //   _Reserved_  LPDWORD lpReserved,
-  //   _Out_opt_   LPDWORD lpType,
-  //   _Out_opt_   LPBYTE  lpData,
-  //   _Inout_opt_ LPDWORD lpcbData
-  // );
   source.getTarget().hasGlobalName(["RegQueryValueEx", "RegQueryValueExA", "RegQueryValueExW"]) and
-  (
-    param = TValueName(source.getArgument(1)) or
-    param = TReturnData(source.getArgument(4))
-  )
+  e = source.getArgument(4)
   or
-  // LONG WINAPI RegGetValue(
-  //   _In_        HKEY    hkey,
-  //   _In_opt_    LPCTSTR lpSubKey,
-  //   _In_opt_    LPCTSTR lpValue,
-  //   _In_opt_    DWORD   dwFlags,
-  //   _Out_opt_   LPDWORD pdwType,
-  //   _Out_opt_   PVOID   pvData,
-  //   _Inout_opt_ LPDWORD pcbData
-  // );
   source.getTarget().hasGlobalName(["RegGetValue", "RegGetValueA", "RegGetValueW"]) and
-  (
-    param = TSubKeyName(source.getArgument(1)) or
-    param = TValueName(source.getArgument(2)) or
-    param = TReturnData(source.getArgument(5))
+  e = source.getArgument(5)
+}
+
+/**
+ * Registry query call (`source`) with information about parameters (`param`).
+ */
+private predicate regQuery(FunctionCall source, TRegQueryParameter param) {
+  exists(Expr e |
+    isSubKeyName(e, source) and
+    param = TSubKeyName(e)
+    or
+    isValueName(e, source) and
+    param = TValueName(e)
+    or
+    isReturnData(e, source) and
+    param = TReturnData(e)
   )
 }
 
