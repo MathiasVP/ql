@@ -143,7 +143,9 @@ class IRBlock extends IRBlockBase {
    * Block `A` strictly dominates block `B` if block `A` dominates block `B` and blocks `A` and `B`
    * are not the same block.
    */
-  final predicate strictlyDominates(IRBlock block) { blockImmediatelyDominates+(this, block) }
+  final predicate strictlyDominates(IRBlock block) {
+    Imports::Dominance::blockStrictlyDominates(this, block)
+  }
 
   /**
    * Holds if this block dominates `block`.
@@ -151,7 +153,7 @@ class IRBlock extends IRBlockBase {
    * Block `A` dominates block `B` if any control flow path from the entry block of the function to
    * block `B` must pass through block `A`. A block always dominates itself.
    */
-  final predicate dominates(IRBlock block) { this.strictlyDominates(block) or this = block }
+  final predicate dominates(IRBlock block) { Imports::Dominance::blockDominates(this, block) }
 
   /**
    * Gets a block on the dominance frontier of this block.
@@ -160,10 +162,7 @@ class IRBlock extends IRBlockBase {
    * dominate block `B`, but block `A` does dominate an immediate predecessor of block `B`.
    */
   pragma[noinline]
-  final IRBlock dominanceFrontier() {
-    this.dominates(result.getAPredecessor()) and
-    not this.strictlyDominates(result)
-  }
+  final IRBlock dominanceFrontier() { result = Imports::Dominance::getDominanceFrontier(this) }
 
   /**
    * Holds if this block immediately post-dominates `block`.
@@ -172,7 +171,7 @@ class IRBlock extends IRBlockBase {
    * block `B` is a direct successor of block `A`.
    */
   final predicate immediatelyPostDominates(IRBlock block) {
-    blockImmediatelyPostDominates(this, block)
+    Imports::Dominance::blockImmediatelyPostDominates(this, block)
   }
 
   /**
@@ -182,7 +181,7 @@ class IRBlock extends IRBlockBase {
    * and `B` are not the same block.
    */
   final predicate strictlyPostDominates(IRBlock block) {
-    blockImmediatelyPostDominates+(this, block)
+    Imports::Dominance::blockStrictlyPostDominates(this, block)
   }
 
   /**
@@ -201,8 +200,7 @@ class IRBlock extends IRBlockBase {
    */
   pragma[noinline]
   final IRBlock postDominanceFrontier() {
-    this.postDominates(result.getASuccessor()) and
-    not this.strictlyPostDominates(result)
+    result = Imports::Dominance::getPostDominanceFrontier(this)
   }
 
   /**
@@ -234,10 +232,6 @@ private predicate adjacentInBlock(Instruction i1, Instruction i2) {
   // This predicate could be simplified to remove one of the `unique`s if we
   // were willing to rely on the CFG being well-formed and thus never having
   // more than one successor to an instruction that has a `GotoEdge` out of it.
-}
-
-private predicate isEntryBlock(TIRBlock block) {
-  block = MkIRBlock(any(EnterFunctionInstruction enter))
 }
 
 cached
@@ -317,17 +311,9 @@ private module Cached {
   predicate blockSuccessor(TIRBlock pred, TIRBlock succ) { blockSuccessor(pred, succ, _) }
 
   cached
-  predicate blockImmediatelyDominates(TIRBlock dominator, TIRBlock block) =
-    idominance(isEntryBlock/1, blockSuccessor/2)(_, dominator, block)
+  predicate blockImmediatelyDominates(TIRBlock dominator, TIRBlock block) {
+    Imports::Dominance::blockImmediatelyDominates(dominator, block)
+  }
 }
 
 private Instruction getFirstInstruction(TIRBlock block) { block = MkIRBlock(result) }
-
-private predicate blockFunctionExit(IRBlock exit) {
-  exit.getLastInstruction() instanceof ExitFunctionInstruction
-}
-
-private predicate blockPredecessor(IRBlock src, IRBlock pred) { src.getAPredecessor() = pred }
-
-private predicate blockImmediatelyPostDominates(IRBlock postDominator, IRBlock block) =
-  idominance(blockFunctionExit/1, blockPredecessor/2)(_, postDominator, block)

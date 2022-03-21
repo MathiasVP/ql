@@ -18,6 +18,8 @@ containsLoopOfForwardEdges
 lostReachability
 backEdgeCountMismatch
 useNotDominatedByDefinition
+| ir.cpp:731:11:731:11 | Load | Operand 'Load' is not dominated by its definition in function '$@'. | ir.cpp:724:6:724:13 | void TryCatch(bool) | void TryCatch(bool) |
+| ir.cpp:1149:11:1149:11 | Load | Operand 'Load' is not dominated by its definition in function '$@'. | ir.cpp:1142:6:1142:23 | void TryCatchNoCatchAny(bool) | void TryCatchNoCatchAny(bool) |
 switchInstructionWithoutDefaultEdge
 notMarkedAsConflated
 wronglyMarkedAsConflated

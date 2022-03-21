@@ -16,6 +16,11 @@ containsLoopOfForwardEdges
 lostReachability
 backEdgeCountMismatch
 useNotDominatedByDefinition
+| ssa.cpp:342:11:342:11 | Load | Operand 'Load' is not dominated by its definition in function '$@'. | ssa.cpp:335:5:335:25 | int UnreachablePhiOperand(int, int) | int UnreachablePhiOperand(int, int) |
+| ssa.cpp:358:13:358:13 | Load | Operand 'Load' is not dominated by its definition in function '$@'. | ssa.cpp:348:5:348:26 | int UnreachablePhiOperand2(int, int, int, bool) | int UnreachablePhiOperand2(int, int, int, bool) |
+| ssa.cpp:376:14:376:14 | Load | Operand 'Load' is not dominated by its definition in function '$@'. | ssa.cpp:365:5:365:17 | int DegeneratePhi(int, int, bool) | int DegeneratePhi(int, int, bool) |
+| ssa.cpp:380:3:380:21 | Phi | Operand 'Phi' is not dominated by its definition in function '$@'. | ssa.cpp:365:5:365:17 | int DegeneratePhi(int, int, bool) | int DegeneratePhi(int, int, bool) |
+| ssa.cpp:393:13:393:13 | Load | Operand 'Load' is not dominated by its definition in function '$@'. | ssa.cpp:383:5:383:24 | int FusedBlockPhiOperand(int, int, int, bool) | int FusedBlockPhiOperand(int, int, int, bool) |
 switchInstructionWithoutDefaultEdge
 notMarkedAsConflated
 wronglyMarkedAsConflated

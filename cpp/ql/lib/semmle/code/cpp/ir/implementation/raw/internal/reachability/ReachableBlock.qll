@@ -47,7 +47,15 @@ class ReachableInstruction extends Instruction {
 module Graph {
   predicate isEntryBlock(ReachableBlock block) { exists(IRFunction f | block = f.getEntryBlock()) }
 
+  predicate isExitBlock(ReachableBlock exit) {
+    exit.getLastInstruction() instanceof ExitFunctionInstruction
+  }
+
   predicate blockSuccessor(ReachableBlock pred, ReachableBlock succ) {
     succ = pred.getAFeasibleSuccessor()
+  }
+
+  predicate blockPredecessor(ReachableBlock succ, ReachableBlock pred) {
+    blockSuccessor(pred, succ)
   }
 }
