@@ -97,11 +97,6 @@ private module Cached {
   }
 
   /**
-   * Gets the block from the old IR that corresponds to `newBlock`.
-   */
-  private OldBlock getOldBlock(IRBlock newBlock) { getNewBlock(result) = newBlock }
-
-  /**
    * Holds if this iteration of SSA can model the def/use information for the result of
    * `oldInstruction`, either because alias analysis has determined a memory location for that
    * result, or because a previous iteration of the IR already computed that def/use information
@@ -503,6 +498,11 @@ private module Cached {
     )
   }
 }
+
+/**
+ * Gets the block from the old IR that corresponds to `newBlock`.
+ */
+OldBlock getOldBlock(IRBlock newBlock) { getNewBlock(result) = newBlock }
 
 private Instruction getNewInstruction(OldInstruction instr) { getOldInstruction(result) = instr }
 
