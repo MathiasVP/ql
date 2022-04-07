@@ -1,0 +1,34 @@
+| test_diff.cpp:16:44:16:76 | // $ ir-path=96:26 ir-path=102:26 | Missing result:ir-path=96:26 |
+| test_diff.cpp:16:44:16:76 | // $ ir-path=96:26 ir-path=102:26 | Missing result:ir-path=102:26 |
+| test_diff.cpp:17:14:17:45 | // $ ast=96:26 ast=98:18 ir-sink | Missing result:ir-sink= |
+| test_diff.cpp:29:38:29:49 | // $ ir-path | Missing result:ir-path= |
+| test_diff.cpp:30:18:30:61 | // $ ast=108:10 ir-sink SPURIOUS: ast=111:10 | Missing result:ir-sink= |
+| test_diff.cpp:41:38:41:49 | // $ ir-path | Missing result:ir-path= |
+| test_diff.cpp:42:18:42:33 | // $ ast ir-sink | Missing result:ir-sink= |
+| test_diff.cpp:52:38:52:70 | // $ ir-path=53:37 ir-path=115:11 | Missing result:ir-path=53:37 |
+| test_diff.cpp:52:38:52:70 | // $ ir-path=53:37 ir-path=115:11 | Missing result:ir-path=115:11 |
+| test_diff.cpp:53:41:53:52 | // $ ir-path | Missing result:ir-path= |
+| test_diff.cpp:60:29:60:40 | // $ ir-path | Missing result:ir-path= |
+| test_diff.cpp:61:38:61:49 | // $ ir-path | Missing result:ir-path= |
+| test_diff.cpp:67:29:67:40 | // $ ir-path | Missing result:ir-path= |
+| test_diff.cpp:68:18:68:33 | // $ ast ir-sink | Missing result:ir-sink= |
+| test_diff.cpp:81:38:81:86 | // $ ir-path=124:19 ir-path=126:43 ir-path=128:44 | Missing result:ir-path=124:19 |
+| test_diff.cpp:81:38:81:86 | // $ ir-path=124:19 ir-path=126:43 ir-path=128:44 | Missing result:ir-path=126:43 |
+| test_diff.cpp:81:38:81:86 | // $ ir-path=124:19 ir-path=126:43 ir-path=128:44 | Missing result:ir-path=128:44 |
+| test_diff.cpp:82:18:82:62 | // $ ast=124:19 ast=126:43 ast=128:44 ir-sink | Missing result:ir-sink= |
+| test_diff.cpp:92:20:92:43 | // $ ast,ir-path,ir-sink | Missing result:ir-path= |
+| test_diff.cpp:92:20:92:43 | // $ ast,ir-path,ir-sink | Missing result:ir-sink= |
+| test_diff.cpp:96:36:96:51 | // $ ast,ir-path | Missing result:ir-path= |
+| test_diff.cpp:98:24:98:39 | // $ ast,ir-path | Missing result:ir-path= |
+| test_diff.cpp:100:18:100:53 | // $ ast ir-sink=96:26 ir-sink=98:18 | Missing result:ir-sink=96:26 |
+| test_diff.cpp:100:18:100:53 | // $ ast ir-sink=96:26 ir-sink=98:18 | Missing result:ir-sink=98:18 |
+| test_diff.cpp:102:34:102:77 | // $ ir-path=96:26 ir-path=98:18 MISSING:ast | Missing result:ir-path=96:26 |
+| test_diff.cpp:102:34:102:77 | // $ ir-path=96:26 ir-path=98:18 MISSING:ast | Missing result:ir-path=98:18 |
+| test_diff.cpp:104:24:104:47 | // $ ast ir-path ir-sink | Missing result:ir-path= |
+| test_diff.cpp:104:24:104:47 | // $ ast ir-path ir-sink | Missing result:ir-sink= |
+| test_diff.cpp:108:20:108:35 | // $ ast,ir-path | Missing result:ir-path= |
+| test_diff.cpp:115:21:115:36 | // $ ast,ir-path | Missing result:ir-path= |
+| test_diff.cpp:121:33:121:48 | // $ ast,ir-path | Missing result:ir-path= |
+| test_diff.cpp:124:29:124:44 | // $ ast,ir-path | Missing result:ir-path= |
+| test_diff.cpp:126:53:126:68 | // $ ast,ir-path | Missing result:ir-path= |
+| test_diff.cpp:128:54:128:69 | // $ ast,ir-path | Missing result:ir-path= |

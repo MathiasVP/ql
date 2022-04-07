@@ -1,0 +1,15 @@
+| defaulttainttracking.cpp:16:33:16:52 | // $ ir MISSING: ast | Missing result:ir= |
+| defaulttainttracking.cpp:17:32:17:42 | // $ ast,ir | Missing result:ir= |
+| defaulttainttracking.cpp:24:14:24:24 | // $ ast,ir | Missing result:ir= |
+| defaulttainttracking.cpp:87:20:87:39 | // $ ir MISSING: ast | Missing result:ir= |
+| defaulttainttracking.cpp:95:14:95:33 | // $ ir MISSING: ast | Missing result:ir= |
+| defaulttainttracking.cpp:120:14:120:33 | // $ ir MISSING: ast | Missing result:ir= |
+| defaulttainttracking.cpp:127:14:127:33 | // $ ir MISSING: ast | Missing result:ir= |
+| defaulttainttracking.cpp:189:16:189:26 | // $ ast,ir | Missing result:ir= |
+| defaulttainttracking.cpp:193:14:193:24 | // $ ast,ir | Missing result:ir= |
+| defaulttainttracking.cpp:194:14:194:34 | // $ SPURIOUS: ast,ir | Fixed spurious result:ir= |
+| defaulttainttracking.cpp:195:15:195:25 | // $ ast,ir | Missing result:ir= |
+| defaulttainttracking.cpp:213:14:213:34 | // $ SPURIOUS: ast,ir | Fixed spurious result:ir= |
+| defaulttainttracking.cpp:214:15:214:25 | // $ ast,ir | Missing result:ir= |
+| defaulttainttracking.cpp:253:18:253:27 | // $ast,ir | Missing result:ir= |
+| defaulttainttracking.cpp:254:16:254:25 | // $ast,ir | Missing result:ir= |

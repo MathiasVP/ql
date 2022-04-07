@@ -41,7 +41,7 @@ class Instruction extends Construction::TStageInstruction {
   }
 
   /** Gets a textual representation of this element. */
-  final string toString() { result = this.getOpcode().toString() + ": " + this.getAst().toString() }
+  final string toString() { result = this.getDumpString() }
 
   /**
    * Gets a string showing the result, opcode, and operands of the instruction, equivalent to what
@@ -630,6 +630,12 @@ class InitializeIndirectionInstruction extends VariableInstruction {
    * Gets the parameter initialized by this instruction.
    */
   final Language::Parameter getParameter() { result = var.(IRUserVariable).getVariable() }
+
+  final AddressOperand getDestinationAddressOperand() { result = this.getAnOperand() }
+
+  final Instruction getDestinationAddress() {
+    result = this.getDestinationAddressOperand().getDef()
+  }
 
   /**
    * Holds if this instruction initializes the memory pointed to by the parameter with
