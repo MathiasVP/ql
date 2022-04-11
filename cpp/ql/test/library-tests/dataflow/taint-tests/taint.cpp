@@ -87,11 +87,11 @@ void class_field_test() {
 
 	sink(mc1.a);
 	sink(mc1.b); // $ ast,ir
-	sink(mc1.c); // $ ast MISSING: ir
+	sink(mc1.c); // $ ast,ir
 	sink(mc1.d); // $ ast,ir
 	sink(mc2.a);
 	sink(mc2.b); // $ ast,ir
-	sink(mc2.c); // $ ast MISSING: ir
+	sink(mc2.c); // $ ast,ir
 	sink(mc2.d);
 }
 

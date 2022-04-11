@@ -504,14 +504,14 @@ void test_vector_iterator() {
 		short *ptr;
 
 		sink(as[1]);
-		sink(as[source()]); // $ ast,ir
+		sink(as[source()]); // $ ast MISSING: ir
 
 		ptr = as;
 		sink(*ptr);
 		ptr += 1;
 		sink(*ptr);
 		ptr += source();
-		sink(*ptr); // $ ast,ir
+		sink(*ptr); // $ ast MISSING: ir
 		sink(as[1]);
 	}
 
