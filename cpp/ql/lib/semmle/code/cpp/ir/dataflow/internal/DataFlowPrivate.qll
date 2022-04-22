@@ -48,21 +48,23 @@ private class PrimaryArgumentNode extends ArgumentNode, OperandNode {
     op = call.getArgumentOperand(pos.(DirectPosition).getIndex())
   }
 
-  override string toString() {
-    exists(Expr unconverted |
-      unconverted = op.getDef().getUnconvertedResultExpression() and
-      result = unconverted.toString()
-    )
+  override string toStringImpl() { result = argumentOperandToString(op) }
+}
+
+private string argumentOperandToString(ArgumentOperand op) {
+  exists(Expr unconverted |
+    unconverted = op.getDef().getUnconvertedResultExpression() and
+    result = unconverted.toString()
+  )
+  or
+  // Certain instructions don't map to an unconverted result expression. For these cases
+  // we fall back to a simpler naming scheme. This can happen in IR-generated constructors.
+  not exists(op.getDef().getUnconvertedResultExpression()) and
+  (
+    result = "Argument " + op.(PositionalArgumentOperand).getIndex()
     or
-    // Certain instructions don't map to an unconverted result expression. For these cases
-    // we fall back to a simpler naming scheme. This can happen in IR-generated constructors.
-    not exists(op.getDef().getUnconvertedResultExpression()) and
-    (
-      result = "Argument " + op.(PositionalArgumentOperand).getIndex()
-      or
-      op instanceof ThisArgumentOperand and result = "Argument this"
-    )
-  }
+    op instanceof ThisArgumentOperand and result = "Argument this"
+  )
 }
 
 private class SideEffectArgumentNode extends ArgumentNode, SideEffectOperandNode {
@@ -72,20 +74,8 @@ private class SideEffectArgumentNode extends ArgumentNode, SideEffectOperandNode
     pos.(IndirectionPosition).getIndex() = super.getIndex()
   }
 
-  override string toString() {
-    result = ToStringUtils::stars().prefix(ind) + this.getArgument().toString() + " indirection"
-    or
-    // Some instructions don't map to an unconverted result expression. For these cases
-    // we fall back to a simpler naming scheme. This can happen in IR-generated constructors.
-    not exists(this.getArgument().toString()) and
-    (
-      if this.getArgumentIndex() = -1
-      then result = ToStringUtils::stars().prefix(ind) + "Argument this indirection"
-      else
-        result =
-          ToStringUtils::stars().prefix(ind) + "Argument " + this.getArgumentIndex() +
-            " indirection"
-    )
+  override string toStringImpl() {
+    result = ToStringUtils::stars().prefix(ind) + argumentOperandToString(this.getAddressOperand())
   }
 }
 
