@@ -113,7 +113,7 @@ class Node extends TIRDataFlowNode {
   Declaration getFunction() { none() } // overridden in subclasses
 
   /** Gets the type of this node. */
-  IRType getType() { none() } // overridden in subclasses
+  DataFlowType getType() { none() } // overridden in subclasses
 
   /** Gets the instruction corresponding to this node, if any. */
   Instruction asInstruction() { result = this.(InstructionNode).getInstruction() }
@@ -271,9 +271,15 @@ class Node extends TIRDataFlowNode {
   Expr asPartialDefinition() { result = this.(PartialDefinitionNode).getDefinedExpr() }
 
   /**
+   * Gets the uninitialized local variable corresponding to this node, if
+   * any.
+   */
+  LocalVariable asUninitialized() { none() } // TODO: We _can_ probably implement a reasonable version of this.
+
+  /**
    * Gets an upper bound on the type of this node.
    */
-  IRType getTypeBound() { result = this.getType() }
+  DataFlowType getTypeBound() { result = this.getType() }
 
   /** Gets the location of this element. */
   cached
@@ -322,7 +328,7 @@ class InstructionNode extends Node, TInstructionNode {
 
   override Declaration getFunction() { result = instr.getEnclosingFunction() }
 
-  override IRType getType() { result = instr.getResultIRType() }
+  override DataFlowType getType() { result = instr.getResultType() }
 
   final override Location getLocationImpl() { result = instr.getLocation() }
 
@@ -348,7 +354,7 @@ class OperandNode extends Node, TOperandNode {
 
   override Declaration getFunction() { result = op.getUse().getEnclosingFunction() }
 
-  override IRType getType() { result = op.getIRType() }
+  override DataFlowType getType() { result = op.getType() }
 
   final override Location getLocationImpl() { result = op.getLocation() }
 
@@ -370,7 +376,7 @@ class PostFieldUpdateNode extends TPostFieldUpdateNode, PartialDefinitionNode {
 
   override Declaration getEnclosingCallable() { result = this.getFunction() }
 
-  override IRType getType() { result = fieldAddress.getIRType() }
+  override DataFlowType getType() { result = fieldAddress.getType() }
 
   FieldAddress getFieldAddress() { result = fieldAddress }
 
@@ -411,7 +417,7 @@ class SsaPhiNode extends Node, TSsaPhiNode {
 
   override Declaration getFunction() { result = phi.getBasicBlock().getEnclosingFunction() }
 
-  override IRType getType() { result instanceof IRVoidType }
+  override DataFlowType getType() { result = phi.getSourceVariable().getBaseVariable().getType() }
 
   final override Location getLocationImpl() { result = phi.getBasicBlock().getLocation() }
 
@@ -435,12 +441,6 @@ class SideEffectOperandNode extends Node, IndirectOperand {
 
   int getArgumentIndex() { result = argumentIndex }
 
-  override Declaration getEnclosingCallable() { result = this.getFunction() }
-
-  override Function getFunction() { result = call.getEnclosingFunction() }
-
-  override IRType getType() { result instanceof IRVoidType }
-
   Expr getArgument() { result = call.getArgument(argumentIndex).getUnconvertedResultExpression() }
 }
 
@@ -458,12 +458,6 @@ class IndirectParameterNode extends Node, IndirectInstruction {
 
   /** Gets the parameter whose indirection is initialized. */
   Parameter getParameter() { result = init.getParameter() }
-
-  override Declaration getEnclosingCallable() { result = this.getFunction() }
-
-  override Function getFunction() { result = this.getInstruction().getEnclosingFunction() }
-
-  override IRType getType() { result instanceof IRVoidType }
 
   override string toStringImpl() {
     result = this.getParameter().toString() + " indirection"
@@ -487,10 +481,6 @@ class IndirectReturnNode extends IndirectOperand {
   }
 
   Operand getAddressOperand() { result = operand }
-
-  override Declaration getEnclosingCallable() { result = this.getFunction() }
-
-  override IRType getType() { result instanceof IRVoidType }
 }
 
 /**
@@ -521,7 +511,7 @@ class IndirectArgumentOutNode extends Node, TIndirectArgumentOutNode, PostUpdate
 
   override Function getFunction() { result = this.getCallInstruction().getEnclosingFunction() }
 
-  override IRType getType() { result instanceof IRVoidType }
+  override DataFlowType getType() { result = operand.getType() }
 
   override Node getPreUpdateNode() { hasOperandAndIndex(result, operand, indirectionIndex + 1) }
 
@@ -600,7 +590,7 @@ class IndirectOperand extends Node, TIndirectOperand {
 
   override Declaration getEnclosingCallable() { result = this.getFunction() }
 
-  override IRType getType() { result = this.getOperand().getIRType() }
+  override DataFlowType getType() { result = this.getOperand().getType() }
 
   final override Location getLocationImpl() { result = this.getOperand().getLocation() }
 
@@ -630,7 +620,7 @@ class IndirectInstruction extends Node, TIndirectInstruction {
 
   override Declaration getEnclosingCallable() { result = this.getFunction() }
 
-  override IRType getType() { result = this.getInstruction().getResultIRType() }
+  override DataFlowType getType() { result = this.getInstruction().getResultType() }
 
   final override Location getLocationImpl() { result = this.getInstruction().getLocation() }
 
@@ -907,7 +897,7 @@ class VariableNode extends Node, TVariableNode {
     result = v
   }
 
-  override IRType getType() { result.getCanonicalLanguageType().hasUnspecifiedType(v.getType(), _) }
+  override DataFlowType getType() { result = v.getType() }
 
   final override Location getLocationImpl() { result = v.getLocation() }
 

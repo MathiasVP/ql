@@ -12,5 +12,5 @@
 import cpp
 
 module DataFlow4 {
-  import semmle.code.cpp.dataflow.internal.DataFlowImpl4
+  import semmle.code.cpp.ir.dataflow.internal.DataFlowImpl4
 }
