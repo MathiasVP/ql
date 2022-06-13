@@ -154,10 +154,10 @@ predicate hasIndirectInstruction(Instruction instr, int index) {
 
 cached
 private newtype TDefOrUseImpl =
-  TNonCallDef(Operand address, int ind) { isNonCallDef(_, _, address, _, ind, _, _) } or
-  TCallDef(Operand address, int ind) { isCallDef(_, address, _, ind, _, _) } or
-  TUseImpl(Operand operand, int ind) {
-    isUse(_, operand, _, ind, _) and
+  TNonCallDef(Operand address, int index) { isNonCallDef(_, _, address, _, _, index, _) } or
+  TCallDef(Operand address, int index) { isCallDef(_, address, _, _, index, _) } or
+  TUseImpl(Operand operand, int index) {
+    isUse(_, operand, _, _, index) and
     not isNonCallDef(_, _, operand, _, _, _, _)
   }
 
@@ -273,9 +273,9 @@ class NonCallDef extends DefImpl, TNonCallDef {
 
   override Operand getAddressOperand() { result = address }
 
-  override int getIndirection() { result = ind }
+  override int getIndirection() { isNonCallDef(_, _, address, _, result, ind, _) }
 
-  override int getIndex() { isNonCallDef(_, _, address, _, ind, result, _) }
+  override int getIndex() { result = ind }
 
   override Instruction getDefiningInstruction() { isNonCallDef(_, result, address, _, _, _, _) }
 
@@ -291,9 +291,9 @@ class NonCallDef extends DefImpl, TNonCallDef {
     this.getDefiningInstruction() = block.getInstruction(index)
   }
 
-  override predicate isCertain() { isNonCallDef(true, _, address, _, ind, _, _) }
+  override predicate isCertain() { isNonCallDef(true, _, address, _, _, ind, _) }
 
-  override predicate addressDependsOnField() { isNonCallDef(_, _, address, _, ind, _, true) }
+  override predicate addressDependsOnField() { isNonCallDef(_, _, address, _, _, ind, true) }
 }
 
 class CallDef extends DefImpl, TCallDef {
@@ -302,7 +302,7 @@ class CallDef extends DefImpl, TCallDef {
 
   CallDef() { this = TCallDef(address, ind) }
 
-  override int getIndex() { isCallDef(_, address, _, ind, result, _) }
+  override int getIndex() { result = ind }
 
   override Instruction getBase() { isCallDef(_, address, result, _, _, _) }
 
@@ -310,7 +310,7 @@ class CallDef extends DefImpl, TCallDef {
 
   override Instruction getDefiningInstruction() { isCallDef(result, address, _, _, _, _) }
 
-  override int getIndirection() { result = ind }
+  override int getIndirection() { isCallDef(_, address, _, result, ind, _) }
 
   override string toString() {
     result =
@@ -427,11 +427,11 @@ private class UseImpl extends DefOrUseImpl, TUseImpl {
 
   final override Cpp::Location getLocation() { result = operand.getLocation() }
 
-  final int getIndirection() { result = ind }
+  final int getIndirection() { isUse(_, operand, _, result, ind) }
 
-  override int getIndex() { isUse(_, operand, _, ind, result) }
+  override int getIndex() { result = ind }
 
-  override Instruction getBase() { isUse(_, operand, result, ind, _) }
+  override Instruction getBase() { isUse(_, operand, result, _, ind) }
 }
 
 cached

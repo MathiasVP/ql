@@ -474,8 +474,6 @@ class IndirectArgumentOutNode extends Node, TIndirectArgumentOutNode, PostUpdate
 
   override IRType getType() { result instanceof IRVoidType }
 
-  int getIndirection() { result = def.getIndirection() }
-
   override IndirectOperand getPreUpdateNode() {
     exists(Operand operand |
       hasOperandAndIndex(result, operand, def.getIndex() + 1) and
