@@ -14,22 +14,6 @@ unreachableNodeCCtx
 localCallNodes
 postIsNotPre
 postHasUniquePre
-| test.cpp:7:21:7:23 | argument_source_0 output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:7:21:7:23 | argument_source_0 output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:7:21:7:23 | argument_source_0 output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:7:21:7:23 | argument_source_0 output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:43:21:43:23 | argument_source_1 output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:43:21:43:23 | argument_source_1 output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:43:21:43:23 | argument_source_1 output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:43:21:43:23 | argument_source_1 output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:79:21:79:23 | argument_source_2 output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:79:21:79:23 | argument_source_2 output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:79:21:79:23 | argument_source_2 output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:79:21:79:23 | argument_source_2 output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:123:21:123:26 | argument_source_0 output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:123:21:123:26 | argument_source_0 output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:123:21:123:26 | argument_source_0 output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:123:21:123:26 | argument_source_0 output argument | PostUpdateNode should have one pre-update node but has 2. |
 | test.cpp:123:25:123:26 | p0 [post update] | PostUpdateNode should have one pre-update node but has 0. |
 | test.cpp:123:25:123:26 | p0 [post update] | PostUpdateNode should have one pre-update node but has 0. |
 | test.cpp:123:25:123:26 | p0 [post update] | PostUpdateNode should have one pre-update node but has 0. |
@@ -66,10 +50,6 @@ postHasUniquePre
 | test.cpp:152:12:152:13 | p4 [post update] | PostUpdateNode should have one pre-update node but has 0. |
 | test.cpp:152:12:152:13 | p4 [post update] | PostUpdateNode should have one pre-update node but has 0. |
 | test.cpp:153:13:153:14 | p4 [post update] | PostUpdateNode should have one pre-update node but has 0. |
-| test.cpp:159:21:159:26 | argument_source_1 output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:159:21:159:26 | argument_source_1 output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:159:21:159:26 | argument_source_1 output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:159:21:159:26 | argument_source_1 output argument | PostUpdateNode should have one pre-update node but has 2. |
 | test.cpp:159:25:159:26 | p0 [post update] | PostUpdateNode should have one pre-update node but has 0. |
 | test.cpp:159:25:159:26 | p0 [post update] | PostUpdateNode should have one pre-update node but has 0. |
 | test.cpp:159:25:159:26 | p0 [post update] | PostUpdateNode should have one pre-update node but has 0. |
@@ -106,10 +86,6 @@ postHasUniquePre
 | test.cpp:188:12:188:13 | p4 [post update] | PostUpdateNode should have one pre-update node but has 0. |
 | test.cpp:188:12:188:13 | p4 [post update] | PostUpdateNode should have one pre-update node but has 0. |
 | test.cpp:189:13:189:14 | p4 [post update] | PostUpdateNode should have one pre-update node but has 0. |
-| test.cpp:195:21:195:26 | argument_source_2 output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:195:21:195:26 | argument_source_2 output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:195:21:195:26 | argument_source_2 output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:195:21:195:26 | argument_source_2 output argument | PostUpdateNode should have one pre-update node but has 2. |
 | test.cpp:195:25:195:26 | p0 [post update] | PostUpdateNode should have one pre-update node but has 0. |
 | test.cpp:195:25:195:26 | p0 [post update] | PostUpdateNode should have one pre-update node but has 0. |
 | test.cpp:195:25:195:26 | p0 [post update] | PostUpdateNode should have one pre-update node but has 0. |

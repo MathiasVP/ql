@@ -575,7 +575,7 @@ void test__mbsncat_l(unsigned char* dest1, unsigned const char* ptr, unsigned ch
 	sink(dest1); // $ SPURIOUS: ast,ir
 	sink(*dest1); // $ ast,ir
 	sink(dest2); // $ SPURIOUS: ir
-	sink(*dest2); // $ ir
+	sink(*dest2); // $ MISSING: ast,ir
 
 	unsigned char* dest4 = _mbsncat_l(dest3, ptr, n, clean);
 	sink(dest3);

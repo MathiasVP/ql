@@ -213,8 +213,16 @@ class Node extends TIRDataFlowNode {
 
   Expr asIndirectArgument() { result = this.asIndirectArgument(_) }
 
+  Parameter asParameter() { result = asParameter(0) }
+
   /** Gets the positional parameter corresponding to this node, if any. */
-  Parameter asParameter() { result = this.(ExplicitParameterNode).getParameter() }
+  Parameter asParameter(int ind) {
+    ind = 0 and
+    result = this.(ExplicitParameterNode).getParameter()
+    or
+    this.(IndirectParameterNode).getIndex() = ind and
+    result = this.(IndirectParameterNode).getParameter()
+  }
 
   /**
    * Gets the variable corresponding to this node, if any. This can be used for
@@ -292,6 +300,7 @@ class InstructionNode extends Node, TInstructionNode {
     // This predicate is overridden in subclasses. This default implementation
     // does not use `Instruction.toString` because that's expensive to compute.
     result = this.getInstruction().getOpcode().toString()
+    // result = this.getInstruction().getDumpString()
   }
 }
 
@@ -315,6 +324,9 @@ class OperandNode extends Node, TOperandNode {
   final override Location getLocationImpl() { result = op.getLocation() }
 
   override string toStringImpl() { result = this.getOperand().toString() }
+  // override string toStringImpl() {
+  //   result = this.getOperand().getDumpString() + " @ " + this.getOperand().getUse().getResultId()
+  // }
 }
 
 class PostFieldUpdateNode extends TPostFieldUpdateNode, PartialDefinitionNode {
@@ -336,12 +348,8 @@ class PostFieldUpdateNode extends TPostFieldUpdateNode, PartialDefinitionNode {
 
   Field getUpdatedField() { result = fieldAddress.getField() }
 
-  override IndirectOperand getPreUpdateNode() {
-    exists(Operand operand |
-      hasOperandAndIndex(result, operand, def.getIndex() + 1) and
-      conversionFlowStepExcludeFields*(pragma[only_bind_into](operand),
-        pragma[only_bind_into](fieldAddress.getObjectAddressOperand()))
-    )
+  override Node getPreUpdateNode() {
+    hasOperandAndIndex(result, fieldAddress.getObjectAddressOperand(), def.getIndex() + 1)
   }
 
   override Expr getDefinedExpr() { result = def.getAddress().getUnconvertedResultExpression() }
@@ -455,14 +463,16 @@ class IndirectArgumentOutNode extends Node, TIndirectArgumentOutNode, PostUpdate
   CallInstruction call;
 
   IndirectArgumentOutNode() {
-    this = TIndirectArgumentOutNode(def) and def.getDefiningInstruction() = call
+    // TODO: Prettify this
+    this = TIndirectArgumentOutNode(def) and
+    def.getDefiningInstruction() = defOfSimpleOutNode(call)
   }
 
   int getIndex() { result = def.getIndex() }
 
   int getArgumentIndex() { call.getArgumentOperand(result) = def.getAddressOperand() }
 
-  CallInstruction getCallInstruction() { result = call }
+  // CallInstruction getCallInstruction() { result = call }
 
   Instruction getPrimaryInstruction() { result = call }
 
@@ -474,32 +484,38 @@ class IndirectArgumentOutNode extends Node, TIndirectArgumentOutNode, PostUpdate
 
   override IRType getType() { result instanceof IRVoidType }
 
-  override IndirectOperand getPreUpdateNode() {
-    exists(Operand operand |
-      hasOperandAndIndex(result, operand, def.getIndex() + 1) and
-      conversionFlowStepExcludeFields*(pragma[only_bind_into](operand),
-        pragma[only_bind_into](def.getAddressOperand()))
-    )
+  override Node getPreUpdateNode() {
+    hasOperandAndIndex(result, def.getAddressOperand(), def.getIndex() + 1)
   }
 
   override string toStringImpl() {
     // This string should be unique enough to be helpful but common enough to
     // avoid storing too many different strings.
-    result = this.getCallInstruction().getStaticCallTarget().getName() + " output argument"
+    result = call.getStaticCallTarget().getName() + " output argument"
     or
-    not exists(this.getCallInstruction().getStaticCallTarget()) and
+    not exists(call.getStaticCallTarget()) and
     result = "output argument"
   }
 
   override Location getLocationImpl() { result = def.getLocation() }
 }
 
-class IndirectReturnOutNode extends Node, IndirectOperand {
+class IndirectReturnOutNode extends Node {
   CallInstruction call;
 
-  IndirectReturnOutNode() { call = this.getOperand().getDef() }
+  IndirectReturnOutNode() {
+    operandForfullyConvertedCall(this.(IndirectOperand).getOperand(), call)
+    or
+    instructionForfullyConvertedCall(this.(IndirectInstruction).getInstruction(), call)
+  }
 
   CallInstruction getCallInstruction() { result = call }
+
+  int getIndex() {
+    result = this.(IndirectOperand).getIndex()
+    or
+    result = this.(IndirectInstruction).getIndex()
+  }
 }
 
 class IndirectOperand extends Node, TIndirectOperand {
@@ -553,27 +569,80 @@ class IndirectInstruction extends Node, TIndirectInstruction {
   }
 }
 
+private predicate isFullyConvertedArgument(Expr e) {
+  e = any(Call call).getAnArgument().getFullyConverted()
+}
+
+private predicate isFullyConvertedCall(Expr e) { e = any(Call call).getFullyConverted() }
+
+private predicate convertedExprMustBeOperand(Expr e) {
+  isFullyConvertedArgument(e)
+  or
+  isFullyConvertedCall(e)
+}
+
+predicate exprNodeShouldBeOperand(Node node, Expr e) {
+  e = node.asOperand().getDef().getConvertedResultExpression() and
+  convertedExprMustBeOperand(e)
+}
+
+predicate exprNodeShouldBeInstruction(Node node, Expr e) {
+  e = node.asInstruction().getConvertedResultExpression() and
+  not exprNodeShouldBeOperand(_, e)
+}
+
+private class TOperandOrInstructionNode = TOperandNode or TInstructionNode;
+
+private class ExprNodeBase extends Node {
+  Expr getConvertedExpr() { none() } // overridden by subclasses
+
+  Expr getExpr() { none() } // overridden by subclasses
+}
+
+class InstructionExprNode extends ExprNodeBase, InstructionNode {
+  InstructionExprNode() { exprNodeShouldBeInstruction(this, _) }
+
+  final override Expr getConvertedExpr() { exprNodeShouldBeInstruction(this, result) }
+
+  final override Expr getExpr() { result = this.getInstruction().getUnconvertedResultExpression() }
+
+  final override string toStringImpl() { result = this.getConvertedExpr().toString() }
+}
+
+class OperandExprNode extends ExprNodeBase, OperandNode {
+  OperandExprNode() { exprNodeShouldBeOperand(this, _) }
+
+  final override Expr getConvertedExpr() { exprNodeShouldBeOperand(this, result) }
+
+  final override Expr getExpr() {
+    result = this.getOperand().getDef().getUnconvertedResultExpression()
+  }
+
+  final override string toStringImpl() {
+    result = this.(ArgumentNode).toStringImpl()
+    or
+    not this instanceof ArgumentNode and
+    result = this.getConvertedExpr().toString()
+  }
+}
+
 /**
  * An expression, viewed as a node in a data flow graph.
  */
-class ExprNode extends InstructionNode {
-  ExprNode() { exists(instr.getConvertedResultExpression()) }
-
+class ExprNode extends Node instanceof ExprNodeBase {
   /**
    * Gets the non-conversion expression corresponding to this node, if any. If
    * this node strictly (in the sense of `getConvertedExpr`) corresponds to a
    * `Conversion`, then the result is that `Conversion`'s non-`Conversion` base
    * expression.
    */
-  Expr getExpr() { result = instr.getUnconvertedResultExpression() }
+  Expr getExpr() { result = super.getExpr() }
 
   /**
    * Gets the expression corresponding to this node, if any. The returned
    * expression may be a `Conversion`.
    */
-  Expr getConvertedExpr() { result = instr.getConvertedResultExpression() }
-
-  override string toStringImpl() { result = this.asConvertedExpr().toString() }
+  Expr getConvertedExpr() { result = super.getConvertedExpr() }
 }
 
 /**
@@ -876,6 +945,7 @@ predicate simpleLocalFlowStep(Node nodeFrom, Node nodeTo) {
   // Flow through modeled functions
   modelFlow(nodeFrom, nodeTo)
   or
+  // TODO: Do we still need this now that 'IndirectReturnOutNode' skips conversions?
   exists(Ssa::Def def |
     Ssa::nodeToDefOrUse(nodeFrom, def) and
     conversionFlowStepExcludeFields*(nodeTo.(IndirectReturnOutNode).getCallInstruction().getAUse(),

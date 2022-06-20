@@ -196,11 +196,88 @@ class ReturnIndirectionNode extends IndirectReturnNode, ReturnNode {
   }
 }
 
+private Operand conversionStep(Instruction i) {
+  result = getAUse(i.(CopyValueInstruction))
+  or
+  result = getAUse(i.(ConvertInstruction))
+  or
+  result = getAUse(i.(CheckedConvertOrNullInstruction))
+  or
+  result = getAUse(i.(InheritanceConversionInstruction))
+  or
+  exists(PointerArithmeticInstruction pai |
+    i = pai.getLeft() and
+    result = getAUse(pai)
+  )
+}
+
+private Operand fullyConvertedCallStep(Operand op) { result = conversionStep(getUse(op)) }
+
+private Instruction getUse(Operand op) {
+  result = op.getUse() and
+  not Ssa::ignoreOperand(op)
+}
+
+private Operand getAUse(Instruction instr) {
+  result = instr.getAUse() and
+  not Ssa::ignoreOperand(result)
+}
+
+private Instruction getANonConversionUse(Operand operand) {
+  result = getUse(operand) and
+  not exists(conversionStep(result))
+}
+
+// TODO: This is very ugly
+predicate operandForfullyConvertedCall(Operand operand, CallInstruction call) {
+  exists(getANonConversionUse(operand)) and
+  (
+    operand = getAUse(call)
+    or
+    operand = fullyConvertedCallStep*(getAUse(call))
+  )
+}
+
+// TODO: This is very ugly
+predicate instructionForfullyConvertedCall(Instruction instr, CallInstruction call) {
+  not operandForfullyConvertedCall(_, call) and
+  (
+    not exists(getAUse(call)) and
+    instr = call
+    or
+    exists(Operand operand |
+      operand = getAUse(call)
+      or
+      operand = fullyConvertedCallStep*(getAUse(call))
+    |
+      instr = getANonConversionUse(operand)
+    )
+  )
+}
+
+// TODO: This is very ugly
+private predicate simpleOutNode(Node node, CallInstruction call) {
+  operandForfullyConvertedCall(node.asOperand(), call)
+  or
+  instructionForfullyConvertedCall(node.asInstruction(), call)
+}
+
+// TODO: This is very ugly
+Instruction defOfSimpleOutNode(CallInstruction call) {
+  exists(Node node | simpleOutNode(node, call) |
+    result = node.asInstruction()
+    or
+    result = node.asOperand().getDef()
+  )
+}
+
 /** A data flow node that represents the output of a call. */
 class OutNode extends Node {
   OutNode() {
-    this.asInstruction() instanceof CallInstruction or
-    this instanceof IndirectReturnOutNode or
+    simpleOutNode(this, _)
+    or
+    this instanceof IndirectReturnOutNode
+    or
     this instanceof IndirectArgumentOutNode
   }
 
@@ -210,10 +287,10 @@ class OutNode extends Node {
   abstract ReturnKind getReturnKind();
 }
 
-private class DirectCallOutNode extends OutNode, InstructionNode {
+private class DirectCallOutNode extends OutNode {
   CallInstruction call;
 
-  DirectCallOutNode() { call = this.getInstruction() }
+  DirectCallOutNode() { simpleOutNode(this, call) }
 
   override DataFlowCall getCall() { result = call }
 
@@ -299,10 +376,10 @@ private predicate numberOfLoadsFromOperand(Operand operandFrom, Operand operandT
   ind = 0
 }
 
-private predicate readStepMid(Node node1, FieldContent f, IndirectOperand node2) {
+private predicate readStepMid(Node node1, FieldContent f, Node node2) {
   exists(FieldAddress fa1, FieldAddress fa2, int index1, int index2, int numberOfLoads |
-    nodeHasOperand(node1, fa1.getObjectAddressOperand(), index1) and
     nodeHasOperand(node2, fa2.getObjectAddressOperand(), index2) and
+    nodeHasOperand(node1, fa1.getObjectAddressOperand(), index1) and
     isQualifierFor(fa1, fa2) and
     f.getField() = fa1.getField() and
     numberOfLoadsFromOperand(fa1, fa2.getObjectAddressOperand(), numberOfLoads) and
@@ -314,14 +391,13 @@ pragma[noinline]
 private predicate nodeHasOperand(Node node, Operand operand, int index) {
   node.asOperand() = operand and index = 0
   or
-  node.(IndirectOperand).getOperand() = operand and
-  index = node.(IndirectOperand).getIndex()
+  hasOperandAndIndex(node, operand, index)
 }
 
-private predicate readStepEnd(Node node1, FieldContent f, IndirectOperand node2) {
+private predicate readStepEnd(Node node1, FieldContent f, Node node2) {
   exists(FieldAddress fa1, Operand operand, int numberOfLoads, int index2 |
-    nodeHasOperand(node1, fa1.getObjectAddressOperand(), _) and
     nodeHasOperand(node2, operand, index2) and
+    nodeHasOperand(node1, fa1.getObjectAddressOperand(), _) and
     f.getField() = fa1.getField() and
     not isQualifierFor(fa1, _) and
     numberOfLoadsFromOperand(fa1, operand, numberOfLoads) and

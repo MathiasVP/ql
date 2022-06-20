@@ -26,73 +26,13 @@ unreachableNodeCCtx
 localCallNodes
 postIsNotPre
 postHasUniquePre
-| clang.cpp:22:8:22:20 | sink output argument | PostUpdateNode should have one pre-update node but has 2. |
-| clang.cpp:22:8:22:20 | sink output argument | PostUpdateNode should have one pre-update node but has 2. |
-| clang.cpp:39:30:39:51 | m1 [post update] | PostUpdateNode should have one pre-update node but has 2. |
-| clang.cpp:39:30:39:51 | m2 [post update] | PostUpdateNode should have one pre-update node but has 2. |
-| dispatch.cpp:15:8:15:8 | Top output argument | PostUpdateNode should have one pre-update node but has 2. |
-| dispatch.cpp:21:8:21:8 | Middle output argument | PostUpdateNode should have one pre-update node but has 2. |
-| dispatch.cpp:39:8:39:13 | isSource1 output argument | PostUpdateNode should have one pre-update node but has 2. |
-| dispatch.cpp:40:8:40:13 | isSource2 output argument | PostUpdateNode should have one pre-update node but has 2. |
-| dispatch.cpp:41:3:41:8 | isSink output argument | PostUpdateNode should have one pre-update node but has 2. |
-| dispatch.cpp:43:8:43:13 | notSource1 output argument | PostUpdateNode should have one pre-update node but has 2. |
-| dispatch.cpp:44:8:44:13 | notSource2 output argument | PostUpdateNode should have one pre-update node but has 2. |
-| dispatch.cpp:45:3:45:8 | notSink output argument | PostUpdateNode should have one pre-update node but has 2. |
-| dispatch.cpp:60:18:60:29 | Bottom output argument | PostUpdateNode should have one pre-update node but has 2. |
-| dispatch.cpp:61:18:61:29 | Middle output argument | PostUpdateNode should have one pre-update node but has 2. |
-| dispatch.cpp:65:10:65:21 | Bottom output argument | PostUpdateNode should have one pre-update node but has 2. |
-| dispatch.cpp:73:3:73:5 | isSink output argument | PostUpdateNode should have one pre-update node but has 2. |
-| dispatch.cpp:78:23:78:39 | callSinkByReference output argument | PostUpdateNode should have one pre-update node but has 3. |
-| dispatch.cpp:89:12:89:17 | identity output argument | PostUpdateNode should have one pre-update node but has 3. |
-| dispatch.cpp:130:10:130:15 | isSource output argument | PostUpdateNode should have one pre-update node but has 2. |
-| example.c:26:18:26:24 | getX output argument | PostUpdateNode should have one pre-update node but has 2. |
-| example.c:28:14:28:25 | doSomething output argument | PostUpdateNode should have one pre-update node but has 3. |
 | lambdas.cpp:20:10:24:2 | t [post update] | PostUpdateNode should have one pre-update node but has 0. |
 | lambdas.cpp:20:10:24:2 | u [post update] | PostUpdateNode should have one pre-update node but has 0. |
 | lambdas.cpp:20:10:24:2 | v [post update] | PostUpdateNode should have one pre-update node but has 0. |
 | lambdas.cpp:20:11:20:11 | t [post update] | PostUpdateNode should have one pre-update node but has 0. |
 | lambdas.cpp:20:11:20:11 | u [post update] | PostUpdateNode should have one pre-update node but has 0. |
 | lambdas.cpp:20:11:20:11 | v [post update] | PostUpdateNode should have one pre-update node but has 0. |
-| lambdas.cpp:45:4:45:4 | operator() output argument | PostUpdateNode should have one pre-update node but has 2. |
-| lambdas.cpp:45:7:45:7 | operator() output argument | PostUpdateNode should have one pre-update node but has 2. |
-| lambdas.cpp:45:10:45:10 | operator() output argument | PostUpdateNode should have one pre-update node but has 2. |
-| ref.cpp:16:12:16:14 | assign output argument | PostUpdateNode should have one pre-update node but has 3. |
-| ref.cpp:37:21:37:23 | sourceToParam output argument | PostUpdateNode should have one pre-update node but has 3. |
-| ref.cpp:55:19:55:20 | assignWrapper output argument | PostUpdateNode should have one pre-update node but has 2. |
-| ref.cpp:58:15:58:16 | notAssign output argument | PostUpdateNode should have one pre-update node but has 2. |
-| ref.cpp:61:26:61:27 | sourceToParamWrapper output argument | PostUpdateNode should have one pre-update node but has 2. |
-| ref.cpp:64:15:64:16 | notSource output argument | PostUpdateNode should have one pre-update node but has 2. |
-| ref.cpp:75:9:75:11 | val [post update] | PostUpdateNode should have one pre-update node but has 2. |
-| ref.cpp:79:12:79:14 | assign output argument | PostUpdateNode should have one pre-update node but has 3. |
-| ref.cpp:83:9:83:11 | val [post update] | PostUpdateNode should have one pre-update node but has 2. |
-| ref.cpp:87:11:87:13 | val [post update] | PostUpdateNode should have one pre-update node but has 2. |
-| ref.cpp:89:11:89:13 | val [post update] | PostUpdateNode should have one pre-update node but has 2. |
-| ref.cpp:94:9:94:11 | val [post update] | PostUpdateNode should have one pre-update node but has 2. |
-| ref.cpp:96:11:96:13 | val [post update] | PostUpdateNode should have one pre-update node but has 2. |
-| ref.cpp:102:21:102:23 | sourceToParam output argument | PostUpdateNode should have one pre-update node but has 3. |
-| ref.cpp:104:11:104:13 | val [post update] | PostUpdateNode should have one pre-update node but has 2. |
-| ref.cpp:109:9:109:11 | val [post update] | PostUpdateNode should have one pre-update node but has 2. |
-| ref.cpp:113:11:113:13 | val [post update] | PostUpdateNode should have one pre-update node but has 2. |
-| ref.cpp:115:11:115:13 | val [post update] | PostUpdateNode should have one pre-update node but has 2. |
-| ref.cpp:122:19:122:20 | assignWrapper output argument | PostUpdateNode should have one pre-update node but has 2. |
-| ref.cpp:125:15:125:16 | notAssign output argument | PostUpdateNode should have one pre-update node but has 2. |
-| ref.cpp:128:26:128:27 | sourceToParamWrapper output argument | PostUpdateNode should have one pre-update node but has 2. |
-| ref.cpp:131:15:131:16 | notSource output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:67:29:67:35 | move output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:67:29:67:35 | move output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:384:10:384:13 | memcpy output argument | PostUpdateNode should have one pre-update node but has 3. |
-| test.cpp:391:10:391:13 | memcpy output argument | PostUpdateNode should have one pre-update node but has 3. |
-| test.cpp:400:10:400:13 | memcpy output argument | PostUpdateNode should have one pre-update node but has 3. |
-| test.cpp:407:10:407:13 | memcpy output argument | PostUpdateNode should have one pre-update node but has 3. |
-| test.cpp:417:16:417:20 | intRefSource output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:423:20:423:25 | intPointerSource output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:429:20:429:24 | intPointerSource output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:436:18:436:23 | intArraySource output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:442:18:442:22 | intArraySource output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:470:21:470:22 | intOutparamSource output argument | PostUpdateNode should have one pre-update node but has 2. |
-| test.cpp:481:21:481:30 | writes_to_content output argument | PostUpdateNode should have one pre-update node but has 2. |
 uniquePostUpdate
-| clang.cpp:39:16:39:21 | *VariableAddress | Node has multiple PostUpdateNodes. |
 postIsInSameCallable
 reverseRead
 | test.cpp:481:21:481:21 | Unary | Origin of readStep is missing a PostUpdateNode. |

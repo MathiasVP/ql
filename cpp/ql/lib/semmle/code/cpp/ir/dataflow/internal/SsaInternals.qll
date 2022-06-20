@@ -261,6 +261,8 @@ abstract private class DefImpl extends DefOrUseImpl {
   abstract Instruction getDefiningInstruction();
 
   abstract predicate addressDependsOnField();
+
+  abstract DefImpl incrementIndexBy(int d);
 }
 
 class NonCallDef extends DefImpl, TNonCallDef {
@@ -294,6 +296,11 @@ class NonCallDef extends DefImpl, TNonCallDef {
   override predicate isCertain() { isNonCallDef(true, _, address, _, _, ind, _) }
 
   override predicate addressDependsOnField() { isNonCallDef(_, _, address, _, _, ind, true) }
+
+  override NonCallDef incrementIndexBy(int d) {
+    result.getAddressOperand() = address and
+    result.getIndex() = ind + d
+  }
 }
 
 class CallDef extends DefImpl, TCallDef {
@@ -308,7 +315,13 @@ class CallDef extends DefImpl, TCallDef {
 
   override Operand getAddressOperand() { result = address }
 
-  override Instruction getDefiningInstruction() { isCallDef(result, address, _, _, _, _) }
+  override Instruction getDefiningInstruction() {
+    exists(CallInstruction call | isCallDef(call, address, _, _, _, _) |
+      instructionForfullyConvertedCall(result, call)
+      or
+      operandForfullyConvertedCall(any(Operand op | result = op.getDef()), call)
+    )
+  }
 
   override int getIndirection() { isCallDef(_, address, _, result, ind, _) }
 
@@ -329,21 +342,25 @@ class CallDef extends DefImpl, TCallDef {
   override predicate isCertain() { none() }
 
   override predicate addressDependsOnField() { isCallDef(_, address, _, _, _, true) }
+
+  override CallDef incrementIndexBy(int d) {
+    result.getAddressOperand() = address and
+    result.getIndex() = ind + d
+  }
 }
 
 cached
 private module DefCached {
   cached
   predicate isCallDef(
-    Instruction instr, Operand address, Instruction base, int ind, int index,
+    CallInstruction call, Operand address, Instruction base, int ind, int index,
     boolean addressDependsOnField
   ) {
-    exists(int ind0, CallInstruction call, CppType addressType, int mAddress, int argumentIndex |
+    exists(int ind0, CppType addressType, int mAddress, int argumentIndex |
       if argumentIndex = -1
       then not call.getStaticCallTarget() instanceof Cpp::ConstMemberFunction
       else not SideEffects::isConstPointerLike(any(Type t | addressType.hasType(t, _)))
     |
-      call = instr and
       address = call.getArgumentOperand(argumentIndex) and
       isDefImpl(address, base, ind0, addressDependsOnField, _) and
       addressType = getLanguageType(address) and
@@ -508,6 +525,7 @@ predicate adjacentDefRead(DefOrUse defOrUse1, UseOrPhi use) {
 private predicate useToNode(UseOrPhi use, Node nodeTo) {
   exists(UseImpl useImpl | useImpl = use.asDefOrUse() |
     useImpl.getIndex() = 0 and
+    // TODO: Can we use nodeTo.asOperand here to avoid going "backwards"?
     nodeTo.asInstruction() = useImpl.getOperand().getDef()
     or
     exists(int index |

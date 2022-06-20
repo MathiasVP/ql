@@ -65,7 +65,9 @@ DataFlow::Node callInput(CallInstruction call, FunctionInput input, int d) {
 }
 
 private IndirectReturnOutNode getIndirectReturnOutNode(CallInstruction call, int d) {
-  hasOperandAndIndex(result.(IndirectReturnOutNode), call.getAUse(), d)
+  // TODO: Properly join order this.
+  result.getCallInstruction() = call and
+  result.getIndex() = d
 }
 
 /**
@@ -81,15 +83,8 @@ Node callOutput(CallInstruction call, FunctionOutput output, int d) {
     n.asInstruction() = result.asInstruction()
     or
     // The side effect of a call on the value pointed to by an argument or qualifier
-    result.(IndirectArgumentOutNode).getArgumentIndex() =
-      n.(IndirectArgumentOutNode).getArgumentIndex() and
-    result.(IndirectArgumentOutNode).getCallInstruction() =
-      n.(IndirectArgumentOutNode).getCallInstruction() and
-    result.(IndirectArgumentOutNode).getIndex() + 1 = n.(IndirectArgumentOutNode).getIndex() + d
-    or
-    exists(Operand operand, int index |
-      hasOperandAndIndex(n, operand, index) and
-      hasOperandAndIndex(result, operand, index + d)
-    )
+    // TODO: Why d - 1?
+    result.(IndirectArgumentOutNode).getDef() =
+      n.(IndirectArgumentOutNode).getDef().incrementIndexBy(d - 1)
   )
 }

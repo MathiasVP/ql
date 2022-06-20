@@ -1,3 +1,0 @@
-| taint.cpp:578:16:578:22 | // $ ir | Missing result:ir= |
-| vector.cpp:191:18:191:37 | // $ ir MISSING: ast | Missing result:ir= |
-| vector.cpp:212:22:212:41 | // $ ir MISSING: ast | Missing result:ir= |

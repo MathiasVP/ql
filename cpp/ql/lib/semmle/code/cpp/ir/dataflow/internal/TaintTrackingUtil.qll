@@ -30,8 +30,6 @@ predicate localAdditionalTaintStep(DataFlow::Node nodeFrom, DataFlow::Node nodeT
   or
   instructionToOperandTaintStep(nodeFrom.asInstruction(), nodeTo.asOperand())
   or
-  // indirectionTaintStep(nodeFrom, nodeTo)
-  // or
   modeledTaintStep(nodeFrom, nodeTo)
 }
 
@@ -162,6 +160,7 @@ predicate defaultTaintSanitizerGuard(DataFlow::BarrierGuard guard) { none() }
  * modeled function.
  */
 predicate modeledTaintStep(DataFlow::Node nodeIn, DataFlow::Node nodeOut) {
+  // Normal taint steps
   exists(CallInstruction call, TaintFunction func, FunctionInput modelIn, FunctionOutput modelOut |
     call.getStaticCallTarget() = func and
     func.hasTaintFlow(modelIn, modelOut)
@@ -193,19 +192,6 @@ predicate modeledTaintStep(DataFlow::Node nodeIn, DataFlow::Node nodeOut) {
       func.hasTaintFlow(modelIn, modelOut) and
       nodeOut = callOutput(call, modelOut, d)
     )
-  )
-  or
-  exists(
-    CallInstruction call, TaintFunction func, FunctionInput modelIn, FunctionOutput modelOut,
-    int ind
-  |
-    call.getStaticCallTarget() = func and
-    modelIn.isReturnValueDeref(ind) and
-    modelOut.isQualifierObject() and
-    hasOperandAndIndex(nodeIn, any(Operand op | op.getDef() = call), ind) and
-    func.hasTaintFlow(modelIn, modelOut) and
-    nodeOut.(IndirectArgumentOutNode).getPreUpdateNode().getOperand() =
-      call.getThisArgumentOperand()
   )
   or
   // Taint flow from one argument to another and data flow from an argument to a
