@@ -345,7 +345,7 @@ predicate storeStep(Node node1, FieldContent f, PostFieldUpdateNode node2) {
   not isQualifierFor(node2.getFieldAddress(), _) and
   exists(Ssa::Def def, int index1, int numberOfLoads |
     def.getDefiningInstruction() instanceof StoreInstruction and
-    nodeHasInstruction(node1, def.getDefiningInstruction(), index1) and
+    nodeHasInstruction(node1, def.getDefiningInstruction(), pragma[only_bind_into](index1)) and
     node2.getDef() = def and
     f.getField() = node2.getUpdatedField() and
     def.getIndex() = 0 and

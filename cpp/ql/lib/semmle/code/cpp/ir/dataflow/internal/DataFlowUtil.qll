@@ -349,7 +349,11 @@ class PostFieldUpdateNode extends TPostFieldUpdateNode, PartialDefinitionNode {
   Field getUpdatedField() { result = fieldAddress.getField() }
 
   override Node getPreUpdateNode() {
-    hasOperandAndIndex(result, fieldAddress.getObjectAddressOperand(), def.getIndex() + 1)
+    exists(int index |
+      index = def.getIndex() + 1 and
+      hasOperandAndIndex(result, fieldAddress.getObjectAddressOperand(),
+        pragma[only_bind_into](index))
+    )
   }
 
   override Expr getDefinedExpr() { result = def.getAddress().getUnconvertedResultExpression() }
@@ -473,7 +477,6 @@ class IndirectArgumentOutNode extends Node, TIndirectArgumentOutNode, PostUpdate
   int getArgumentIndex() { call.getArgumentOperand(result) = def.getAddressOperand() }
 
   // CallInstruction getCallInstruction() { result = call }
-
   Instruction getPrimaryInstruction() { result = call }
 
   override Declaration getEnclosingCallable() { result = this.getFunction() }
@@ -485,7 +488,10 @@ class IndirectArgumentOutNode extends Node, TIndirectArgumentOutNode, PostUpdate
   override IRType getType() { result instanceof IRVoidType }
 
   override Node getPreUpdateNode() {
-    hasOperandAndIndex(result, def.getAddressOperand(), def.getIndex() + 1)
+    exists(int index |
+      index = def.getIndex() + 1 and
+      hasOperandAndIndex(result, def.getAddressOperand(), pragma[only_bind_into](index))
+    )
   }
 
   override string toStringImpl() {

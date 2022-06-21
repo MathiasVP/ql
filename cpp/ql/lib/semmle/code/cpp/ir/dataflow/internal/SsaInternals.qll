@@ -695,7 +695,8 @@ class Def extends DefOrUse {
 
   Instruction getAddress() { result = defOrUse.getAddress() }
 
-  int getIndex() { result = defOrUse.getIndex() }
+  pragma[inline]
+  int getIndex() { pragma[only_bind_into](result) = pragma[only_bind_out](defOrUse).getIndex() }
 
   predicate addressDependsOnField() { defOrUse.addressDependsOnField() }
 
