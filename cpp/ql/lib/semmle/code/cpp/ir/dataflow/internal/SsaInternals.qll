@@ -6,7 +6,7 @@ private import semmle.code.cpp.models.interfaces.Allocation as Alloc
 private import semmle.code.cpp.models.interfaces.DataFlow as DataFlow
 private import semmle.code.cpp.ir.internal.IRCppLanguage
 private import DataFlowPrivate
-private import ssa0.SsaInternals as SsaInternals0
+private import ssa1.SsaInternals as SsaInternals1
 import semmle.code.cpp.ir.dataflow.internal.SsaInternalsCommon
 
 private module SourceVariables {
@@ -19,11 +19,11 @@ private module SourceVariables {
     )
   }
 
-  class BaseSourceVariable = SsaInternals0::BaseSourceVariable;
+  class BaseSourceVariable = SsaInternals1::BaseSourceVariable;
 
-  class BaseIRVariable = SsaInternals0::BaseIRVariable;
+  class BaseIRVariable = SsaInternals1::BaseIRVariable;
 
-  class BaseCallVariable = SsaInternals0::BaseCallVariable;
+  class BaseCallVariable = SsaInternals1::BaseCallVariable;
 
   cached
   private newtype TSourceVariable =
@@ -107,10 +107,12 @@ predicate hasIndirectInstruction(Instruction instr, int indirectionIndex) {
 cached
 private newtype TDefOrUseImpl =
   TDefImpl(Operand address, int indirectionIndex) {
-    isDef(_, _, address, _, _, indirectionIndex) and
     // We only include the definition if the SSA pruning stage
     // concluded that the definition is live after the write.
-    any(SsaInternals0::Def def).getAddressOperand() = address
+    exists(SsaInternals1::Def def |
+      def.getSourceVariable().getIndirection().abstractionOf(indirectionIndex) and
+      def.getAddressOperand() = address
+    )
   } or
   TUseImpl(Operand operand, int indirectionIndex) {
     isUse(_, operand, _, _, indirectionIndex) and
@@ -385,12 +387,20 @@ predicate fromPhiNode(SsaPhiNode nodeFrom, Node nodeTo) {
   )
 }
 
-private SsaInternals0::SourceVariable getOldSourceVariable(SourceVariable v) {
-  v.getBaseVariable().(BaseIRVariable).getIRVariable() =
-    result.getBaseVariable().(SsaInternals0::BaseIRVariable).getIRVariable()
+private SsaInternals1::SourceVariable getOldSourceVariable(SourceVariable v) {
+  exists(BaseIRVariable base, SsaInternals1::BaseIRVariable base1 |
+    base = v.getBaseVariable() and
+    base1 = result.getBaseVariable() and
+    base.getIRVariable() = base1.getIRVariable() and
+    result.getIndirection().abstractionOf(v.getIndirection())
+  )
   or
-  v.getBaseVariable().(BaseCallVariable).getCallInstruction() =
-    result.getBaseVariable().(SsaInternals0::BaseCallVariable).getCallInstruction()
+  exists(BaseCallVariable base, SsaInternals1::BaseCallVariable base1 |
+    base = v.getBaseVariable() and
+    base1 = result.getBaseVariable() and
+    base.getCallInstruction() = base1.getCallInstruction() and
+    result.getIndirection().abstractionOf(v.getIndirection())
+  )
 }
 
 /**
@@ -398,7 +408,7 @@ private SsaInternals0::SourceVariable getOldSourceVariable(SourceVariable v) {
  * subsequently read (as determined by the SSA pruning stage).
  */
 private predicate variableWriteCand(IRBlock bb, int i, SourceVariable v) {
-  exists(SsaInternals0::Def def, SsaInternals0::SourceVariable v0 |
+  exists(SsaInternals1::Def def, SsaInternals1::SourceVariable v0 |
     def.asDefOrUse().hasIndexInBlock(bb, i, v0) and
     v0 = getOldSourceVariable(v)
   )
