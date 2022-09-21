@@ -350,11 +350,12 @@ from
   MergedPathNode source, MergedPathNode sink, int k, string kstr, DataFlow3::PathNode source3,
   PointerArithmeticInstruction pai, string operation, Expr offset, DataFlow::Node n
 where
-  hasFlowPath(source, sink, source3, pai, operation) and
-  invalidPointerToDerefSource(pai, source3.getNode(), k) and
-  offset = pai.getRight().getUnconvertedResultExpression() and
-  n = source.asPathNode1().getNode() and
-  if k = 0 then kstr = "" else kstr = " + " + k
+  // hasFlowPath(source, sink, source3, pai, operation) and
+  // invalidPointerToDerefSource(pai, source3.getNode(), k) and
+  // offset = pai.getRight().getUnconvertedResultExpression() and
+  // n = source.asPathNode1().getNode() and
+  // if k = 0 then kstr = "" else kstr = " + " + k
+  none()
 select sink, source, sink,
   "This " + operation + " might be out of bounds, as the pointer might be equal to $@ + $@" + kstr +
     ".", n, n.toString(), offset, offset.toString()

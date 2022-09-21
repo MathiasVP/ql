@@ -61,6 +61,6 @@ class ArraySizeConfiguration extends ProductFlow::Configuration {
 from
   ArraySizeConfiguration conf, DataFlow::PathNode source1, DataFlow2::PathNode source2,
   DataFlow::PathNode sink1, DataFlow2::PathNode sink2
-where conf.hasFlowPath(source1, source2, sink1, sink2)
+where none() //conf.hasFlowPath(source1, source2, sink1, sink2)
 // TODO: pull delta out and display it
 select sink1.getNode(), ""
