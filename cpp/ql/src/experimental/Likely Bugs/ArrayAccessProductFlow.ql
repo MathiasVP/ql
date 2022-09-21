@@ -1,3 +1,18 @@
+/**
+ * @name Invalid Array access
+ * @description TODO
+ * @kind problem
+ * @problem.severity error
+ * @precision high
+ * @id cpp/invalid-array-access
+ * @tags reliability
+ *       security
+ *       external/cwe/cwe-119
+ *       external/cwe/cwe-125
+ *       external/cwe/cwe-193
+ *       external/cwe/cwe-787
+ */
+
 import cpp
 import experimental.semmle.code.cpp.dataflow.ProductFlow
 import experimental.semmle.code.cpp.semantic.analysis.RangeAnalysis
@@ -48,4 +63,4 @@ from
   DataFlow::PathNode sink1, DataFlow2::PathNode sink2
 where conf.hasFlowPath(source1, source2, sink1, sink2)
 // TODO: pull delta out and display it
-select source1, source2, sink1, sink2
+select sink1.getNode(), ""

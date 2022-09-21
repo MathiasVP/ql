@@ -1,3 +1,18 @@
+/**
+ * @name Overrunning write
+ * @description TODO
+ * @kind problem
+ * @problem.severity error
+ * @precision high
+ * @id cpp/better-overrunning-write
+ * @tags reliability
+ *       security
+ *       external/cwe/cwe-119
+ *       external/cwe/cwe-125
+ *       external/cwe/cwe-193
+ *       external/cwe/cwe-787
+ */
+
 import cpp
 import experimental.semmle.code.cpp.dataflow.ProductFlow
 import semmle.code.cpp.ir.IR
@@ -31,4 +46,5 @@ from
   StringSizeConfiguration conf, DataFlow::PathNode source1, DataFlow2::PathNode source2,
   DataFlow::PathNode sink1, DataFlow2::PathNode sink2
 where conf.hasFlowPath(source1, source2, sink1, sink2)
-select source1, source2, sink1, sink2
+// TODO: pull delta out and display it
+select sink1.getNode(), ""
