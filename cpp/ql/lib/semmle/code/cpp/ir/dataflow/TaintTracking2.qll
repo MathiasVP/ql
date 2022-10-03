@@ -10,6 +10,4 @@
  *
  * See `semmle.code.cpp.ir.dataflow.TaintTracking` for the full documentation.
  */
-module TaintTracking2 {
-  import semmle.code.cpp.ir.dataflow.internal.tainttracking2.TaintTrackingImpl
-}
+import experimental.semmle.code.cpp.ir.dataflow.TaintTracking2
