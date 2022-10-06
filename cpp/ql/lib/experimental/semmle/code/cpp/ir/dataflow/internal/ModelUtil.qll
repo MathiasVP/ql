@@ -4,8 +4,8 @@
  */
 
 private import semmle.code.cpp.ir.IR
-private import experimental.semmle.code.cpp.ir.dataflow.DataFlow
-private import experimental.semmle.code.cpp.ir.dataflow.internal.DataFlowUtil
+private import semmle.code.cpp.ir.dataflow.DataFlow
+private import DataFlowUtil
 private import SsaInternals as Ssa
 
 /**

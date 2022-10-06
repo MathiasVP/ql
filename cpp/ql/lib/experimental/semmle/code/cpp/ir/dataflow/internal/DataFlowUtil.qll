@@ -270,6 +270,14 @@ class Node extends TIRDataFlowNode {
   Expr asPartialDefinition() { result = this.(PartialDefinitionNode).getDefinedExpr() }
 
   /**
+   * DEPRECATED: Do not use.
+   * 
+   * Gets the uninitialized local variable corresponding to this node, if
+   * any.
+   */
+  LocalVariable asUninitialized() { none() }
+
+  /**
    * Gets an upper bound on the type of this node.
    */
   DataFlowType getTypeBound() { result = this.getType() }

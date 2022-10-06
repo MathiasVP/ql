@@ -6,7 +6,7 @@
 import cpp
 import semmle.code.cpp.security.Security
 private import semmle.code.cpp.ir.dataflow.DataFlow
-private import semmle.code.cpp.ir.dataflow.internal.DataFlowUtil
+private import experimental.semmle.code.cpp.ir.dataflow.internal.DataFlowUtil
 private import semmle.code.cpp.ir.dataflow.DataFlow3
 private import semmle.code.cpp.ir.IR
 private import semmle.code.cpp.ir.dataflow.ResolveCall
@@ -16,7 +16,7 @@ private import semmle.code.cpp.models.interfaces.DataFlow
 private import semmle.code.cpp.ir.dataflow.TaintTracking
 private import semmle.code.cpp.ir.dataflow.TaintTracking2
 private import semmle.code.cpp.ir.dataflow.TaintTracking3
-private import semmle.code.cpp.ir.dataflow.internal.ModelUtil
+private import experimental.semmle.code.cpp.ir.dataflow.internal.ModelUtil
 
 /**
  * A predictable instruction is one where an external user can predict
@@ -282,7 +282,7 @@ private module Cached {
   cached
   predicate additionalTaintStep(DataFlow::Node n1, DataFlow::Node n2) {
     exists(CallInstruction call, Function func, FunctionInput modelIn, FunctionOutput modelOut |
-      n1.asOperand() = callInput(call, modelIn) and
+      n1 = callInput(call, modelIn) and
       (
         func.(TaintFunction).hasTaintFlow(modelIn, modelOut)
         or

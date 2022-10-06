@@ -9,8 +9,4 @@
  * See `semmle.code.cpp.dataflow.DataFlow` for the full documentation.
  */
 
-import cpp
-
-module DataFlow4 {
-  import semmle.code.cpp.dataflow.internal.DataFlowImpl4
-}
+import semmle.code.cpp.ir.dataflow.DataFlow4

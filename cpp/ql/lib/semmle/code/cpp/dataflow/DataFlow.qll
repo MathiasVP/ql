@@ -17,8 +17,4 @@
  * `DataFlow::Node`.
  */
 
-import cpp
-
-module DataFlow {
-  import semmle.code.cpp.dataflow.internal.DataFlowImpl
-}
+import semmle.code.cpp.ir.dataflow.DataFlow
