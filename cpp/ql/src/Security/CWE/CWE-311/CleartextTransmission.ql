@@ -15,7 +15,7 @@
 import cpp
 import semmle.code.cpp.security.SensitiveExprs
 import semmle.code.cpp.security.PrivateData
-import semmle.code.cpp.dataflow.TaintTracking
+import experimental.semmle.code.cpp.ir.dataflow.TaintTracking
 import semmle.code.cpp.models.interfaces.FlowSource
 import semmle.code.cpp.commons.File
 import DataFlow::PathGraph
@@ -34,21 +34,20 @@ class SourceFunction extends Function {
   }
 }
 
-/**
- * A DataFlow node corresponding to a variable or function call that
- * might contain or return a password or other sensitive information.
- */
-class SourceNode extends DataFlow::Node {
-  SourceNode() {
-    this.asExpr() = any(SourceVariable sv).getInitializer().getExpr() or
-    this.asExpr().(VariableAccess).getTarget() = any(SourceVariable sv).(GlobalOrNamespaceVariable) or
-    this.asExpr().(VariableAccess).getTarget() = any(SourceVariable v | v instanceof Field) or
-    this.asUninitialized() instanceof SourceVariable or
-    this.asParameter() instanceof SourceVariable or
-    this.asExpr().(FunctionCall).getTarget() instanceof SourceFunction
-  }
-}
-
+// /**
+//  * A DataFlow node corresponding to a variable or function call that
+//  * might contain or return a password or other sensitive information.
+//  */
+// class SourceNode extends DataFlow::Node {
+//   SourceNode() {
+//     this.asExpr() = any(SourceVariable sv).getInitializer().getExpr() or
+//     this.asExpr().(VariableAccess).getTarget() = any(SourceVariable sv).(GlobalOrNamespaceVariable) or
+//     this.asExpr().(VariableAccess).getTarget() = any(SourceVariable v | v instanceof Field) or
+//     // this.asUninitialized() instanceof SourceVariable or
+//     this.asParameter() instanceof SourceVariable or
+//     this.asExpr().(FunctionCall).getTarget() instanceof SourceFunction
+//   }
+// }
 /**
  * A function that sends or receives data over a network.
  */
@@ -216,6 +215,23 @@ class Encrypted extends Expr {
   }
 }
 
+predicate isSinkSendRecv(DataFlow::Node sink, NetworkSendRecv nsr) {
+  sink.asConvertedExpr() = nsr.getDataExpr().getFullyConverted()
+}
+
+predicate isSinkEncrypt(DataFlow::Node sink, Encrypted enc) {
+  sink.asConvertedExpr() = enc.getFullyConverted()
+}
+
+DataFlow::Node getAnIndirectionOf(DataFlow::Node n2) {
+  n2.asOperand() = result.(DataFlow::IndirectOperand).getOperand()
+  or
+  exists(DataFlow::IndirectOperand ind | ind = result |
+    n2.(DataFlow::IndirectOperand).getOperand() = ind.getOperand() and
+    n2.(DataFlow::IndirectOperand).getIndirectionIndex() <= ind.getIndirectionIndex()
+  )
+}
+
 /**
  * A taint flow configuration for flow from a sensitive expression to a network
  * operation or encryption operation.
@@ -223,21 +239,32 @@ class Encrypted extends Expr {
 class FromSensitiveConfiguration extends TaintTracking::Configuration {
   FromSensitiveConfiguration() { this = "FromSensitiveConfiguration" }
 
-  override predicate isSource(DataFlow::Node source) { source instanceof SourceNode }
+  override predicate isSource(DataFlow::Node source) {
+    source.asIndirectExpr().(VariableAccess).getTarget() instanceof SourceVariable
+    or
+    source.asExpr().(FunctionCall).getTarget() instanceof SourceFunction
+  }
 
   override predicate isSink(DataFlow::Node sink) {
-    sink.asExpr() = any(NetworkSendRecv nsr).getDataExpr()
+    isSinkSendRecv(sink, _)
     or
-    sink.asExpr() instanceof Encrypted
+    isSinkEncrypt(sink, _)
   }
 
   override predicate isAdditionalTaintStep(DataFlow::Node node1, DataFlow::Node node2) {
     // flow through encryption functions to the return value (in case we can reach other sinks)
-    node2.asExpr().(Encrypted).(FunctionCall).getAnArgument() = node1.asExpr()
+    exists(FunctionCall enc |
+      isSinkEncrypt(node2, enc) and
+      enc.getAnArgument() = node1.asExpr()
+    )
   }
 
   override predicate isSanitizer(DataFlow::Node node) {
     node.asExpr().getUnspecifiedType() instanceof IntegralType
+  }
+
+  override predicate isSanitizerIn(DataFlow::Node node) {
+    this.isSource([node, getAnIndirectionOf(node)])
   }
 }
 
@@ -247,7 +274,7 @@ from
 where
   // flow from sensitive -> network data
   config.hasFlowPath(source, sink) and
-  sink.getNode().asExpr() = networkSendRecv.getDataExpr() and
+  isSinkSendRecv(sink.getNode(), networkSendRecv) and
   // no flow from sensitive -> evidence of encryption
   not exists(DataFlow::Node encrypted |
     config.hasFlow(source.getNode(), encrypted) and
@@ -263,4 +290,4 @@ where
     msg =
       "This operation receives into '" + sink.toString() +
         "', which may put unencrypted sensitive data into $@."
-select networkSendRecv, source, sink, msg, source, source.getNode().toString()
+select networkSendRecv, source, sink, msg, source.getNode(), source.getNode().toString()
