@@ -367,7 +367,7 @@ class ReturnIndirectionNode extends IndirectReturnNode, ReturnNode {
   }
 }
 
-private Operand fullyConvertedCallStep(Operand op) {
+private Operand fullyConvertedStep(Operand op) {
   not exists(getANonConversionUse(op)) and
   exists(Instruction instr |
     conversionFlow(op, instr, _) and
@@ -409,7 +409,7 @@ predicate operandForfullyConvertedCall(Operand operand, CallInstruction call) {
   (
     operand = getAUse(call)
     or
-    operand = fullyConvertedCallStep*(getAUse(call))
+    operand = fullyConvertedStep*(getAUse(call))
   )
 }
 
@@ -428,7 +428,7 @@ predicate instructionForfullyConvertedCall(Instruction instr, CallInstruction ca
     instr = call
     or
     // Otherwise, flow to the first non-conversion use.
-    exists(Operand operand | operand = fullyConvertedCallStep*(getAUse(call)) |
+    exists(Operand operand | operand = fullyConvertedStep*(getAUse(call)) |
       instr = getANonConversionUse(operand)
     )
   )
