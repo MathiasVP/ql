@@ -30,4 +30,6 @@ abstract class GetIteratorFunction extends Function {
 /**
  * A type which can be used as an iterator.
  */
-abstract class Iterator extends Type { }
+abstract class Iterator extends Type {
+  Type getValueType() { none() }
+}

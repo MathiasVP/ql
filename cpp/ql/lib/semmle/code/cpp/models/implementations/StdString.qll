@@ -20,7 +20,11 @@ private class StdBasicString extends ClassTemplateInstantiation {
  */
 private class StdBasicStringIterator extends Iterator, Type {
   StdBasicStringIterator() {
-    this.getEnclosingElement() instanceof StdBasicString and this.hasName("iterator")
+    this.getEnclosingElement() = any(StdBasicString s).getTemplate() and this.hasName("iterator")
+  }
+
+  override Type getValueType() {
+    result = this.getUnspecifiedType().(UserType).getTemplateArgument(1)
   }
 }
 
