@@ -6,6 +6,12 @@ private import DataFlowImplCommon as DataFlowImplCommon
 private import DataFlowUtil
 private import DataFlowPrivate
 
+private module Models {
+  import semmle.code.cpp.models.interfaces.Iterator as Interfaces
+  import semmle.code.cpp.models.implementations.Iterator as Iterator
+  import semmle.code.cpp.models.implementations.StdContainer as StdContainer
+}
+
 /**
  * Holds if `operand` is an operand that is not used by the dataflow library.
  * Ignored operands are not recognizd as uses by SSA, and they don't have a
@@ -84,7 +90,7 @@ int getMaxIndirectionsForType(Type type) {
   result = countIndirectionsForCppType(getTypeForGLValue(type))
 }
 
-private class PointerOrReferenceType extends Cpp::DerivedType {
+class PointerOrReferenceType extends Cpp::DerivedType {
   PointerOrReferenceType() {
     this instanceof Cpp::PointerType
     or
@@ -157,6 +163,79 @@ class PointerOrReferenceTypeIndirection extends Indirection, PointerOrReferenceT
   override Type getBaseType() { result = PointerOrReferenceType.super.getBaseType() }
 
   override string toString() { result = PointerOrReferenceType.super.toString() }
+}
+
+class IteratorIndirection extends Indirection instanceof Models::Interfaces::Iterator {
+  IteratorIndirection() { not this instanceof PointerOrReferenceTypeIndirection }
+
+  override int getNumberOfIndirections() { result = 1 + countIndirections(this.getBaseType()) }
+
+  override predicate isAdditionalDereference(Instruction deref, Operand address) {
+    exists(CallInstruction call |
+      operandForfullyConvertedCall(deref.getAUse(), call) and
+      this = call.getStaticCallTarget().getClassAndName("operator*") and
+      address = call.getThisArgumentOperand()
+    )
+  }
+
+  override predicate isAdditionalWrite(Node0Impl value, Operand address, boolean certain) {
+    exists(CallInstruction call | call.getArgumentOperand(0) = value.asOperand() |
+      this = call.getStaticCallTarget().getClassAndName("operator=") and
+      address = call.getThisArgumentOperand() and
+      certain = false
+    )
+  }
+
+  override Type getBaseType() { result = super.getValueType().getUnspecifiedType() }
+
+  override string toString() { result = Models::Interfaces::Iterator.super.toString() }
+
+  // TODO. Fix:
+  // 1. Conflation.
+  // 2. Restrict based on types
+  override predicate isAdditionalTaintStep(Node node1, Node node2) {
+    exists(CallInstruction call |
+      call.getStaticCallTarget() instanceof Models::Iterator::IteratorAssignArithmeticOperator and
+      node2.(IndirectArgumentOutNode).getPreUpdateNode() = node1
+    |
+      node1.(IndirectOperand).getOperand() = call.getArgumentOperand(0) or
+      node1.asOperand() = call.getArgumentOperand(1)
+    )
+  }
+
+  override predicate isAdditionalConversionFlow(Operand opFrom, Instruction instrTo) {
+    exists(StoreInstruction store, VariableInstruction var |
+      var = instrTo and
+      var.getIRVariable() instanceof IRTempVariable and
+      opFrom.getType() = this and
+      store.getSourceValueOperand() = opFrom and
+      store.getDestinationAddress() = var
+    )
+    or
+    exists(CallInstruction call |
+      instrTo = call and
+      call.getStaticCallTarget() instanceof Models::Iterator::IteratorCrementMemberOperator and
+      opFrom = call.getThisArgumentOperand()
+    )
+  }
+
+  override predicate ignoreSourceVariableBase(Instruction base, Node0Impl value) {
+    base.(VariableAddressInstruction).getIRVariable().(IRTempVariable).getType() = this and
+    this.isAdditionalWrite(value, _, _)
+  }
+}
+
+class ContainerIndirection extends Indirection instanceof Models::StdContainer::StdSequenceContainer {
+  override int getNumberOfIndirections() { result = 1 + countIndirections(this.getBaseType()) }
+
+  override Type getBaseType() { result = super.getElementType() }
+
+  override predicate isAdditionalDereference(Instruction deref, Operand address) {
+    exists(CallInstruction call | call = deref |
+      this = call.getStaticCallTarget().getClassAndName("operator[]") and
+      address = call.getThisArgumentOperand()
+    )
+  }
 }
 
 predicate isDereference(Instruction deref, Operand address) {

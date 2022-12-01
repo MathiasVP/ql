@@ -14,18 +14,11 @@ private import semmle.code.cpp.ir.dataflow.internal.DataFlowPrivate
 private import semmle.code.cpp.ir.dataflow.internal.DataFlowUtil
 private import semmle.code.cpp.ir.dataflow.internal.SsaInternalsCommon
 
-private module SourceVariables {
-  newtype TBaseSourceVariable =
-    // Each IR variable gets its own source variable
-    TBaseIRVariable(IRVariable var) or
-    // Each allocation gets its own source variable
-    TBaseCallVariable(AllocationInstruction call)
-
-  abstract class BaseSourceVariable extends TBaseSourceVariable {
-    abstract string toString();
-
-    abstract DataFlowType getType();
-  }
+private module Models {
+  import semmle.code.cpp.models.interfaces.Iterator as Interfaces
+  import semmle.code.cpp.models.implementations.Iterator as Iterator
+  import semmle.code.cpp.models.implementations.StdContainer as StdContainer
+}
 
 private module SourceVariables {
   class SourceVariable instanceof BaseSourceVariable {
@@ -205,6 +198,19 @@ class Phi extends TPhi, SsaDefOrUse {
   final override PhiNode asPhi() { result = phi }
 
   final override Location getLocation() { result = phi.getBasicBlock().getLocation() }
+
+  Definition getAnInput() { Cached::lastRefRedef(result, _, _, phi) }
+}
+
+private Node0Impl getAnUltimateValueForDef(Definition def) {
+  exists(IRBlock bb, int i, SourceVariable sv | def.definesAt(sv, bb, i) |
+    result = getAnUltimateValueForDef(any(Phi phi | phi.asPhi() = def).getAnInput())
+    or
+    exists(DefOrUse defOrUse |
+      defOrUse.asDefOrUse().hasIndexInBlock(bb, i, sv) and
+      result = defOrUse.asDefOrUse().(DefImpl).getValue()
+    )
+  )
 }
 
 class UseOrPhi extends SsaDefOrUse {
@@ -223,6 +229,35 @@ class UseOrPhi extends SsaDefOrUse {
     or
     this instanceof Phi and
     result = "Phi"
+  }
+
+  cached
+  Node0Impl getAnUltimateValue() {
+    // Use case
+    exists(Definition def, IRBlock bb1, int i1, IRBlock bb2, int i2 |
+      Cached::adjacentDefRead(def, bb1, i1, bb2, i2) and
+      this.asDefOrUse().hasIndexInBlock(bb2, i2, def.getSourceVariable())
+    |
+      result = getAnUltimateValueForDef(def)
+    )
+    or
+    // Phi case
+    result = getAnUltimateValueForDef(this.asPhi())
+  }
+}
+
+class Use extends DefOrUse {
+  override UseImpl defOrUse;
+
+  Operand getOperand() { result = defOrUse.getOperand() }
+
+  Node0Impl getAnUltimateValue() {
+    exists(Definition def, IRBlock bb1, int i1, IRBlock bb2, int i2 |
+      Cached::adjacentDefRead(def, bb1, i1, bb2, i2) and
+      defOrUse.hasIndexInBlock(bb2, i2, def.getSourceVariable())
+    |
+      result = getAnUltimateValueForDef(def)
+    )
   }
 }
 
@@ -247,3 +282,23 @@ private module SsaImpl = SsaImplCommon::Make<SsaInput>;
 class PhiNode = SsaImpl::PhiNode;
 
 class Definition = SsaImpl::Definition;
+
+cached
+private module Cached {
+  cached
+  predicate adjacentDefRead(Definition def, IRBlock bb1, int i1, IRBlock bb2, int i2) {
+    SsaImpl::adjacentDefRead(def, bb1, i1, bb2, i2)
+  }
+
+  /**
+   * Holds if the node at index `i` in `bb` is a last reference to SSA definition
+   * `def`. The reference is last because it can reach another write `next`,
+   * without passing through another read or write.
+   */
+  cached
+  predicate lastRefRedef(Definition def, IRBlock bb, int i, Definition next) {
+    SsaImpl::lastRefRedef(def, bb, i, next)
+  }
+}
+
+private import Cached

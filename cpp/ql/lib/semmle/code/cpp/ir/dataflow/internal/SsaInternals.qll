@@ -9,6 +9,12 @@ private import DataFlowPrivate
 private import ssa0.SsaInternals as SsaInternals0
 import SsaInternalsCommon
 
+private module Models {
+  import semmle.code.cpp.models.interfaces.Iterator as Interfaces
+  import semmle.code.cpp.models.implementations.Iterator as Iterator
+  import semmle.code.cpp.models.implementations.StdContainer as StdContainer
+}
+
 private module SourceVariables {
   int getMaxIndirectionForIRVariable(IRVariable var) {
     exists(Type type, boolean isGLValue |
@@ -108,6 +114,32 @@ predicate hasRawIndirectInstruction(Instruction instr, int indirectionIndex) {
   )
 }
 
+private CallInstruction getCall(ArgumentOperand operand) { result.getAnOperand() = operand }
+
+private CallInstruction getAnIteratorAccess(UseImpl use) {
+  exists(Instruction value, StoreInstruction store |
+    store = use.getSsa0Use().getAnUltimateValue().asInstruction() and
+    value = store.getSourceValue()
+  |
+    if
+      value.(CallInstruction).getStaticCallTarget() instanceof Models::Iterator::GetIteratorFunction
+    then result = value
+    else
+      exists(Operand operand |
+        conversionFlow(operand, value, _)
+        or
+        exists(
+          CallInstruction call // This is an operator*
+        |
+          operandForfullyConvertedCall(store.getDestinationAddressOperand(), call) and
+          operand = call.getThisArgumentOperand()
+        )
+      |
+        result = getAnIteratorAccess(any(UseImpl use2 | use2.getOperand() = operand))
+      )
+  )
+}
+
 cached
 private newtype TDefOrUseImpl =
   TDefImpl(Operand address, int indirectionIndex) {
@@ -118,7 +150,40 @@ private newtype TDefOrUseImpl =
   } or
   TUseImpl(Operand operand, int indirectionIndex) {
     isUse(_, operand, _, _, indirectionIndex) and
-    not isDef(_, _, operand, _, _, _)
+    not isDef(true, _, operand, _, _, _)
+  } or
+  TIteratorUse(ConcreteUse use, ConcreteUse containerUse) {
+    exists(ConcreteUse iteratorUse, CallInstruction getIterator |
+      use.getIndirection() > 1 and
+      use.getIndirectionIndex() = 0 and
+      use.getSsa0Use().getSourceVariable().getBaseVariable().getType().getUnspecifiedType()
+        instanceof Models::Iterator::Iterator and
+      use.getOperand() = iteratorUse.getSsa0Use().getOperand() and
+      containerUse.getOperand() = getIterator.getThisArgumentOperand() and
+      containerUse.getIndirectionIndex() = 1 and
+      getIterator = getAnIteratorAccess(iteratorUse)
+    )
+  } or
+  TIteratorDef(ConcreteDef def, ConcreteUse containerUse) {
+    exists(UseImpl iteratorUse, CallInstruction getIterator |
+      // Consider an example like:
+      // ```cpp
+      //   iterator = container.begin();
+      //   *iterator = source();
+      // ```
+      // In this case, `def` is the definition of `*iterator`, containerUse is the use of `container`,
+      // `iteratorUse` is the use of `iterator` on line 2, `getIteratorCall` is the call to `begin`
+      // def.getAddressOperand() = iteratorUse.asDefOrUse().(SsaInternals0::UseImpl).getOperand() and
+      def.getIndirection() > 1 and
+      def.getIndirectionIndex() = 0 and
+      def.getSsa0Def().getBase().getBaseSourceVariable().getType().getUnspecifiedType() instanceof
+        Models::Iterator::Iterator and
+      containerUse.getOperand() = getIterator.getThisArgumentOperand() and
+      containerUse.getIndirectionIndex() = 1 and
+      operandForfullyConvertedCall(def.getSsa0Def().getAddressOperand(),
+        getCall(iteratorUse.getOperand())) and
+      getIterator = getAnIteratorAccess(iteratorUse)
+    )
   }
 
 abstract private class DefOrUseImpl extends TDefOrUseImpl {
@@ -234,6 +299,29 @@ private class ConcreteDef extends DefImpl, TDefImpl {
   override int getIndirectionIndex() { result = ind }
 }
 
+private class IteratorDefImpl extends DefImpl, TIteratorDef {
+  ConcreteDef def;
+  ConcreteUse containerUse;
+
+  IteratorDefImpl() {
+    this = TIteratorDef(def, containerUse) and
+    def = TDefImpl(address, ind + 1)
+  }
+
+  override BaseSourceVariableInstruction getBase() { result = containerUse.getBase() }
+
+  override int getIndirection() { result = def.getIndirection() - 1 }
+
+  override int getIndirectionIndex() { result = def.getIndirectionIndex() }
+
+  override string toString() { result = "IteratorDefImpl" }
+
+  override predicate cannotBePruned() { any() }
+
+  DefImpl getDef() { result = def }
+
+  UseImpl getContainerUse() { result = containerUse }
+}
 
 abstract class UseImpl extends DefOrUseImpl {
   Operand operand;
@@ -267,7 +355,22 @@ private class ConcreteUse extends UseImpl, TUseImpl {
   override int getIndirection() { isUse(_, operand, _, result, ind) }
 
   override BaseSourceVariableInstruction getBase() { isUse(_, operand, result, _, ind) }
-  predicate isCertain() { isUse(true, operand, _, _, ind) }
+}
+
+private class IteratorUse extends UseImpl, TIteratorUse {
+  ConcreteUse use;
+  ConcreteUse containerUse;
+
+  IteratorUse() {
+    this = TIteratorUse(use, containerUse) and
+    use = TUseImpl(operand, ind + 1)
+  }
+
+  override BaseSourceVariableInstruction getBase() { result = containerUse.getBase() }
+
+  override int getIndirection() { result = containerUse.getIndirection() }
+
+  override string toString() { result = "IteratorUseImpl" }
 }
 
 /**
