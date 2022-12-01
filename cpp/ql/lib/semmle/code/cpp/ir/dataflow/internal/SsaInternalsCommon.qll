@@ -99,9 +99,9 @@ private class PointerOrReferenceType extends Cpp::DerivedType {
  * (i.e., `countIndirections(e.getUnspecifiedType())`).
  */
 private int countIndirections(Type t) {
-  result = 1 + countIndirections(t.(PointerOrReferenceType).getBaseType())
+  result = any(Indirection ind | ind.getType() = t).getNumberOfIndirections()
   or
-  not t instanceof PointerOrReferenceType and
+  not exists(Indirection ind | ind.getType() = t) and
   result = 0
 }
 
@@ -127,7 +127,47 @@ class AllocationInstruction extends CallInstruction {
   AllocationInstruction() { this.getStaticCallTarget() instanceof Cpp::AllocationFunction }
 }
 
+abstract class Indirection instanceof Type {
+  final Type getType() { result = super.getUnspecifiedType() }
+
+  abstract int getNumberOfIndirections();
+
+  predicate isAdditionalDereference(Instruction deref, Operand address) { none() }
+
+  predicate isAdditionalWrite(Node0Impl value, Operand address, boolean certain) { none() }
+
+  abstract Type getBaseType();
+
+  string toString() { none() }
+
+  predicate isAdditionalTaintStep(Node node1, Node node2) { none() }
+
+  predicate isAdditionalConversionFlow(Operand opFrom, Instruction instrTo) { none() }
+
+  predicate ignoreSourceVariableBase(Instruction base, Node0Impl value) { none() }
+}
+
+class PointerOrReferenceTypeIndirection extends Indirection, PointerOrReferenceType {
+  override int getNumberOfIndirections() { result = 1 + countIndirections(this.getBaseType()) }
+
+  override predicate isAdditionalDereference(Instruction deref, Operand address) { none() }
+
+  override predicate isAdditionalWrite(Node0Impl value, Operand address, boolean certain) { none() }
+
+  override Type getBaseType() { result = PointerOrReferenceType.super.getBaseType() }
+
+  override string toString() { result = PointerOrReferenceType.super.toString() }
+}
+
+predicate isDereference(Instruction deref, Operand address) {
+  any(Indirection ind).isAdditionalDereference(deref, address)
+  or
+  deref.(LoadInstruction).getSourceAddressOperand() = address
+}
+
 predicate isWrite(Node0Impl value, Operand address, boolean certain) {
+  any(Indirection ind).isAdditionalWrite(value, address, certain)
+  or
   certain = true and
   (
     exists(StoreInstruction store |
@@ -150,6 +190,14 @@ predicate isWrite(Node0Impl value, Operand address, boolean certain) {
       address = uninitialized.getAnOperand()
     )
   )
+}
+
+predicate isAdditionalConversionFlow(Operand opFrom, Instruction instrTo) {
+  any(Indirection ind).isAdditionalConversionFlow(opFrom, instrTo)
+}
+
+predicate ignoreSourceVariableBase(Instruction base, Node0Impl value) {
+  any(Indirection ind).ignoreSourceVariableBase(base, value)
 }
 
 /**
@@ -230,8 +278,8 @@ private module Cached {
    */
   cached
   Operand getIRRepresentationOfIndirectOperand(Operand operand, int indirectionIndex) {
-    exists(LoadInstruction load |
-      operand = load.getSourceAddressOperand() and
+    exists(Instruction load |
+      isDereference(load, operand) and
       result = unique( | | load.getAUse()) and
       isUseImpl(operand, _, indirectionIndex - 1)
     )
@@ -246,9 +294,10 @@ private module Cached {
    */
   cached
   Instruction getIRRepresentationOfIndirectInstruction(Instruction instr, int indirectionIndex) {
-    exists(LoadInstruction load |
-      load.getSourceAddress() = instr and
-      isUseImpl(load.getSourceAddressOperand(), _, indirectionIndex - 1) and
+    exists(Instruction load, Operand address |
+      address.getDef() = instr and
+      isDereference(load, address) and
+      isUseImpl(address, _, indirectionIndex - 1) and
       result = instr
     )
   }
@@ -270,7 +319,10 @@ private module Cached {
     )
     or
     exists(int ind0 |
-      isUseImpl(operand.getDef().(LoadInstruction).getSourceAddressOperand(), base, ind0)
+      exists(Operand address |
+        isDereference(operand.getDef(), address) and
+        isUseImpl(address, base, ind0)
+      )
       or
       isUseImpl(operand.getDef().(InitializeParameterInstruction).getAnOperand(), base, ind0)
     |
@@ -333,7 +385,10 @@ private module Cached {
     )
     or
     exists(int ind0 |
-      isDefImpl(address.getDef().(LoadInstruction).getSourceAddressOperand(), base, ind0)
+      exists(Operand operand |
+        isDereference(operand.getDef(), address) and
+        isDefImpl(address, base, ind - 1)
+      )
       or
       isDefImpl(address.getDef().(InitializeParameterInstruction).getAnOperand(), base, ind0)
     |

@@ -547,7 +547,7 @@ predicate storeStep(Node node1, Content c, PostFieldUpdateNode node2) {
  * operations and exactly `n` `LoadInstruction` operations.
  */
 private predicate numberOfLoadsFromOperandRec(Operand operandFrom, Operand operandTo, int ind) {
-  exists(LoadInstruction load | load.getSourceAddressOperand() = operandFrom |
+  exists(Instruction load | Ssa::isDereference(load, operandFrom) |
     operandTo = operandFrom and ind = 0
     or
     numberOfLoadsFromOperand(load.getAUse(), operandTo, ind - 1)
@@ -567,7 +567,7 @@ private predicate numberOfLoadsFromOperandRec(Operand operandFrom, Operand opera
 private predicate numberOfLoadsFromOperand(Operand operandFrom, Operand operandTo, int n) {
   numberOfLoadsFromOperandRec(operandFrom, operandTo, n)
   or
-  not any(LoadInstruction load).getSourceAddressOperand() = operandFrom and
+  not Ssa::isDereference(_, operandFrom) and
   not conversionFlow(operandFrom, _, _) and
   operandFrom = operandTo and
   n = 0
