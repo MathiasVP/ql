@@ -139,6 +139,8 @@ abstract private class DefOrUseImpl extends TDefOrUseImpl {
   /** Gets the location of this element. */
   abstract Cpp::Location getLocation();
 
+  abstract int getIndirection();
+
   /**
    * Gets the index (i.e., the number of loads required) of this
    * definition or use.
@@ -192,19 +194,16 @@ private predicate sourceVariableHasBaseAndIndex(SourceVariable v, BaseSourceVari
   v.getIndirection() = ind
 }
 
-class DefImpl extends DefOrUseImpl, TDefImpl {
+abstract class DefImpl extends DefOrUseImpl {
   Operand address;
   int ind;
 
-  DefImpl() { this = TDefImpl(address, ind) }
+  bindingset[ind]
+  DefImpl() { any() }
 
-  override Instruction getBase() { isDef(_, _, address, result, _, _) }
+  override BaseSourceVariableInstruction getBase() { isDef(_, _, address, result, _, _) }
 
   Operand getAddressOperand() { result = address }
-
-  int getIndirection() { isDef(_, _, address, _, result, ind) }
-
-  override int getIndirectionIndex() { result = ind }
 
   Node0Impl getValue() { isDef(_, result, address, _, _, _) }
 
@@ -219,17 +218,31 @@ class DefImpl extends DefOrUseImpl, TDefImpl {
   }
 
   predicate isCertain() { isDef(true, _, address, _, _, ind) }
+
+  predicate cannotBePruned() { none() }
+
+  SsaInternals0::Def getSsa0Def() { result.getAddressOperand() = address }
 }
 
-class UseImpl extends DefOrUseImpl, TUseImpl {
+private class ConcreteDef extends DefImpl, TDefImpl {
+  ConcreteDef() { this = TDefImpl(address, ind) }
+
+  override int getIndirection() { isDef(_, _, address, _, result, ind) }
+
+  override string toString() { result = "DefImpl" }
+
+  override int getIndirectionIndex() { result = ind }
+}
+
+
+abstract class UseImpl extends DefOrUseImpl {
   Operand operand;
   int ind;
 
-  UseImpl() { this = TUseImpl(operand, ind) }
+  bindingset[ind]
+  UseImpl() { any() }
 
   Operand getOperand() { result = operand }
-
-  override string toString() { result = "UseImpl" }
 
   final override predicate hasIndexInBlock(IRBlock block, int index) {
     operand.getUse() = block.getInstruction(index)
@@ -239,12 +252,21 @@ class UseImpl extends DefOrUseImpl, TUseImpl {
 
   final override Cpp::Location getLocation() { result = operand.getLocation() }
 
-  final int getIndirection() { isUse(_, operand, _, result, ind) }
-
   override int getIndirectionIndex() { result = ind }
 
-  override Instruction getBase() { isUse(_, operand, result, _, ind) }
+  predicate isCertain() { isUse(true, operand, _, _, ind) }
 
+  SsaInternals0::Use getSsa0Use() { result.getOperand() = operand }
+}
+
+private class ConcreteUse extends UseImpl, TUseImpl {
+  ConcreteUse() { this = TUseImpl(operand, ind) }
+
+  override string toString() { result = "UseImpl" }
+
+  override int getIndirection() { isUse(_, operand, _, result, ind) }
+
+  override BaseSourceVariableInstruction getBase() { isUse(_, operand, result, _, ind) }
   predicate isCertain() { isUse(true, operand, _, _, ind) }
 }
 
@@ -419,8 +441,11 @@ private module SsaInput implements SsaImplCommon::InputSig {
    */
   predicate variableWrite(IRBlock bb, int i, SourceVariable v, boolean certain) {
     DataFlowImplCommon::forceCachingInSameStage() and
-    variableWriteCand(bb, i, v) and
-    exists(DefImpl def | def.hasIndexInBlock(bb, i, v) |
+    exists(DefImpl def |
+      variableWriteCand(bb, i, v) or
+      def.cannotBePruned()
+    |
+      def.hasIndexInBlock(bb, i, v) and
       if def.isCertain() then certain = true else certain = false
     )
   }
@@ -469,6 +494,8 @@ private newtype TSsaDefOrUse =
     or
     // Like in the pruning stage, we only include definition that's live after the
     // write as the final definitions computed by SSA.
+    defOrUse.(DefImpl).cannotBePruned()
+    or
     exists(Definition def, SourceVariable sv, IRBlock bb, int i |
       def.definesAt(sv, bb, i) and
       defOrUse.(DefImpl).hasIndexInBlock(bb, i, sv)
@@ -498,6 +525,10 @@ class DefOrUse extends TDefOrUse, SsaDefOrUse {
   final SourceVariable getSourceVariable() { result = defOrUse.getSourceVariable() }
 
   override string toString() { result = defOrUse.toString() }
+
+  predicate hasIndexInBlock(IRBlock block, int index, SourceVariable sv) {
+    defOrUse.hasIndexInBlock(block, index, sv)
+  }
 }
 
 class Phi extends TPhi, SsaDefOrUse {
@@ -541,6 +572,8 @@ class Def extends DefOrUse {
   }
 
   Node0Impl getValue() { result = defOrUse.getValue() }
+
+  predicate isCertain() { defOrUse.isCertain() }
 }
 
 private module SsaImpl = SsaImplCommon::Make<SsaInput>;

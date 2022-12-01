@@ -103,6 +103,13 @@ class DefImpl extends DefOrUseImpl, TDefImpl {
   }
 
   predicate isCertain() { isDef(true, _, address, _, _, _) }
+
+  final predicate cannotBePruned() {
+    exists(Type t | t = this.getBase().getBaseSourceVariable().getType().getUnspecifiedType() |
+      t instanceof Models::Iterator::Iterator and
+      not t instanceof PointerOrReferenceType
+    )
+  }
 }
 
 class UseImpl extends DefOrUseImpl, TUseImpl {
@@ -159,6 +166,8 @@ private newtype TSsaDefOrUse =
     or
     // If `defOrUse` is a definition we only include it if the
     // SSA library concludes that it's live after the write.
+    defOrUse.(DefImpl).cannotBePruned()
+    or
     exists(Definition def, SourceVariable sv, IRBlock bb, int i |
       def.definesAt(sv, bb, i) and
       defOrUse.(DefImpl).hasIndexInBlock(bb, i, sv)
@@ -227,6 +236,8 @@ class Def extends DefOrUse {
   Node0Impl getValue() { result = defOrUse.getValue() }
 
   override string toString() { result = this.asDefOrUse().toString() }
+
+  predicate cannotBePruned() { defOrUse.cannotBePruned() }
 
   BaseSourceVariableInstruction getBase() { result = defOrUse.getBase() }
 }
