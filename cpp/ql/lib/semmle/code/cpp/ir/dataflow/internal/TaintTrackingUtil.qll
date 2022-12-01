@@ -121,6 +121,18 @@ predicate defaultAdditionalTaintStep(DataFlow::Node src, DataFlow::Node sink) {
   localAdditionalTaintStep(src, sink)
 }
 
+predicate defaultAdditionalTaintStepAtSink(DataFlow::Node node1, DataFlow::Node node2) {
+  exists(Operand operand, int indirectionIndex |
+    nodeHasOperand(node1, operand, indirectionIndex) and
+    nodeHasOperand(node2, operand, indirectionIndex - 1)
+  )
+  or
+  exists(Instruction instr, int indirectionIndex |
+    nodeHasInstruction(node1, instr, indirectionIndex) and
+    nodeHasInstruction(node2, instr, indirectionIndex - 1)
+  )
+}
+
 /**
  * Holds if default `TaintTracking::Configuration`s should allow implicit reads
  * of `c` at sinks and inputs to additional taint steps.
