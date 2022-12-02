@@ -27,6 +27,7 @@ public:
 template<>
 struct std::iterator_traits<int_iterator_by_trait> {
     typedef input_iterator_tag iterator_category;
+    typedef int value_type;
 };
 
 class non_iterator {
@@ -69,6 +70,7 @@ public:
 template<>
 struct std::iterator_traits<insert_iterator_by_trait> {
     typedef output_iterator_tag iterator_category;
+    typedef int value_type;
 };
 
 class container {
@@ -101,7 +103,7 @@ void test_assign_through_iterator() {
 	a = c1.begin();
 	b = c1.begin();
 	*a = source();
-	sink(a); // $ ast MISSING: ir
+	sink(a); // $ ast,ir
 
 	c = c1.begin();
 	sink(b); // MISSING: ast,ir
