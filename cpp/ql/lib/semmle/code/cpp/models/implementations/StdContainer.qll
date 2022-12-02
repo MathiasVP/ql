@@ -21,6 +21,13 @@ private class Array extends StdSequenceContainer {
 }
 
 /**
+ * The `std::string` template class.
+ */
+private class String extends StdSequenceContainer {
+  String() { this.hasQualifiedName(["std", "bsl"], "basic_string") }
+}
+
+/**
  * The `std::deque` template class.
  */
 private class Deque extends StdSequenceContainer {
