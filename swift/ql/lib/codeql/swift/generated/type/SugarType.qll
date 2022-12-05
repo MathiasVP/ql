@@ -4,5 +4,23 @@ private import codeql.swift.generated.Raw
 import codeql.swift.elements.type.Type
 
 module Generated {
-  class SugarType extends Synth::TSugarType, Type { }
+  class SugarType extends Synth::TSugarType, Type {
+    /**
+     * Gets the underlying type of this sugar type.
+     *
+     * This includes nodes from the "hidden" AST. It can be overridden in subclasses to change the
+     * behavior of both the `Immediate` and non-`Immediate` versions.
+     */
+    Type getImmediateUnderlyingType() {
+      result =
+        Synth::convertTypeFromRaw(Synth::convertSugarTypeToRaw(this)
+              .(Raw::SugarType)
+              .getUnderlyingType())
+    }
+
+    /**
+     * Gets the underlying type of this sugar type.
+     */
+    final Type getUnderlyingType() { result = getImmediateUnderlyingType().resolve() }
+  }
 }

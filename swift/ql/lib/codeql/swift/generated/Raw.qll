@@ -1364,7 +1364,9 @@ module Raw {
 
   class SubstitutableType extends @substitutable_type, Type { }
 
-  class SugarType extends @sugar_type, Type { }
+  class SugarType extends @sugar_type, Type {
+    Type getUnderlyingType() { sugar_types(this, result) }
+  }
 
   class TupleType extends @tuple_type, Type {
     override string toString() { result = "TupleType" }

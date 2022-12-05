@@ -2072,6 +2072,12 @@ reference_storage_types(  //dir=type
 | @type_alias_type
 ;
 
+#keyset[id]
+sugar_types(  //dir=type
+  int id: @sugar_type ref,
+  int underlying_type: @type_or_none ref
+);
+
 tuple_types(  //dir=type
   unique int id: @tuple_type
 );

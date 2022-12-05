@@ -93,7 +93,7 @@ class CfgNode extends ControlFlowNode, TElementNode {
   final Split getASplit() { result = splits.getASplit() }
 }
 
-private Expr getAst(ControlFlowElement n) {
+Expr getAst(ControlFlowElement n) {
   result = n.asAstNode()
   or
   result = n.(PropertyGetterElement).getRef()

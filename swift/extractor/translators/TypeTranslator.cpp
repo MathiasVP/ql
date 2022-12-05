@@ -64,6 +64,7 @@ codeql::ExistentialMetatypeType TypeTranslator::translateExistentialMetatypeType
 
 codeql::TypeAliasType TypeTranslator::translateTypeAliasType(const swift::TypeAliasType& type) {
   auto entry = createTypeEntry(type);
+  fillSugarType(type, entry);
   entry.decl = dispatcher.fetchLabel(type.getDecl());
   return entry;
 }
@@ -78,6 +79,7 @@ codeql::DependentMemberType TypeTranslator::translateDependentMemberType(
 
 codeql::ParenType TypeTranslator::translateParenType(const swift::ParenType& type) {
   auto entry = createTypeEntry(type);
+  fillSugarType(type, entry);
   entry.type = dispatcher.fetchLabel(type.getUnderlyingType());
   return entry;
 }
@@ -96,6 +98,7 @@ codeql::ArraySliceType TypeTranslator::translateArraySliceType(const swift::Arra
 
 codeql::DictionaryType TypeTranslator::translateDictionaryType(const swift::DictionaryType& type) {
   auto entry = createTypeEntry(type);
+  fillSugarType(type, entry);
   entry.key_type = dispatcher.fetchLabel(type.getKeyType());
   entry.value_type = dispatcher.fetchLabel(type.getValueType());
   return entry;
@@ -135,8 +138,14 @@ codeql::UnboundGenericType TypeTranslator::translateUnboundGenericType(
   return entry;
 }
 
+void TypeTranslator::fillSugarType(const swift::SugarType& type,
+                                         codeql::SugarType& entry) {
+  entry.underlying_type = dispatcher.fetchLabel(type.getSinglyDesugaredType());
+}
+
 void TypeTranslator::fillUnarySyntaxSugarType(const swift::UnarySyntaxSugarType& type,
                                               codeql::UnarySyntaxSugarType& entry) {
+  fillSugarType(type, entry);
   entry.base_type = dispatcher.fetchLabel(type.getBaseType());
 }
 

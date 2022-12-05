@@ -886,7 +886,7 @@ class SubstitutableType(Type):
     pass
 
 class SugarType(Type):
-    pass
+    underlying_type: Type
 
 class TupleType(Type):
     types: list[Type]

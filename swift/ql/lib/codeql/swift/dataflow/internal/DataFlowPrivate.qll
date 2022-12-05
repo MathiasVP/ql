@@ -29,6 +29,8 @@ abstract class NodeImpl extends Node {
 
   /** Do not call: use `toString()` instead. */
   abstract string toStringImpl();
+
+  abstract Type getType();
 }
 
 private class ExprNodeImpl extends ExprNode, NodeImpl {
@@ -37,6 +39,8 @@ private class ExprNodeImpl extends ExprNode, NodeImpl {
   override string toStringImpl() { result = expr.toString() }
 
   override DataFlowCallable getEnclosingCallable() { result = TDataFlowFunc(n.getScope()) }
+
+  override Type getType() { result = expr.getType() }
 }
 
 private class SsaDefinitionNodeImpl extends SsaDefinitionNode, NodeImpl {
@@ -47,6 +51,8 @@ private class SsaDefinitionNodeImpl extends SsaDefinitionNode, NodeImpl {
   override DataFlowCallable getEnclosingCallable() {
     result = TDataFlowFunc(def.getBasicBlock().getScope())
   }
+
+  override Type getType() { result = def.getSourceVariable().getType() }
 }
 
 private predicate localFlowSsaInput(Node nodeFrom, Ssa::Definition def, Ssa::Definition next) {
@@ -237,6 +243,8 @@ private module ParameterNodes {
 
     /** Gets the parameter associated with this node, if any. */
     ParamDecl getParameter() { none() }
+
+    override Type getType() { result = this.getParameter().getType() }
   }
 
   class SourceParameterNode extends ParameterNodeImpl, TSourceParameterNode {
@@ -294,6 +302,8 @@ class SummaryNode extends NodeImpl, TSummaryNode {
   override UnknownLocation getLocationImpl() { any() }
 
   override string toStringImpl() { result = "[summary] " + state + " in " + c }
+
+  override Type getType() { none() } // TODO
 }
 
 /** A data-flow node that represents a call argument. */
@@ -419,6 +429,8 @@ private module ReturnNodes {
     override Location getLocationImpl() { result = exit.getLocation() }
 
     override string toStringImpl() { result = param.toString() + "[return]" }
+
+    override Type getType() { result = param.getType() }
   }
 
   private class SummaryReturnNode extends SummaryNode, ReturnNode {
@@ -469,6 +481,8 @@ private module OutNodes {
       result.getAnArgument() = n and
       kind.(ParamReturnKind).getIndex() = arg.getIndex()
     }
+
+    override Type getType() { result = arg.getExpr().getType() }
   }
 
   class InOutUpdateQualifierNode extends OutNode, ExprPostUpdateNode {
@@ -578,15 +592,29 @@ predicate clearsContent(Node n, ContentSet c) {
  */
 predicate expectsContent(Node n, ContentSet c) { none() }
 
-private newtype TDataFlowType = TODO_DataFlowType()
+class DataFlowType = Type;
 
-class DataFlowType extends TDataFlowType {
-  string toString() { result = "" }
+Type simplifyStep(Type t) {
+  result = any(BoundGenericEnumType s | s = t and s.getName() = "Optional").getAnArgType()
+}
+
+/**
+ * Note: Should only be called on canonical types
+ */
+Type getSimplifiedType(Type t) {
+  not exists(simplifyStep(t)) and
+  result = t
+  or
+  result = getSimplifiedType(simplifyStep(t))
 }
 
 /** Gets the type of `n` used for type pruning. */
-DataFlowType getNodeType(NodeImpl n) {
-  any() // return the singleton DataFlowType until we support type pruning for Swift
+DataFlowType getNodeType(NodeImpl n) { result = getSimplifiedType(n.getType().getCanonicalType()) }
+
+predicate foo(DeclRefExpr ref, Type t, string s) {
+  getSimplifiedType(ref.getType().getCanonicalType()) = t and
+  s = t.getAQlClass() and
+  ref.getEnclosingFunction().hasName("foo()")
 }
 
 /** Gets a string representation of a `DataFlowType`. */
@@ -604,6 +632,8 @@ abstract class PostUpdateNodeImpl extends Node {
   abstract Node getPreUpdateNode();
 }
 
+Type getCfgType(CfgNode n) { result = getAst(n.getNode()).getType() }
+
 private module PostUpdateNodes {
   class ExprPostUpdateNode extends PostUpdateNodeImpl, NodeImpl, TExprPostUpdateNode {
     CfgNode n;
@@ -617,6 +647,8 @@ private module PostUpdateNodes {
     override string toStringImpl() { result = "[post] " + n.toString() }
 
     override DataFlowCallable getEnclosingCallable() { result = TDataFlowFunc(n.getScope()) }
+
+    override Type getType() { result = getCfgType(n) }
   }
 
   class SummaryPostUpdateNode extends SummaryNode, PostUpdateNodeImpl {

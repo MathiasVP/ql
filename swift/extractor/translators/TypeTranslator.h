@@ -79,6 +79,7 @@ class TypeTranslator : public TypeTranslatorBase<TypeTranslator> {
  private:
   void fillType(const swift::TypeBase& type, codeql::Type& entry);
   void fillArchetypeType(const swift::ArchetypeType& type, codeql::ArchetypeType& entry);
+  void fillSugarType(const swift::SugarType& type, codeql::SugarType& entry);
   void fillUnarySyntaxSugarType(const swift::UnarySyntaxSugarType& type,
                                 codeql::UnarySyntaxSugarType& entry);
   void fillReferenceStorageType(const swift::ReferenceStorageType& type,
