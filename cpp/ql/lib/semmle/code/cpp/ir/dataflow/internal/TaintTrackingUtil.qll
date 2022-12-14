@@ -24,7 +24,7 @@ predicate localTaintStep(DataFlow::Node nodeFrom, DataFlow::Node nodeTo) {
  */
 cached
 predicate localAdditionalTaintStep(DataFlow::Node nodeFrom, DataFlow::Node nodeTo) {
-  operandToInstructionTaintStep(nodeFrom.asOperand(), nodeTo.asInstruction())
+  operandToInstructionTaintStep(nodeFrom.asOperand(), nodeTo.asUnconvertedInstruction()) // TODO: Is this right?
   or
   modeledTaintStep(nodeFrom, nodeTo)
   or
@@ -35,7 +35,7 @@ predicate localAdditionalTaintStep(DataFlow::Node nodeFrom, DataFlow::Node nodeT
   )
   or
   // Flow from `instr` to `*instr`.
-  exists(Instruction instr, int indirectionIndex |
+  exists(EquivInstruction instr, int indirectionIndex |
     nodeHasInstruction(nodeFrom, instr, indirectionIndex) and
     nodeHasInstruction(nodeTo, instr, indirectionIndex - 1)
   )
@@ -45,7 +45,8 @@ predicate localAdditionalTaintStep(DataFlow::Node nodeFrom, DataFlow::Node nodeT
   // in `x[source]` to the result of the associated load instruction.
   exists(PointerArithmeticInstruction pai, int indirectionIndex |
     nodeHasOperand(nodeFrom, pai.getAnOperand(), pragma[only_bind_into](indirectionIndex)) and
-    hasInstructionAndIndex(nodeTo, pai, indirectionIndex + 1)
+    hasInstructionAndIndex(nodeTo,
+      any(EquivInstruction equiv | equiv.getUnconvertedInstruction() = pai), indirectionIndex + 1)
   )
   or
   any(Ssa::Indirection ind).isAdditionalTaintStep(nodeFrom, nodeTo)

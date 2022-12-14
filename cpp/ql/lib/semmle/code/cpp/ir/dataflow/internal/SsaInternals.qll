@@ -98,10 +98,10 @@ predicate hasRawIndirectOperand(Operand op, int indirectionIndex) {
  * Holds if the `(instr, indirectionIndex)` columns should be
  * assigned a `RawIndirectInstruction` value.
  */
-predicate hasRawIndirectInstruction(Instruction instr, int indirectionIndex) {
+predicate hasRawIndirectInstruction(EquivInstruction instr, int indirectionIndex) {
   exists(CppType type, int m |
-    not ignoreInstruction(instr) and
-    type = getResultLanguageType(instr) and
+    not ignoreInstruction(instr.getUnconvertedInstruction()) and
+    type = getResultLanguageType(instr.getConvertedInstruction()) and
     m = countIndirectionsForCppType(type) and
     indirectionIndex = [1 .. m] and
     not exists(getIRRepresentationOfIndirectInstruction(instr, indirectionIndex))
@@ -294,7 +294,10 @@ predicate outNodeHasAddressAndIndex(
 private predicate defToNode(Node nodeFrom, Def def) {
   nodeHasOperand(nodeFrom, def.getValue().asOperand(), def.getIndirectionIndex())
   or
-  nodeHasInstruction(nodeFrom, def.getValue().asInstruction(), def.getIndirectionIndex())
+  nodeHasInstruction(nodeFrom,
+    any(EquivInstruction equiv |
+      equiv.getUnconvertedInstruction() = def.getValue().asUnconvertedInstruction()
+    ), def.getIndirectionIndex())
 }
 
 /**

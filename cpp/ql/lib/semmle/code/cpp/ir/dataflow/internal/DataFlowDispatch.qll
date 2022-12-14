@@ -86,7 +86,7 @@ private module VirtualDispatch {
         // Flow from global variable to load.
         exists(LoadInstruction load, GlobalOrNamespaceVariable var |
           var = src.asVariable() and
-          other.asInstruction() = load and
+          other.asUnconvertedInstruction() = load and
           addressOfGlobal(load.getSourceAddress(), var) and
           // The `allowFromArg` concept doesn't play a role when `src` is a
           // global variable, so we just set it to a single arbitrary value for
@@ -97,7 +97,7 @@ private module VirtualDispatch {
         // Flow from store to global variable.
         exists(StoreInstruction store, GlobalOrNamespaceVariable var |
           var = other.asVariable() and
-          store = src.asInstruction() and
+          store = src.asUnconvertedInstruction() and
           storeIntoGlobal(store, var) and
           // Setting `allowFromArg` to `true` like in the base case means we
           // treat a store to a global variable like the dispatch itself: flow
@@ -165,7 +165,9 @@ private module VirtualDispatch {
       exists(this.getStaticCallTarget().(VirtualFunction).getAnOverridingFunction())
     }
 
-    override DataFlow::Node getDispatchValue() { result.asInstruction() = this.getThisArgument() }
+    override DataFlow::Node getDispatchValue() {
+      result.asConvertedInstruction() = this.getThisArgument()
+    }
 
     override MemberFunction resolve() {
       exists(Class overridingClass |

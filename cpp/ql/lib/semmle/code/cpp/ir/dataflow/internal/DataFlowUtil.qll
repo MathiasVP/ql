@@ -45,7 +45,7 @@ private newtype TIRDataFlowNode =
   TRawIndirectOperand(Operand op, int indirectionIndex) {
     Ssa::hasRawIndirectOperand(op, indirectionIndex)
   } or
-  TRawIndirectInstruction(Instruction instr, int indirectionIndex) {
+  TRawIndirectInstruction(EquivInstruction instr, int indirectionIndex) {
     Ssa::hasRawIndirectInstruction(instr, indirectionIndex)
   }
 
@@ -115,8 +115,15 @@ class Node extends TIRDataFlowNode {
    */
   DataFlowType getType() { none() } // overridden in subclasses
 
+  // /** Gets the instruction corresponding to this node, if any. */
+  // Instruction asInstruction() { result = this.asUnconvertedInstruction() }
   /** Gets the instruction corresponding to this node, if any. */
-  Instruction asInstruction() { result = this.(InstructionNode).getInstruction() }
+  Instruction asUnconvertedInstruction() {
+    result = this.(InstructionNode).getUnconvertedInstruction()
+  }
+
+  /** Gets the instruction corresponding to this node, if any. */
+  Instruction asConvertedInstruction() { result = this.(InstructionNode).getConvertedInstruction() }
 
   /** Gets the operands corresponding to this node, if any. */
   Operand asOperand() { result = this.(OperandNode).getOperand() }
@@ -352,12 +359,15 @@ private class Node0 extends Node, TNode0 {
  */
 class InstructionNode extends Node0 {
   override InstructionNode0 node;
-  Instruction instr;
+  EquivInstruction instr;
 
-  InstructionNode() { instr = node.getInstruction() }
+  InstructionNode() { instr.getUnconvertedInstruction() = node.getUnconvertedInstruction() }
 
-  /** Gets the instruction corresponding to this node. */
-  Instruction getInstruction() { result = instr }
+  Instruction getUnconvertedInstruction() { result = instr.getUnconvertedInstruction() }
+
+  Instruction getConvertedInstruction() { result = instr.getConvertedInstruction() }
+
+  Instruction getAnInstruction() { result = instr.getAnInstruction() }
 }
 
 /**
@@ -496,7 +506,7 @@ class SideEffectOperandNode extends Node, IndirectOperand {
 class IndirectParameterNode extends Node, IndirectInstruction {
   InitializeParameterInstruction init;
 
-  IndirectParameterNode() { this.getInstruction() = init }
+  IndirectParameterNode() { this.getUnconvertedInstruction() = init }
 
   int getArgumentIndex() { init.hasIndex(result) }
 
@@ -505,7 +515,9 @@ class IndirectParameterNode extends Node, IndirectInstruction {
 
   override Declaration getEnclosingCallable() { result = this.getFunction() }
 
-  override Function getFunction() { result = this.getInstruction().getEnclosingFunction() }
+  override Function getFunction() {
+    result = this.getUnconvertedInstruction().getEnclosingFunction()
+  }
 
   override string toStringImpl() {
     result = this.getParameter().toString() + " indirection"
@@ -579,7 +591,9 @@ class IndirectArgumentOutNode extends Node, TIndirectArgumentOutNode, PartialDef
 
 pragma[nomagic]
 predicate indirectReturnOutNodeOperand0(CallInstruction call, Operand operand, int indirectionIndex) {
-  Ssa::hasRawIndirectInstruction(call, indirectionIndex) and
+  Ssa::hasRawIndirectInstruction(any(EquivInstruction equiv |
+      equiv.getUnconvertedInstruction() = call
+    ), indirectionIndex) and
   operandForfullyConvertedCall(operand, call)
 }
 
@@ -587,7 +601,9 @@ pragma[nomagic]
 predicate indirectReturnOutNodeInstruction0(
   CallInstruction call, Instruction instr, int indirectionIndex
 ) {
-  Ssa::hasRawIndirectInstruction(call, indirectionIndex) and
+  Ssa::hasRawIndirectInstruction(any(EquivInstruction equiv |
+      equiv.getUnconvertedInstruction() = call
+    ), indirectionIndex) and
   instructionForfullyConvertedCall(instr, call)
 }
 
@@ -610,7 +626,8 @@ private predicate hasInstruction(
   Node node, CallInstruction call, int indirectionIndex, Instruction instr
 ) {
   indirectReturnOutNodeInstruction0(call, instr, indirectionIndex) and
-  hasInstructionAndIndex(node, instr, indirectionIndex)
+  hasInstructionAndIndex(node,
+    any(EquivInstruction equiv | equiv.getConvertedInstruction() = instr), indirectionIndex)
 }
 
 /**
@@ -717,7 +734,7 @@ class UninitializedNode extends Node {
 
   UninitializedNode() {
     exists(Ssa::Def def |
-      def.getValue().asInstruction() instanceof UninitializedInstruction and
+      def.getValue().asUnconvertedInstruction() instanceof UninitializedInstruction and
       Ssa::nodeToDefOrUse(this, def) and
       v = def.getSourceVariable().getBaseVariable().(Ssa::BaseIRVariable).getIRVariable().getAst()
     )
@@ -734,18 +751,25 @@ class UninitializedNode extends Node {
  * after `index` number of loads.
  */
 class RawIndirectInstruction extends Node, TRawIndirectInstruction {
-  Instruction instr;
+  EquivInstruction instr;
   int indirectionIndex;
 
   RawIndirectInstruction() { this = TRawIndirectInstruction(instr, indirectionIndex) }
 
+  // /** Gets the underlying instruction. */
+  // Instruction getInstruction() { result = instr }
   /** Gets the underlying instruction. */
-  Instruction getInstruction() { result = instr }
+  Instruction getUnconvertedInstruction() { result = instr.getUnconvertedInstruction() }
+
+  /** Gets the underlying instruction. */
+  Instruction getConvertedInstruction() { result = instr.getConvertedInstruction() }
 
   /** Gets the underlying indirection index. */
   int getIndirectionIndex() { result = indirectionIndex }
 
-  override Function getFunction() { result = this.getInstruction().getEnclosingFunction() }
+  override Function getFunction() {
+    result = this.getUnconvertedInstruction().getEnclosingFunction()
+  }
 
   override Declaration getEnclosingCallable() { result = this.getFunction() }
 
@@ -755,10 +779,12 @@ class RawIndirectInstruction extends Node, TRawIndirectInstruction {
     )
   }
 
-  final override Location getLocationImpl() { result = this.getInstruction().getLocation() }
+  final override Location getLocationImpl() {
+    result = this.getUnconvertedInstruction().getLocation()
+  }
 
   override string toStringImpl() {
-    result = instructionNode(this.getInstruction()).toStringImpl() + " indirection"
+    result = instructionNode(this.getUnconvertedInstruction()).toStringImpl() + " indirection"
   }
 }
 
@@ -821,7 +847,7 @@ private predicate exprNodeShouldBeIndirectOutNode(IndirectArgumentOutNode node, 
 
 /** Holds if `node` should be an instruction node that maps `node.asExpr()` to `e`. */
 predicate exprNodeShouldBeInstruction(Node node, Expr e) {
-  e = node.asInstruction().getConvertedResultExpression() and
+  e = node.asUnconvertedInstruction().getConvertedResultExpression() and
   not exprNodeShouldBeOperand(_, e) and
   not exprNodeShouldBeIndirectOutNode(_, e)
 }
@@ -829,7 +855,7 @@ predicate exprNodeShouldBeInstruction(Node node, Expr e) {
 /** Holds if `node` should be an `IndirectInstruction` that maps `node.asIndirectExpr()` to `e`. */
 predicate indirectExprNodeShouldBeIndirectInstruction(IndirectInstruction node, Expr e) {
   exists(Instruction instr |
-    instr = node.getInstruction() and not indirectExprNodeShouldBeIndirectOperand(_, e)
+    instr = node.getUnconvertedInstruction() and not indirectExprNodeShouldBeIndirectOperand(_, e)
   |
     e = instr.(VariableAddressInstruction).getAst().(Expr).getFullyConverted()
     or
@@ -967,7 +993,7 @@ class IndirectExprNode extends Node instanceof IndirectExprNodeBase {
 class ParameterNode extends Node {
   ParameterNode() {
     // To avoid making this class abstract, we enumerate its values here
-    this.asInstruction() instanceof InitializeParameterInstruction
+    this.asUnconvertedInstruction() instanceof InitializeParameterInstruction
     or
     this instanceof IndirectParameterNode
   }
@@ -982,25 +1008,31 @@ class ParameterNode extends Node {
 
 /** An explicit positional parameter, not including `this` or `...`. */
 private class ExplicitParameterNode extends ParameterNode, InstructionNode {
-  override InitializeParameterInstruction instr;
+  InitializeParameterInstruction init;
 
-  ExplicitParameterNode() { exists(instr.getParameter()) }
+  ExplicitParameterNode() {
+    init = this.getUnconvertedInstruction() and
+    exists(init.getParameter())
+  }
 
   override predicate isParameterOf(Function f, ParameterPosition pos) {
-    f.getParameter(pos.(DirectPosition).getIndex()) = instr.getParameter()
+    f.getParameter(pos.(DirectPosition).getIndex()) = init.getParameter()
   }
 
   /** Gets the `Parameter` associated with this node. */
-  Parameter getParameter() { result = instr.getParameter() }
+  Parameter getParameter() { result = init.getParameter() }
 
-  override string toStringImpl() { result = instr.getParameter().toString() }
+  override string toStringImpl() { result = init.getParameter().toString() }
 }
 
 /** An implicit `this` parameter. */
 class ThisParameterNode extends ParameterNode, InstructionNode {
-  override InitializeParameterInstruction instr;
+  InitializeParameterInstruction init;
 
-  ThisParameterNode() { instr.getIRVariable() instanceof IRThisVariable }
+  ThisParameterNode() {
+    init = this.getUnconvertedInstruction() and
+    init.getIRVariable() instanceof IRThisVariable
+  }
 
   override predicate isParameterOf(Function f, ParameterPosition pos) {
     pos.(DirectPosition).getIndex() = -1 and instr.getEnclosingFunction() = f
@@ -1128,7 +1160,7 @@ class VariableNode extends Node, TVariableNode {
 /**
  * Gets the node corresponding to `instr`.
  */
-InstructionNode instructionNode(Instruction instr) { result.getInstruction() = instr }
+InstructionNode instructionNode(Instruction instr) { result.getAnInstruction() = instr }
 
 /**
  * Gets the node corresponding to `operand`.
@@ -1183,9 +1215,9 @@ predicate hasOperandAndIndex(IndirectOperand indirectOperand, Operand operand, i
 
 pragma[noinline]
 predicate hasInstructionAndIndex(
-  IndirectInstruction indirectInstr, Instruction instr, int indirectionIndex
+  IndirectInstruction indirectInstr, EquivInstruction instr, int indirectionIndex
 ) {
-  indirectInstr.getInstruction() = instr and
+  indirectInstr.getUnconvertedInstruction() = instr.getUnconvertedInstruction() and
   indirectInstr.getIndirectionIndex() = indirectionIndex
 }
 
@@ -1202,7 +1234,8 @@ private module Cached {
     // Reduce the indirection count by 1 if we're passing through a `LoadInstruction`.
     exists(int ind, LoadInstruction load |
       hasOperandAndIndex(nodeFrom, load.getSourceAddressOperand(), ind) and
-      nodeHasInstruction(nodeTo, load, ind - 1)
+      nodeHasInstruction(nodeTo,
+        any(EquivInstruction equiv | equiv.getUnconvertedInstruction() = load), ind - 1)
     )
     or
     // If an operand flows to an instruction, then the indirection of
@@ -1210,14 +1243,18 @@ private module Cached {
     exists(Operand operand, Instruction instr, int indirectionIndex |
       simpleInstructionLocalFlowStep(operand, instr) and
       hasOperandAndIndex(nodeFrom, operand, indirectionIndex) and
-      hasInstructionAndIndex(nodeTo, instr, indirectionIndex)
+      hasInstructionAndIndex(nodeTo, any(EquivInstruction equiv | equiv.getAnInstruction() = instr),
+        indirectionIndex)
     )
     or
     // If there's indirect flow to an operand, then there's also indirect
     // flow to the operand after applying some pointer arithmetic.
     exists(PointerArithmeticInstruction pointerArith, int indirectionIndex |
       hasOperandAndIndex(nodeFrom, pointerArith.getAnOperand(), indirectionIndex) and
-      hasInstructionAndIndex(nodeTo, pointerArith, indirectionIndex)
+      // A `PointerArithmeticInstruction´ isn't a conversion. So we can use `getUnconvertedInstruction` here.
+      hasInstructionAndIndex(nodeTo,
+        any(EquivInstruction equiv | equiv.getUnconvertedInstruction() = pointerArith),
+        indirectionIndex)
     )
   }
 
@@ -1230,7 +1267,8 @@ private module Cached {
       simpleOperandLocalFlowStep(pragma[only_bind_into](instr), pragma[only_bind_into](operand))
     |
       hasOperandAndIndex(nodeTo, operand, indirectionIndex) and
-      hasInstructionAndIndex(nodeFrom, instr, indirectionIndex)
+      hasInstructionAndIndex(nodeFrom,
+        any(EquivInstruction equiv | equiv.getAnInstruction() = instr), indirectionIndex)
     )
   }
 
@@ -1249,10 +1287,10 @@ private module Cached {
     Ssa::ssaFlow(nodeFrom, nodeTo)
     or
     // Operand -> Instruction flow
-    simpleInstructionLocalFlowStep(nodeFrom.asOperand(), nodeTo.asInstruction())
+    simpleInstructionLocalFlowStep(nodeFrom.asOperand(), nodeTo.asUnconvertedInstruction())
     or
     // Instruction -> Operand flow
-    simpleOperandLocalFlowStep(nodeFrom.asInstruction(), nodeTo.asOperand())
+    simpleOperandLocalFlowStep(nodeFrom.asConvertedInstruction(), nodeTo.asOperand())
     or
     // Phi node -> Node flow
     Ssa::fromPhiNode(nodeFrom, nodeTo)
@@ -1273,7 +1311,9 @@ private module Cached {
       nodeHasOperand(nodeTo.(IndirectReturnOutNode), address, indirectionIndex)
     |
       exists(StoreInstruction store |
-        nodeHasInstruction(nodeFrom, store, indirectionIndex - 1) and
+        nodeHasInstruction(nodeFrom,
+          any(EquivInstruction equiv | equiv.getUnconvertedInstruction() = store),
+          indirectionIndex - 1) and
         store.getDestinationAddressOperand() = address
       )
       or
@@ -1282,9 +1322,6 @@ private module Cached {
   }
 
   private predicate simpleInstructionLocalFlowStep(Operand opFrom, Instruction iTo) {
-    // Treat all conversions as flow, even conversions between different numeric types.
-    conversionFlow(opFrom, iTo, false)
-    or
     iTo.(CopyInstruction).getSourceValueOperand() = opFrom
   }
 
@@ -1517,7 +1554,7 @@ class ContentSet instanceof Content {
 }
 
 private IRBlock getBasicBlock(Node node) {
-  node.asInstruction().getBlock() = result
+  node.asUnconvertedInstruction().getBlock() = result
   or
   node.asOperand().getUse().getBlock() = result
   or
@@ -1525,7 +1562,7 @@ private IRBlock getBasicBlock(Node node) {
   or
   node.(RawIndirectOperand).getOperand().getUse().getBlock() = result
   or
-  node.(RawIndirectInstruction).getInstruction().getBlock() = result
+  node.(RawIndirectInstruction).getUnconvertedInstruction().getBlock() = result
   or
   result = getBasicBlock(node.(PostUpdateNode).getPreUpdateNode())
 }
@@ -1606,8 +1643,8 @@ deprecated class BarrierGuard extends IRGuardCondition {
         or
         this.checks(value.getAnInstruction().getConvertedResultExpression(), edge)
       ) and
-      result.asInstruction() = value.getAnInstruction() and
-      this.controls(result.asInstruction().getBlock(), edge)
+      result.asConvertedInstruction() = value.getAnInstruction() and
+      this.controls(result.asConvertedInstruction().getBlock(), edge)
     )
   }
 }

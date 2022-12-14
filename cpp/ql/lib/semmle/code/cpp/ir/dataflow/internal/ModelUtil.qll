@@ -35,7 +35,7 @@ DataFlow::Node callInput(CallInstruction call, FunctionInput input) {
  */
 Node callOutput(CallInstruction call, FunctionOutput output) {
   // The return value
-  result.asInstruction() = call and
+  result.asUnconvertedInstruction() = call and
   output.isReturnValue()
   or
   // The side effect of a call on the value pointed to by an argument or qualifier
@@ -77,12 +77,12 @@ bindingset[d]
 Node callOutput(CallInstruction call, FunctionOutput output, int d) {
   exists(DataFlow::Node n | n = callOutput(call, output) and d > 0 |
     // The return value
-    result = getIndirectReturnOutNode(n.asInstruction(), d)
+    result = getIndirectReturnOutNode(n.asUnconvertedInstruction(), d)
     or
     // If there isn't an indirect out node for the call with indirection `d` then
     // we conflate this with the underlying `CallInstruction`.
     not exists(getIndirectReturnOutNode(call, d)) and
-    n.asInstruction() = result.asInstruction()
+    n.asUnconvertedInstruction() = result.asUnconvertedInstruction()
     or
     // The side effect of a call on the value pointed to by an argument or qualifier
     exists(Operand operand, int indirectionIndex |

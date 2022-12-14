@@ -206,22 +206,22 @@ predicate isWrite(Node0Impl value, Operand address, boolean certain) {
   certain = true and
   (
     exists(StoreInstruction store |
-      value.asInstruction() = store and
+      value.asUnconvertedInstruction() = store and
       address = store.getDestinationAddressOperand()
     )
     or
     exists(InitializeParameterInstruction init |
-      value.asInstruction() = init and
+      value.asUnconvertedInstruction() = init and
       address = init.getAnOperand()
     )
     or
     exists(InitializeDynamicAllocationInstruction init |
-      value.asInstruction() = init and
+      value.asUnconvertedInstruction() = init and
       address = init.getAllocationAddressOperand()
     )
     or
     exists(UninitializedInstruction uninitialized |
-      value.asInstruction() = uninitialized and
+      value.asUnconvertedInstruction() = uninitialized and
       address = uninitialized.getAnOperand()
     )
   )
@@ -379,9 +379,9 @@ private module Cached {
    * instead associated with the instruction returned by this predicate.
    */
   cached
-  Instruction getIRRepresentationOfIndirectInstruction(Instruction instr, int indirectionIndex) {
+  EquivInstruction getIRRepresentationOfIndirectInstruction(EquivInstruction instr, int indirectionIndex) {
     exists(Instruction load, Operand address |
-      address.getDef() = instr and
+      address.getDef() = instr.getConvertedInstruction() and
       isDereference(load, address) and
       isUseImpl(address, _, indirectionIndex - 1) and
       result = instr

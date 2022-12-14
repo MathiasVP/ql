@@ -6,12 +6,53 @@ private import DataFlowImplConsistency
 private import semmle.code.cpp.ir.internal.IRCppLanguage
 private import SsaInternals as Ssa
 
+private predicate conversionStep(Instruction i, Instruction conv) {
+  exists(Operand use |
+    use = unique( | | i.getAUse()) and
+    conversionFlow(use, conv, false)
+  )
+}
+
+private predicate conversion(Instruction i, Instruction conv) {
+  i = conv // we make this predicate reflexive so that `EquivInstruction` is onto
+  or
+  conversionStep(i, conv)
+}
+
+private module EquivInstructionImpl = QlBuiltins::EquivalenceRelation<Instruction, conversion/2>;
+
+class EquivInstruction extends EquivInstructionImpl::EquivalenceClass {
+  Instruction getAnInstruction() { this = EquivInstructionImpl::getEquivalenceClass(result) }
+
+  Instruction getUnconvertedInstruction() {
+    result = this.getAnInstruction() and
+    not conversionStep(_, result)
+  }
+
+  Instruction getConvertedInstruction() {
+    result = this.getAnInstruction() and
+    not conversionStep(result, _)
+  }
+
+  string toString() { result = this.getUnconvertedInstruction().getOpcode().toString() }
+
+  Cpp::Location getLocation() { result = this.getConvertedInstruction().getLocation() }
+
+  Type getResultType() { result = this.getConvertedInstruction().getResultType() }
+
+  predicate isGLValue() { this.getConvertedInstruction().isGLValue() }
+
+  Cpp::Declaration getEnclosingFunction() {
+    result = this.getConvertedInstruction().getEnclosingFunction()
+  }
+}
+
 cached
 private module Cached {
   cached
   newtype TIRDataFlowNode0 =
-    TInstructionNode0(Instruction i) {
-      not Ssa::ignoreInstruction(i) and
+    TInstructionNode0(EquivInstruction i) {
+      not Ssa::ignoreInstruction(i.getUnconvertedInstruction()) and
       // We exclude `void`-typed instructions because they cannot contain data.
       // However, if the instruction is a glvalue, and their type is `void`, then the result
       // type of the instruction is really `void*`, and thus we still want to have a dataflow
@@ -40,11 +81,18 @@ class Node0Impl extends TIRDataFlowNode0 {
    */
   DataFlowType getType() { none() } // overridden in subclasses
 
-  /** Gets the instruction corresponding to this node, if any. */
-  Instruction asInstruction() { result = this.(InstructionNode0).getInstruction() }
-
+  // /** Gets the instruction corresponding to this node, if any. */
+  // Instruction asAnInstruction() { result = this.(InstructionNode0).getAnInstruction() }
   /** Gets the operands corresponding to this node, if any. */
   Operand asOperand() { result = this.(OperandNode0).getOperand() }
+
+  Instruction asUnconvertedInstruction() {
+    result = this.(InstructionNode0).getUnconvertedInstruction()
+  }
+
+  Instruction asConvertedInstruction() {
+    result = this.(InstructionNode0).getConvertedInstruction()
+  }
 
   /** INTERNAL: Do not use. */
   Location getLocationImpl() {
@@ -67,12 +115,13 @@ class Node0Impl extends TIRDataFlowNode0 {
  * An instruction, viewed as a node in a data flow graph.
  */
 class InstructionNode0 extends Node0Impl, TInstructionNode0 {
-  Instruction instr;
+  EquivInstruction instr;
 
   InstructionNode0() { this = TInstructionNode0(instr) }
 
-  /** Gets the instruction corresponding to this node. */
-  Instruction getInstruction() { result = instr }
+  Instruction getUnconvertedInstruction() { result = instr.getUnconvertedInstruction() }
+
+  Instruction getConvertedInstruction() { result = instr.getConvertedInstruction() }
 
   override Declaration getEnclosingCallable() { result = this.getFunction() }
 
@@ -85,7 +134,7 @@ class InstructionNode0 extends Node0Impl, TInstructionNode0 {
   override string toStringImpl() {
     // This predicate is overridden in subclasses. This default implementation
     // does not use `Instruction.toString` because that's expensive to compute.
-    result = this.getInstruction().getOpcode().toString()
+    result = instr.toString()
   }
 }
 
@@ -161,19 +210,23 @@ class IndirectOperand extends Node {
  * be an `InstructionNode`.
  */
 class IndirectInstruction extends Node {
-  Instruction instr;
+  EquivInstruction instr;
   int indirectionIndex;
 
   IndirectInstruction() {
-    this.(RawIndirectInstruction).getInstruction() = instr and
+    this.(RawIndirectInstruction).getUnconvertedInstruction() = instr.getUnconvertedInstruction() and
     this.(RawIndirectInstruction).getIndirectionIndex() = indirectionIndex
     or
-    this.(InstructionNode).getInstruction() =
+    this.(InstructionNode).getUnconvertedInstruction() =
       Ssa::getIRRepresentationOfIndirectInstruction(instr, indirectionIndex)
+          .getUnconvertedInstruction()
   }
 
   /** Gets the underlying instruction. */
-  Instruction getInstruction() { result = instr }
+  Instruction getUnconvertedInstruction() { result = instr.getUnconvertedInstruction() }
+
+  /** Gets the underlying instruction. */
+  Instruction getConvertedInstruction() { result = instr.getConvertedInstruction() }
 
   /** Gets the underlying indirection index. */
   int getIndirectionIndex() { result = indirectionIndex }
@@ -182,7 +235,7 @@ class IndirectInstruction extends Node {
    * Holds if this `IndirectInstruction` is represented directly in the IR instead of
    * a `RawIndirectionInstruction` with instruction `i` and indirection index `index`.
    */
-  predicate isIRRepresentationOf(Instruction i, int index) {
+  predicate isIRRepresentationOf(EquivInstruction i, int index) {
     this instanceof InstructionNode and
     (
       i = instr and
@@ -356,7 +409,7 @@ class ReturnNode extends Node instanceof IndirectReturnNode {
  */
 private predicate hasNonInitializeParameterDef(IRVariable v) {
   exists(Ssa::Def def |
-    not def.getValue().asInstruction() instanceof InitializeParameterInstruction and
+    not def.getValue().asUnconvertedInstruction() instanceof InitializeParameterInstruction and
     v = def.getSourceVariable().getBaseVariable().(Ssa::BaseIRVariable).getIRVariable()
   )
 }
@@ -452,7 +505,7 @@ predicate instructionForfullyConvertedCall(Instruction instr, CallInstruction ca
 private predicate simpleOutNode(Node node, CallInstruction call) {
   operandForfullyConvertedCall(node.asOperand(), call)
   or
-  instructionForfullyConvertedCall(node.asInstruction(), call)
+  node.asUnconvertedInstruction() = call
 }
 
 /** A data flow node that represents the output of a call. */
@@ -515,7 +568,7 @@ OutNode getAnOutNode(DataFlowCall call, ReturnKind kind) {
 predicate jumpStep(Node n1, Node n2) {
   exists(Cpp::GlobalOrNamespaceVariable v |
     v =
-      n1.asInstruction()
+      n1.asUnconvertedInstruction()
           .(StoreInstruction)
           .getResultAddress()
           .(VariableAddressInstruction)
@@ -523,7 +576,7 @@ predicate jumpStep(Node n1, Node n2) {
     v = n2.asVariable()
     or
     v =
-      n2.asInstruction()
+      n2.asUnconvertedInstruction()
           .(LoadInstruction)
           .getSourceAddress()
           .(VariableAddressInstruction)
@@ -539,7 +592,9 @@ predicate jumpStep(Node n1, Node n2) {
  */
 predicate storeStep(Node node1, Content c, PostFieldUpdateNode node2) {
   exists(int indirectionIndex1, int numberOfLoads, StoreInstruction store |
-    nodeHasInstruction(node1, store, pragma[only_bind_into](indirectionIndex1)) and
+    nodeHasInstruction(node1,
+      any(EquivInstruction equiv | equiv.getUnconvertedInstruction() = store),
+      pragma[only_bind_into](indirectionIndex1)) and
     node2.getIndirectionIndex() = 1 and
     numberOfLoadsFromOperand(node2.getFieldAddress(), store.getDestinationAddressOperand(),
       numberOfLoads)
@@ -597,8 +652,8 @@ predicate nodeHasOperand(Node node, Operand operand, int indirectionIndex) {
 
 // Needed to join on both an instruction and an index at the same time.
 pragma[noinline]
-predicate nodeHasInstruction(Node node, Instruction instr, int indirectionIndex) {
-  node.asInstruction() = instr and indirectionIndex = 0
+predicate nodeHasInstruction(Node node, EquivInstruction instr, int indirectionIndex) {
+  node.asUnconvertedInstruction() = instr.getUnconvertedInstruction() and indirectionIndex = 0
   or
   hasInstructionAndIndex(node, instr, indirectionIndex)
 }

@@ -1,0 +1,9 @@
+| sources-and-sinks.cpp:6:18:6:30 | call to getenv | Unexpected result: local_source=6:18 |
+| sources-and-sinks.cpp:6:18:6:30 | call to getenv indirection | Unexpected result: local_source=6:18 |
+| sources-and-sinks.cpp:6:33:6:49 | // $ local_source | Missing result:local_source= |
+| sources-and-sinks.cpp:7:18:7:37 | call to secure_getenv | Unexpected result: local_source=7:18 |
+| sources-and-sinks.cpp:7:18:7:37 | call to secure_getenv indirection | Unexpected result: local_source=7:18 |
+| sources-and-sinks.cpp:7:40:7:56 | // $ local_source | Missing result:local_source= |
+| sources-and-sinks.cpp:8:18:8:33 | call to _wgetenv | Unexpected result: local_source=8:18 |
+| sources-and-sinks.cpp:8:18:8:33 | call to _wgetenv indirection | Unexpected result: local_source=8:18 |
+| sources-and-sinks.cpp:8:36:8:52 | // $ local_source | Missing result:local_source= |

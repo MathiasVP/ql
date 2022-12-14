@@ -97,9 +97,9 @@ private class ToGlobalVarTaintTrackingCfg extends TaintTracking::Configuration {
   }
 
   override predicate isAdditionalTaintStep(DataFlow::Node n1, DataFlow::Node n2) {
-    writesVariable(n1.asInstruction(), n2.asVariable().(GlobalOrNamespaceVariable))
+    writesVariable(n1.asUnconvertedInstruction(), n2.asVariable().(GlobalOrNamespaceVariable))
     or
-    readsVariable(n2.asInstruction(), n1.asVariable().(GlobalOrNamespaceVariable))
+    readsVariable(n2.asUnconvertedInstruction(), n1.asVariable().(GlobalOrNamespaceVariable))
   }
 
   override predicate isSanitizer(DataFlow::Node node) { nodeIsBarrier(node) }
@@ -122,7 +122,7 @@ private class FromGlobalVarTaintTrackingCfg extends TaintTracking2::Configuratio
     // Additional step for flow out of variables. There is no flow _into_
     // variables in this configuration, so this step only serves to take flow
     // out of a variable that's a source.
-    readsVariable(n2.asInstruction(), n1.asVariable())
+    readsVariable(n2.asUnconvertedInstruction(), n1.asVariable())
   }
 
   override predicate isSanitizer(DataFlow::Node node) { nodeIsBarrier(node) }
@@ -168,8 +168,8 @@ private predicate hasUpperBoundsCheck(Variable var) {
 private predicate nodeIsBarrierEqualityCandidate(
   DataFlow::Node node, Operand access, Variable checkedVar
 ) {
-  readsVariable(node.asInstruction(), checkedVar) and
-  any(IRGuardCondition guard).ensuresEq(access, _, _, node.asInstruction().getBlock(), true)
+  readsVariable(node.asUnconvertedInstruction(), checkedVar) and
+  any(IRGuardCondition guard).ensuresEq(access, _, _, node.asUnconvertedInstruction().getBlock(), true)
 }
 
 cached
@@ -211,7 +211,7 @@ private module Cached {
     or
     // don't use dataflow into binary instructions if both operands are unpredictable
     exists(BinaryInstruction iTo |
-      iTo = node.asInstruction() and
+      iTo = node.asUnconvertedInstruction() and
       not predictableInstruction(iTo.getLeft()) and
       not predictableInstruction(iTo.getRight()) and
       // propagate taint from either the pointer or the offset, regardless of predictability
@@ -221,7 +221,7 @@ private module Cached {
     // don't use dataflow through calls to pure functions if two or more operands
     // are unpredictable
     exists(Instruction iFrom1, Instruction iFrom2, CallInstruction iTo |
-      iTo = node.asInstruction() and
+      iTo = node.asUnconvertedInstruction() and
       isPureFunction(iTo.getStaticCallTarget().getName()) and
       iFrom1 = iTo.getAnArgument() and
       iFrom2 = iTo.getAnArgument() and
@@ -250,7 +250,7 @@ private module Cached {
     // For compatibility, send flow into a `Variable` if there is flow to any
     // Load or Store of that variable.
     exists(CopyInstruction copy |
-      copy.getSourceValue() = sink.asInstruction() and
+      copy.getSourceValue() = sink.asInstruction() and // TODO
       (
         readsVariable(copy, result) or
         writesVariable(copy, result)
@@ -292,7 +292,7 @@ private module Cached {
       ) and
       call.getStaticCallTarget() = func and
       modelOut.isReturnValueDeref() and
-      call = n2.asInstruction()
+      call = n2.asUnconvertedInstruction()
     )
   }
 }
@@ -417,9 +417,9 @@ module TaintedWithPath {
     override predicate isAdditionalTaintStep(DataFlow::Node n1, DataFlow::Node n2) {
       // Steps into and out of global variables
       exists(TaintTrackingConfiguration cfg | cfg.taintThroughGlobals() |
-        writesVariable(n1.asInstruction(), n2.asVariable().(GlobalOrNamespaceVariable))
+        writesVariable(n1.asUnconvertedInstruction(), n2.asVariable().(GlobalOrNamespaceVariable))
         or
-        readsVariable(n2.asInstruction(), n1.asVariable().(GlobalOrNamespaceVariable))
+        readsVariable(n2.asUnconvertedInstruction(), n1.asVariable().(GlobalOrNamespaceVariable))
       )
       or
       additionalTaintStep(n1, n2)
@@ -491,7 +491,7 @@ module TaintedWithPath {
     /** Gets the element that `pathNode` wraps, if any. */
     Element getElementFromPathNode(PathNode pathNode) {
       exists(DataFlow::Node node | node = pathNode.(WrapPathNode).inner().getNode() |
-        result = node.asInstruction().getAst()
+        result = node.asUnconvertedInstruction().getAst()
         or
         result = node.asOperand().getDef().getAst()
       )
