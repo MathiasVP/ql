@@ -1,8 +1,8 @@
 uniqueEnclosingCallable
-| globals.cpp:9:5:9:19 | VariableAddress indirection | Node should have one enclosing callable but has 0. |
-| globals.cpp:9:5:9:19 | VariableAddress indirection | Node should have one enclosing callable but has 0. |
-| globals.cpp:16:12:16:26 | VariableAddress indirection | Node should have one enclosing callable but has 0. |
-| globals.cpp:16:12:16:26 | VariableAddress indirection | Node should have one enclosing callable but has 0. |
+| globals.cpp:9:5:9:19 | r9_3 indirection | Node should have one enclosing callable but has 0. |
+| globals.cpp:9:5:9:19 | r9_3 indirection | Node should have one enclosing callable but has 0. |
+| globals.cpp:16:12:16:26 | r16_3 indirection | Node should have one enclosing callable but has 0. |
+| globals.cpp:16:12:16:26 | r16_3 indirection | Node should have one enclosing callable but has 0. |
 uniqueType
 uniqueNodeLocation
 | BarrierGuard.cpp:2:11:2:13 | (unnamed parameter 0) | Node should have one location but has 6. |
@@ -22,6 +22,24 @@ uniqueNodeLocation
 missingLocation
 | Nodes without location: 4 |
 uniqueNodeToString
+| dispatch.cpp:78:23:78:39 | * ... | Node should have one toString but has 2. |
+| dispatch.cpp:78:23:78:39 | call to allocateBottom | Node should have one toString but has 2. |
+| test.cpp:115:3:115:6 | * ... | Node should have one toString but has 2. |
+| test.cpp:115:3:115:6 | out | Node should have one toString but has 2. |
+| test.cpp:120:3:120:6 | * ... | Node should have one toString but has 2. |
+| test.cpp:120:3:120:6 | out | Node should have one toString but has 2. |
+| test.cpp:125:3:125:6 | * ... | Node should have one toString but has 2. |
+| test.cpp:125:3:125:6 | out | Node should have one toString but has 2. |
+| test.cpp:457:9:457:22 | (statement expression) | Node should have one toString but has 2. |
+| test.cpp:457:9:457:22 | source1 | Node should have one toString but has 2. |
+| test.cpp:458:9:458:21 | (statement expression) | Node should have one toString but has 2. |
+| test.cpp:458:9:458:21 | clean1 | Node should have one toString but has 2. |
+| test.cpp:460:15:467:4 | (statement expression) | Node should have one toString but has 2. |
+| test.cpp:460:15:467:4 | tmp | Node should have one toString but has 2. |
+| test.cpp:472:3:472:4 | * ... | Node should have one toString but has 2. |
+| test.cpp:472:3:472:4 | p | Node should have one toString but has 2. |
+| test.cpp:506:3:506:4 | * ... | Node should have one toString but has 2. |
+| test.cpp:506:3:506:4 | p | Node should have one toString but has 2. |
 missingToString
 parameterCallable
 localFlowIsLocal

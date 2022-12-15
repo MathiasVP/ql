@@ -1,3 +1,17 @@
-ERROR: asInstruction() cannot be resolved for type DataFlowUtil::Node (/Users/mathias/semmle-code/ql/cpp/ql/lib/semmle/code/cpp/ir/dataflow/internal/DefaultTaintTrackingImpl.qll:253,36-49)
 WARNING: Module TaintedWithPath has been deprecated and may be removed in future (tainted.ql:9,8-47)
 WARNING: Predicate tainted has been deprecated and may be removed in future (tainted.ql:20,49-74)
+| dispatch.cpp:51:38:51:135 | // $ ir-path=58:10 ir-path=60:17 ir-path=61:28 ir-path=62:29 ir-path=63:33 SPURIOUS: ir-path=73:30 | Missing result:ir-path=60:17 |
+| dispatch.cpp:51:38:51:135 | // $ ir-path=58:10 ir-path=60:17 ir-path=61:28 ir-path=62:29 ir-path=63:33 SPURIOUS: ir-path=73:30 | Missing result:ir-path=61:28 |
+| dispatch.cpp:51:38:51:135 | // $ ir-path=58:10 ir-path=60:17 ir-path=61:28 ir-path=62:29 ir-path=63:33 SPURIOUS: ir-path=73:30 | Missing result:ir-path=62:29 |
+| dispatch.cpp:51:38:51:135 | // $ ir-path=58:10 ir-path=60:17 ir-path=61:28 ir-path=62:29 ir-path=63:33 SPURIOUS: ir-path=73:30 | Missing result:ir-path=63:33 |
+| dispatch.cpp:60:33:60:48 | // $ ast ir-path | Missing result:ir-path= |
+| dispatch.cpp:61:44:61:59 | // $ ast ir-path | Missing result:ir-path= |
+| dispatch.cpp:62:45:62:60 | // $ ast ir-path | Missing result:ir-path= |
+| dispatch.cpp:63:49:63:64 | // $ ast ir-path | Missing result:ir-path= |
+| test_diff.cpp:81:38:81:86 | // $ ir-path=124:19 ir-path=126:43 ir-path=128:44 | Missing result:ir-path=124:19 |
+| test_diff.cpp:81:38:81:86 | // $ ir-path=124:19 ir-path=126:43 ir-path=128:44 | Missing result:ir-path=126:43 |
+| test_diff.cpp:81:38:81:86 | // $ ir-path=124:19 ir-path=126:43 ir-path=128:44 | Missing result:ir-path=128:44 |
+| test_diff.cpp:82:18:82:62 | // $ ast=124:19 ast=126:43 ast=128:44 ir-sink | Missing result:ir-sink= |
+| test_diff.cpp:124:29:124:44 | // $ ast,ir-path | Missing result:ir-path= |
+| test_diff.cpp:126:53:126:68 | // $ ast,ir-path | Missing result:ir-path= |
+| test_diff.cpp:128:54:128:69 | // $ ast,ir-path | Missing result:ir-path= |

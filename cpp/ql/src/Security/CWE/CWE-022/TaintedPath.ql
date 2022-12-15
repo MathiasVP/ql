@@ -47,15 +47,7 @@ class FileFunction extends FunctionWithWrappers {
   override predicate interestingArg(int arg) { arg = 0 }
 }
 
-Expr asSinkExpr(DataFlow::Node node) {
-  result =
-    node.asOperand()
-        .(SideEffectOperand)
-        .getUse()
-        .(ReadSideEffectInstruction)
-        .getArgumentDef()
-        .getUnconvertedResultExpression()
-}
+Expr asSinkExpr(DataFlow::Node node) { result = node.asIndirectArgument() }
 
 /**
  * Holds for a variable that has any kind of upper-bound check anywhere in the program.

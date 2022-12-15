@@ -12,6 +12,19 @@ uniqueNodeLocation
 missingLocation
 | Nodes without location: 4 |
 uniqueNodeToString
+| aliasing.cpp:106:3:106:5 | * ... | Node should have one toString but has 2. |
+| aliasing.cpp:106:3:106:5 | pa | Node should have one toString but has 2. |
+| aliasing.cpp:132:9:132:14 | & ... | Node should have one toString but has 3. |
+| aliasing.cpp:132:9:132:14 | * ... | Node should have one toString but has 3. |
+| aliasing.cpp:132:9:132:14 | xs | Node should have one toString but has 3. |
+| aliasing.cpp:136:15:136:17 | + ... | Node should have one toString but has 2. |
+| aliasing.cpp:136:15:136:17 | xs | Node should have one toString but has 2. |
+| aliasing.cpp:137:9:137:11 | + ... | Node should have one toString but has 2. |
+| aliasing.cpp:137:9:137:11 | xs | Node should have one toString but has 2. |
+| by_reference.cpp:92:3:92:5 | * ... | Node should have one toString but has 2. |
+| by_reference.cpp:92:3:92:5 | pa | Node should have one toString but has 2. |
+| qualifiers.cpp:37:19:37:35 | * ... | Node should have one toString but has 2. |
+| qualifiers.cpp:37:19:37:35 | call to getInner | Node should have one toString but has 2. |
 missingToString
 parameterCallable
 localFlowIsLocal
@@ -33,20 +46,12 @@ postIsNotPre
 | D.cpp:56:15:56:24 | new indirection | PostUpdateNode should not equal its pre-update node. |
 postHasUniquePre
 uniquePostUpdate
-| aliasing.cpp:70:11:70:11 | VariableAddress indirection | Node has multiple PostUpdateNodes. |
-| aliasing.cpp:77:11:77:11 | VariableAddress indirection | Node has multiple PostUpdateNodes. |
-| aliasing.cpp:84:11:84:11 | VariableAddress indirection | Node has multiple PostUpdateNodes. |
-| aliasing.cpp:91:11:91:11 | VariableAddress indirection | Node has multiple PostUpdateNodes. |
-| complex.cpp:22:3:22:5 | this indirection | Node has multiple PostUpdateNodes. |
-| complex.cpp:25:7:25:7 | this indirection | Node has multiple PostUpdateNodes. |
-| complex.cpp:42:10:42:14 | inner indirection | Node has multiple PostUpdateNodes. |
-| complex.cpp:43:10:43:14 | inner indirection | Node has multiple PostUpdateNodes. |
-| complex.cpp:53:6:53:10 | inner indirection | Node has multiple PostUpdateNodes. |
-| complex.cpp:54:6:54:10 | inner indirection | Node has multiple PostUpdateNodes. |
-| complex.cpp:55:6:55:10 | inner indirection | Node has multiple PostUpdateNodes. |
-| complex.cpp:56:6:56:10 | inner indirection | Node has multiple PostUpdateNodes. |
-| struct_init.c:26:16:26:20 | VariableAddress indirection | Node has multiple PostUpdateNodes. |
-| struct_init.c:41:16:41:20 | VariableAddress indirection | Node has multiple PostUpdateNodes. |
+| aliasing.cpp:70:11:70:11 | r70_1 indirection | Node has multiple PostUpdateNodes. |
+| aliasing.cpp:77:11:77:11 | r77_1 indirection | Node has multiple PostUpdateNodes. |
+| aliasing.cpp:84:11:84:11 | r84_1 indirection | Node has multiple PostUpdateNodes. |
+| aliasing.cpp:91:11:91:11 | r91_1 indirection | Node has multiple PostUpdateNodes. |
+| struct_init.c:26:16:26:20 | r26_1 indirection | Node has multiple PostUpdateNodes. |
+| struct_init.c:41:16:41:20 | r41_1 indirection | Node has multiple PostUpdateNodes. |
 postIsInSameCallable
 reverseRead
 argHasPostUpdate

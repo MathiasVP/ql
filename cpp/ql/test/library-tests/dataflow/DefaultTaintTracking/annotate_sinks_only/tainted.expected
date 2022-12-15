@@ -1,3 +1,2 @@
-ERROR: asInstruction() cannot be resolved for type DataFlowUtil::Node (/Users/mathias/semmle-code/ql/cpp/ql/lib/semmle/code/cpp/ir/dataflow/internal/DefaultTaintTrackingImpl.qll:253,36-49)
 WARNING: Module TaintedWithPath has been deprecated and may be removed in future (tainted.ql:10,8-47)
 WARNING: Predicate tainted has been deprecated and may be removed in future (tainted.ql:21,3-28)

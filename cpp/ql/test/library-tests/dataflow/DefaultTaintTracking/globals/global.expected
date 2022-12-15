@@ -1,3 +1,2 @@
-ERROR: asInstruction() cannot be resolved for type DataFlowUtil::Node (/Users/mathias/semmle-code/ql/cpp/ql/lib/semmle/code/cpp/ir/dataflow/internal/DefaultTaintTrackingImpl.qll:253,36-49)
 WARNING: Predicate taintedIncludingGlobalVars has been deprecated and may be removed in future (global.ql:8,3-47)
 WARNING: Predicate taintedIncludingGlobalVars has been deprecated and may be removed in future (global.ql:12,3-53)

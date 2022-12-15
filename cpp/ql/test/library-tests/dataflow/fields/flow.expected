@@ -1,1 +1,2 @@
+| A.cpp:43:16:43:32 | // $ ast ir=41:15 | Missing result:ir=41:15 |
 | realistic.cpp:61:59:61:84 | // $ ast ir=53:47 ir=53:55 | Missing result:ir=53:55 |
