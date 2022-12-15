@@ -143,7 +143,9 @@ private module VirtualDispatch {
   private class DataSensitiveExprCall extends DataSensitiveCall {
     DataSensitiveExprCall() { not exists(this.getStaticCallTarget()) }
 
-    override DataFlow::Node getDispatchValue() { result.asOperand() = this.getCallTargetOperand() }
+    override DataFlow::Node getDispatchValue() {
+      result.asConvertedOperand() = this.getCallTargetOperand()
+    }
 
     override Function resolve() {
       exists(FunctionInstruction fi |
@@ -251,7 +253,7 @@ private predicate mayBenefitFromCallContext(
   f = pragma[only_bind_out](call).getEnclosingCallable() and
   exists(InitializeParameterInstruction init |
     not exists(call.getStaticCallTarget()) and
-    init.getEnclosingFunction() = f and
+    pragma[only_bind_out](init.getEnclosingFunction()) = f and
     call.flowsFrom(DataFlow::instructionNode(init), _) and
     init.getParameter().getIndex() = arg
   )

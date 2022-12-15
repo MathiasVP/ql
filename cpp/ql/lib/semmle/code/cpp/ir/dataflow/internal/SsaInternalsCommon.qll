@@ -342,12 +342,12 @@ private module Cached {
    */
   cached
   predicate isUse(
-    boolean certain, Operand op, BaseSourceVariableInstruction base, int ind, int indirectionIndex
+    boolean certain, EquivOperand op, BaseSourceVariableInstruction base, int ind,
+    int indirectionIndex
   ) {
-    not ignoreOperand(op) and
     certain = true and
     exists(LanguageType type, int upper, int ind0 |
-      type = getLanguageType(op) and
+      type = getLanguageType(op.getConvertedOperand()) and
       upper = countIndirectionsForCppType(type) and
       isUseImpl(op, base, ind0) and
       ind = ind0 + [0 .. upper] and
@@ -363,10 +363,10 @@ private module Cached {
    * instead associated with the operand returned by this predicate.
    */
   cached
-  Operand getIRRepresentationOfIndirectOperand(Operand operand, int indirectionIndex) {
+  EquivOperand getIRRepresentationOfIndirectOperand(EquivOperand operand, int indirectionIndex) {
     exists(Instruction load |
-      isDereference(load, operand) and
-      result = unique( | | load.getAUse()) and
+      isDereference(load, operand.getAnOperand()) and
+      result.getUnconvertedOperand() = unique( | | load.getAUse()) and
       isUseImpl(operand, _, indirectionIndex - 1)
     )
   }
@@ -379,10 +379,12 @@ private module Cached {
    * instead associated with the instruction returned by this predicate.
    */
   cached
-  EquivInstruction getIRRepresentationOfIndirectInstruction(EquivInstruction instr, int indirectionIndex) {
-    exists(Instruction load, Operand address |
-      address.getDef() = instr.getConvertedInstruction() and
-      isDereference(load, address) and
+  EquivInstruction getIRRepresentationOfIndirectInstruction(
+    EquivInstruction instr, int indirectionIndex
+  ) {
+    exists(Instruction load, EquivOperand address |
+      address.getUnconvertedOperand().getDef() = instr.getConvertedInstruction() and
+      isDereference(load, address.getAnOperand()) and
       isUseImpl(address, _, indirectionIndex - 1) and
       result = instr
     )
@@ -392,24 +394,27 @@ private module Cached {
    * Holds if `operand` is a use of an SSA variable rooted at `base`, and the
    * path from `base` to `operand` passes through `ind` load-like instructions.
    */
-  private predicate isUseImpl(Operand operand, BaseSourceVariableInstruction base, int ind) {
+  private predicate isUseImpl(EquivOperand operand, BaseSourceVariableInstruction base, int ind) {
     DataFlowImplCommon::forceCachingInSameStage() and
     ind = 0 and
-    operand = base.getAUse()
+    operand.getUnconvertedOperand() = base.getAUse()
     or
-    exists(Operand mid, Instruction instr |
+    exists(EquivOperand mid, Instruction instr |
       isUseImpl(mid, base, ind) and
-      instr = operand.getDef() and
-      conversionFlow(mid, instr, false)
+      instr = operand.getAnOperand().getDef() and
+      conversionFlow(mid.getConvertedOperand(), instr, false)
     )
     or
     exists(int ind0 |
-      exists(Operand address |
-        isDereference(operand.getDef(), address) and
+      exists(EquivOperand address |
+        isDereference(operand.getUnconvertedOperand().getDef(), address.getUnconvertedOperand()) and
         isUseImpl(address, base, ind0)
       )
       or
-      isUseImpl(operand.getDef().(InitializeParameterInstruction).getAnOperand(), base, ind0)
+      isUseImpl(any(EquivOperand equiv |
+          equiv.getConvertedOperand() =
+            operand.getUnconvertedOperand().getDef().(InitializeParameterInstruction).getAnOperand()
+        ), base, ind0)
     |
       ind0 = ind - 1
     )
@@ -425,13 +430,13 @@ private module Cached {
    */
   cached
   predicate isDef(
-    boolean certain, Node0Impl value, Operand address, BaseSourceVariableInstruction base, int ind,
-    int indirectionIndex
+    boolean certain, Node0Impl value, EquivOperand address, BaseSourceVariableInstruction base,
+    int ind, int indirectionIndex
   ) {
     exists(int ind0, CppType type, int lower, int upper |
-      isWrite(value, address, certain) and
+      isWrite(value, address.getAnOperand(), certain) and
       isDefImpl(address, base, ind0) and
-      type = getLanguageType(address) and
+      type = getLanguageType(address.getConvertedOperand()) and
       upper = countIndirectionsForCppType(type) and
       ind = ind0 + [lower .. upper] and
       indirectionIndex = ind - (ind0 + lower) and
@@ -446,24 +451,27 @@ private module Cached {
    * Note: Unlike `isUseImpl`, this predicate recurses through pointer-arithmetic
    * instructions.
    */
-  private predicate isDefImpl(Operand address, BaseSourceVariableInstruction base, int ind) {
+  private predicate isDefImpl(EquivOperand address, BaseSourceVariableInstruction base, int ind) {
     DataFlowImplCommon::forceCachingInSameStage() and
     ind = 0 and
-    address = base.getAUse()
+    address.getUnconvertedOperand() = base.getAUse()
     or
-    exists(Operand mid, Instruction instr |
+    exists(EquivOperand mid, Instruction instr |
       isDefImpl(mid, base, ind) and
-      instr = address.getDef() and
-      conversionFlow(mid, instr, _)
+      instr = address.getAnOperand().getDef() and
+      conversionFlow(mid.getConvertedOperand(), instr, _)
     )
     or
     exists(int ind0 |
-      exists(Operand operand |
-        isDereference(address.getDef(), operand) and
+      exists(EquivOperand operand |
+        isDereference(address.getUnconvertedOperand().getDef(), operand.getAnOperand()) and
         isDefImpl(operand, base, ind - 1)
       )
       or
-      isDefImpl(address.getDef().(InitializeParameterInstruction).getAnOperand(), base, ind0)
+      isUseImpl(any(EquivOperand equiv |
+          equiv.getConvertedOperand() =
+            address.getUnconvertedOperand().getDef().(InitializeParameterInstruction).getAnOperand()
+        ), base, ind0)
     |
       ind0 = ind - 1
     )

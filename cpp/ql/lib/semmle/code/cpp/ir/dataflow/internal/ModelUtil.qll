@@ -6,6 +6,7 @@
 private import semmle.code.cpp.ir.IR
 private import semmle.code.cpp.ir.dataflow.DataFlow
 private import DataFlowUtil
+private import DataFlowPrivate
 private import SsaInternals as Ssa
 
 /**
@@ -14,13 +15,15 @@ private import SsaInternals as Ssa
 DataFlow::Node callInput(CallInstruction call, FunctionInput input) {
   // An argument or qualifier
   exists(int index |
-    result.asOperand() = call.getArgumentOperand(index) and
+    result.asConvertedOperand() = call.getArgumentOperand(index) and
     input.isParameterOrQualifierAddress(index)
   )
   or
   // A value pointed to by an argument or qualifier
   exists(int index, int indirectionIndex |
-    hasOperandAndIndex(result, call.getArgumentOperand(index), indirectionIndex) and
+    hasOperandAndIndex(result,
+      any(EquivOperand equiv | equiv.getConvertedOperand() = call.getArgumentOperand(index)),
+      indirectionIndex) and
     input.isParameterDerefOrQualifierObject(index, indirectionIndex)
   )
   or
@@ -55,9 +58,10 @@ Node callOutput(CallInstruction call, FunctionOutput output) {
 DataFlow::Node callInput(CallInstruction call, FunctionInput input, int d) {
   exists(DataFlow::Node n | n = callInput(call, input) and d > 0 |
     // An argument or qualifier
-    hasOperandAndIndex(result, n.asOperand(), d)
+    hasOperandAndIndex(result,
+      any(EquivOperand equiv | equiv.getUnconvertedOperand() = n.asUnconvertedOperand()), d)
     or
-    exists(Operand operand, int indirectionIndex |
+    exists(EquivOperand operand, int indirectionIndex |
       // A value pointed to by an argument or qualifier
       hasOperandAndIndex(n, operand, indirectionIndex) and
       hasOperandAndIndex(result, operand, indirectionIndex + d)
@@ -85,7 +89,7 @@ Node callOutput(CallInstruction call, FunctionOutput output, int d) {
     n.asUnconvertedInstruction() = result.asUnconvertedInstruction()
     or
     // The side effect of a call on the value pointed to by an argument or qualifier
-    exists(Operand operand, int indirectionIndex |
+    exists(EquivOperand operand, int indirectionIndex |
       Ssa::outNodeHasAddressAndIndex(n, operand, indirectionIndex) and
       Ssa::outNodeHasAddressAndIndex(result, operand, indirectionIndex + d)
     )

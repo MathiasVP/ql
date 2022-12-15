@@ -169,7 +169,8 @@ private predicate nodeIsBarrierEqualityCandidate(
   DataFlow::Node node, Operand access, Variable checkedVar
 ) {
   readsVariable(node.asUnconvertedInstruction(), checkedVar) and
-  any(IRGuardCondition guard).ensuresEq(access, _, _, node.asUnconvertedInstruction().getBlock(), true)
+  any(IRGuardCondition guard)
+      .ensuresEq(access, _, _, node.asUnconvertedInstruction().getBlock(), true)
 }
 
 cached
@@ -250,7 +251,7 @@ private module Cached {
     // For compatibility, send flow into a `Variable` if there is flow to any
     // Load or Store of that variable.
     exists(CopyInstruction copy |
-      copy.getSourceValue() = sink.asInstruction() and // TODO
+      copy.getSourceValue() = sink.asConvertedInstruction() and
       (
         readsVariable(copy, result) or
         writesVariable(copy, result)
@@ -269,7 +270,7 @@ private module Cached {
     result.(AssignOperation).getAnOperand() = sink.asExpr()
     or
     result =
-      sink.asOperand()
+      sink.asConvertedOperand()
           .(SideEffectOperand)
           .getUse()
           .(ReadSideEffectInstruction)
@@ -493,7 +494,7 @@ module TaintedWithPath {
       exists(DataFlow::Node node | node = pathNode.(WrapPathNode).inner().getNode() |
         result = node.asUnconvertedInstruction().getAst()
         or
-        result = node.asOperand().getDef().getAst()
+        result = node.asUnconvertedOperand().getDef().getAst()
       )
       or
       result = pathNode.(EndpointPathNode).inner()

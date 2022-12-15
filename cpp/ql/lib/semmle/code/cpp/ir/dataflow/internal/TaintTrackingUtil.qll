@@ -24,12 +24,12 @@ predicate localTaintStep(DataFlow::Node nodeFrom, DataFlow::Node nodeTo) {
  */
 cached
 predicate localAdditionalTaintStep(DataFlow::Node nodeFrom, DataFlow::Node nodeTo) {
-  operandToInstructionTaintStep(nodeFrom.asOperand(), nodeTo.asUnconvertedInstruction()) // TODO: Is this right?
+  operandToInstructionTaintStep(nodeFrom.asConvertedOperand(), nodeTo.asUnconvertedInstruction()) // TODO: Is this right?
   or
   modeledTaintStep(nodeFrom, nodeTo)
   or
   // Flow from `op` to `*op`.
-  exists(Operand operand, int indirectionIndex |
+  exists(EquivOperand operand, int indirectionIndex |
     nodeHasOperand(nodeFrom, operand, indirectionIndex) and
     nodeHasOperand(nodeTo, operand, indirectionIndex - 1)
   )
@@ -44,7 +44,9 @@ predicate localAdditionalTaintStep(DataFlow::Node nodeFrom, DataFlow::Node nodeT
   // indirection of the pointer arithmetic instruction. This provides flow from `source`
   // in `x[source]` to the result of the associated load instruction.
   exists(PointerArithmeticInstruction pai, int indirectionIndex |
-    nodeHasOperand(nodeFrom, pai.getAnOperand(), pragma[only_bind_into](indirectionIndex)) and
+    nodeHasOperand(nodeFrom,
+      any(EquivOperand equiv | equiv.getConvertedOperand() = pai.getAnOperand()),
+      pragma[only_bind_into](indirectionIndex)) and
     hasInstructionAndIndex(nodeTo,
       any(EquivInstruction equiv | equiv.getUnconvertedInstruction() = pai), indirectionIndex + 1)
   )
@@ -197,7 +199,7 @@ predicate modeledTaintStep(DataFlow::Node nodeIn, DataFlow::Node nodeOut) {
     FunctionInput modelIn, FunctionOutput modelOut
   |
     indirectArgument = callInput(call, modelIn) and
-    indirectArgument.getAddressOperand() = nodeIn.asOperand() and
+    indirectArgument.getUnconvertedAddressOperand() = nodeIn.asUnconvertedOperand() and
     call.getStaticCallTarget() = func and
     (
       func.(DataFlowFunction).hasDataFlow(modelIn, modelOut)

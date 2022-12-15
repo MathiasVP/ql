@@ -84,10 +84,9 @@ import SourceVariables
  * Holds if the `(operand, indirectionIndex)` columns should be
  * assigned a `RawIndirectOperand` value.
  */
-predicate hasRawIndirectOperand(Operand op, int indirectionIndex) {
+predicate hasRawIndirectOperand(EquivOperand op, int indirectionIndex) {
   exists(CppType type, int m |
-    not ignoreOperand(op) and
-    type = getLanguageType(op) and
+    type = getLanguageType(op.getConvertedOperand()) and
     m = countIndirectionsForCppType(type) and
     indirectionIndex = [1 .. m] and
     not exists(getIRRepresentationOfIndirectOperand(op, indirectionIndex))
@@ -100,7 +99,6 @@ predicate hasRawIndirectOperand(Operand op, int indirectionIndex) {
  */
 predicate hasRawIndirectInstruction(EquivInstruction instr, int indirectionIndex) {
   exists(CppType type, int m |
-    not ignoreInstruction(instr.getUnconvertedInstruction()) and
     type = getResultLanguageType(instr.getConvertedInstruction()) and
     m = countIndirectionsForCppType(type) and
     indirectionIndex = [1 .. m] and
@@ -110,13 +108,13 @@ predicate hasRawIndirectInstruction(EquivInstruction instr, int indirectionIndex
 
 cached
 private newtype TDefOrUseImpl =
-  TDefImpl(Operand address, int indirectionIndex) {
+  TDefImpl(EquivOperand address, int indirectionIndex) {
     isDef(_, _, address, _, _, indirectionIndex) and
     // We only include the definition if the SSA pruning stage
     // concluded that the definition is live after the write.
-    any(SsaInternals0::Def def).getAddressOperand() = address
+    any(SsaInternals0::Def def).getConvertedAddressOperand() = address.getConvertedOperand()
   } or
-  TUseImpl(Operand operand, int indirectionIndex) {
+  TUseImpl(EquivOperand operand, int indirectionIndex) {
     isUse(_, operand, _, _, indirectionIndex) and
     not isDef(_, _, operand, _, _, _)
   }
@@ -193,14 +191,16 @@ private predicate sourceVariableHasBaseAndIndex(SourceVariable v, BaseSourceVari
 }
 
 class DefImpl extends DefOrUseImpl, TDefImpl {
-  Operand address;
+  EquivOperand address;
   int ind;
 
   DefImpl() { this = TDefImpl(address, ind) }
 
   override BaseSourceVariableInstruction getBase() { isDef(_, _, address, result, _, _) }
 
-  Operand getAddressOperand() { result = address }
+  Operand getConvertedAddressOperand() { result = address.getConvertedOperand() }
+
+  Operand getUnconvertedAddressOperand() { result = address.getUnconvertedOperand() }
 
   int getIndirection() { isDef(_, _, address, _, result, ind) }
 
@@ -210,32 +210,38 @@ class DefImpl extends DefOrUseImpl, TDefImpl {
 
   override string toString() { result = "DefImpl" }
 
-  override IRBlock getBlock() { result = this.getAddressOperand().getUse().getBlock() }
+  override IRBlock getBlock() { result = this.getUnconvertedAddressOperand().getUse().getBlock() }
 
-  override Cpp::Location getLocation() { result = this.getAddressOperand().getUse().getLocation() }
+  override Cpp::Location getLocation() {
+    result = this.getConvertedAddressOperand().getUse().getLocation()
+  }
 
   final override predicate hasIndexInBlock(IRBlock block, int index) {
-    this.getAddressOperand().getUse() = block.getInstruction(index)
+    this.getConvertedAddressOperand().getUse() = block.getInstruction(index)
   }
 
   predicate isCertain() { isDef(true, _, address, _, _, ind) }
 }
 
 class UseImpl extends DefOrUseImpl, TUseImpl {
-  Operand operand;
+  EquivOperand operand;
   int ind;
 
   UseImpl() { this = TUseImpl(operand, ind) }
 
-  Operand getOperand() { result = operand }
+  EquivOperand getEquivOperand() { result = operand }
+
+  Operand getConvertedOperand() { result = operand.getConvertedOperand() }
+
+  Operand getUnconvertedOperand() { result = operand.getUnconvertedOperand() }
 
   override string toString() { result = "UseImpl" }
 
   final override predicate hasIndexInBlock(IRBlock block, int index) {
-    operand.getUse() = block.getInstruction(index)
+    operand.getConvertedOperand().getUse() = block.getInstruction(index)
   }
 
-  final override IRBlock getBlock() { result = operand.getUse().getBlock() }
+  final override IRBlock getBlock() { result = operand.getUnconvertedOperand().getUse().getBlock() }
 
   final override Cpp::Location getLocation() { result = operand.getLocation() }
 
@@ -277,7 +283,7 @@ predicate adjacentDefRead(DefOrUse defOrUse1, UseOrPhi use) {
 private predicate useToNode(UseOrPhi use, Node nodeTo) {
   exists(UseImpl useImpl |
     useImpl = use.asDefOrUse() and
-    nodeHasOperand(nodeTo, useImpl.getOperand(), useImpl.getIndirectionIndex())
+    nodeHasOperand(nodeTo, useImpl.getEquivOperand(), useImpl.getIndirectionIndex())
   )
   or
   nodeTo.(SsaPhiNode).getPhiNode() = use.asPhi()
@@ -285,14 +291,14 @@ private predicate useToNode(UseOrPhi use, Node nodeTo) {
 
 pragma[noinline]
 predicate outNodeHasAddressAndIndex(
-  IndirectArgumentOutNode out, Operand address, int indirectionIndex
+  IndirectArgumentOutNode out, EquivOperand address, int indirectionIndex
 ) {
-  out.getAddressOperand() = address and
+  out.getUnconvertedAddressOperand() = address.getUnconvertedOperand() and
   out.getIndirectionIndex() = indirectionIndex
 }
 
 private predicate defToNode(Node nodeFrom, Def def) {
-  nodeHasOperand(nodeFrom, def.getValue().asOperand(), def.getIndirectionIndex())
+  nodeHasOperand(nodeFrom, def.getValue().asEquivOperand(), def.getIndirectionIndex())
   or
   nodeHasInstruction(nodeFrom,
     any(EquivInstruction equiv |
@@ -322,11 +328,11 @@ private predicate indirectConversionFlowStep(Node nFrom, Node nTo) {
     nodeToDefOrUse(nTo, defOrUse) and
     adjacentDefRead(defOrUse, _)
   ) and
-  exists(Operand op1, Operand op2, int indirectionIndex, Instruction instr |
+  exists(EquivOperand op1, EquivOperand op2, int indirectionIndex, Instruction instr |
     hasOperandAndIndex(nFrom, op1, pragma[only_bind_into](indirectionIndex)) and
     hasOperandAndIndex(nTo, op2, pragma[only_bind_into](indirectionIndex)) and
-    instr = op2.getDef() and
-    conversionFlow(op1, instr, _)
+    instr = op2.getConvertedOperand().getDef() and
+    conversionFlow(op1.getAnOperand(), instr, true)
   )
 }
 
@@ -346,8 +352,8 @@ private predicate indirectConversionFlowStep(Node nFrom, Node nTo) {
  * first use that has provides use-use flow, and uses that target as the target of the `nodeFrom`.
  */
 private predicate adjustForPointerArith(Node nodeFrom, UseOrPhi use) {
-  nodeFrom = any(PostUpdateNode pun).getPreUpdateNode() and
   exists(DefOrUse defOrUse, Node adjusted |
+    nodeFrom = any(PostUpdateNode pun).getPreUpdateNode() and
     indirectConversionFlowStep*(adjusted, nodeFrom) and
     nodeToDefOrUse(adjusted, defOrUse) and
     adjacentDefRead(defOrUse, use)
@@ -530,9 +536,13 @@ class UseOrPhi extends SsaDefOrUse {
 class Def extends DefOrUse {
   override DefImpl defOrUse;
 
-  Operand getAddressOperand() { result = defOrUse.getAddressOperand() }
+  Operand getConvertedAddressOperand() { result = defOrUse.getConvertedAddressOperand() }
 
-  Instruction getAddress() { result = this.getAddressOperand().getDef() }
+  Operand getUnconvertedAddressOperand() { result = defOrUse.getUnconvertedAddressOperand() }
+
+  Instruction getConvertedAddress() { result = this.getConvertedAddressOperand().getDef() }
+
+  Instruction getUnconvertedAddress() { result = this.getUnconvertedAddressOperand().getDef() }
 
   /**
    * This predicate ensures that joins go from `defOrUse` to the result

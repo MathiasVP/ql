@@ -29,8 +29,8 @@ private module SourceVariables {
 import SourceVariables
 
 private newtype TDefOrUseImpl =
-  TDefImpl(Operand address) { isDef(_, _, address, _, _, _) } or
-  TUseImpl(Operand operand) {
+  TDefImpl(EquivOperand address) { isDef(_, _, address, _, _, _) } or
+  TUseImpl(EquivOperand operand) {
     isUse(_, operand, _, _, _) and
     not isDef(_, _, operand, _, _, _)
   }
@@ -66,43 +66,47 @@ abstract private class DefOrUseImpl extends TDefOrUseImpl {
 }
 
 class DefImpl extends DefOrUseImpl, TDefImpl {
-  Operand address;
+  EquivOperand address;
 
   DefImpl() { this = TDefImpl(address) }
 
   override BaseSourceVariableInstruction getBase() { isDef(_, _, address, result, _, _) }
 
-  Operand getAddressOperand() { result = address }
+  Operand getConvertedAddressOperand() { result = address.getConvertedOperand() }
+
+  Operand getUnconvertedAddressOperand() { result = address.getUnconvertedOperand() }
 
   Node0Impl getValue() { isDef(_, result, address, _, _, _) }
 
   override string toString() { result = address.toString() }
 
-  override IRBlock getBlock() { result = this.getAddressOperand().getDef().getBlock() }
+  override IRBlock getBlock() { result = this.getUnconvertedAddressOperand().getDef().getBlock() }
 
-  override Cpp::Location getLocation() { result = this.getAddressOperand().getLocation() }
+  override Cpp::Location getLocation() { result = this.getConvertedAddressOperand().getLocation() }
 
   final override predicate hasIndexInBlock(IRBlock block, int index) {
-    this.getAddressOperand().getUse() = block.getInstruction(index)
+    this.getConvertedAddressOperand().getUse() = block.getInstruction(index)
   }
 
   predicate isCertain() { isDef(true, _, address, _, _, _) }
 }
 
 class UseImpl extends DefOrUseImpl, TUseImpl {
-  Operand operand;
+  EquivOperand operand;
 
   UseImpl() { this = TUseImpl(operand) }
 
-  Operand getOperand() { result = operand }
+  Operand getConvertedOperand() { result = operand.getConvertedOperand() }
+
+  Operand getUnconvertedOperand() { result = operand.getUnconvertedOperand() }
 
   override string toString() { result = operand.toString() }
 
   final override predicate hasIndexInBlock(IRBlock block, int index) {
-    operand.getUse() = block.getInstruction(index)
+    operand.getConvertedOperand().getUse() = block.getInstruction(index)
   }
 
-  final override IRBlock getBlock() { result = operand.getUse().getBlock() }
+  final override IRBlock getBlock() { result = operand.getConvertedOperand().getUse().getBlock() }
 
   final override Cpp::Location getLocation() { result = operand.getLocation() }
 
@@ -204,9 +208,13 @@ class UseOrPhi extends SsaDefOrUse {
 class Def extends DefOrUse {
   override DefImpl defOrUse;
 
-  Operand getAddressOperand() { result = defOrUse.getAddressOperand() }
+  Operand getConvertedAddressOperand() { result = defOrUse.getConvertedAddressOperand() }
 
-  Instruction getAddress() { result = this.getAddressOperand().getDef() }
+  Operand getUnconvertedAddressOperand() { result = defOrUse.getUnconvertedAddressOperand() }
+
+  Instruction getConvertedAddress() { result = this.getConvertedAddressOperand().getDef() }
+
+  Instruction getUnconvertedAddress() { result = this.getUnconvertedAddressOperand().getDef() }
 
   Node0Impl getValue() { result = defOrUse.getValue() }
 
