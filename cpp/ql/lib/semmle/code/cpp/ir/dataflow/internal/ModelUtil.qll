@@ -12,6 +12,7 @@ private import SsaInternals as Ssa
 /**
  * Gets the instruction that goes into `input` for `call`.
  */
+pragma[nomagic]
 DataFlow::Node callInput(CallInstruction call, FunctionInput input) {
   // An argument or qualifier
   exists(int index |
@@ -33,9 +34,19 @@ DataFlow::Node callInput(CallInstruction call, FunctionInput input) {
   )
 }
 
+pragma[nomagic]
+private IndirectArgumentOutNode getIndirectArgumentOutNode(
+  CallInstruction call, int argumentIndex, int indirectionIndex
+) {
+  result.getCallInstruction() = call and
+  result.getArgumentIndex() = argumentIndex and
+  result.getIndirectionIndex() = indirectionIndex
+}
+
 /**
  * Gets the instruction that holds the `output` for `call`.
  */
+pragma[nomagic]
 Node callOutput(CallInstruction call, FunctionOutput output) {
   // The return value
   result.asUnconvertedInstruction() = call and
@@ -43,9 +54,7 @@ Node callOutput(CallInstruction call, FunctionOutput output) {
   or
   // The side effect of a call on the value pointed to by an argument or qualifier
   exists(int index, int indirectionIndex |
-    result.(IndirectArgumentOutNode).getArgumentIndex() = index and
-    result.(IndirectArgumentOutNode).getIndirectionIndex() = indirectionIndex and
-    result.(IndirectArgumentOutNode).getCallInstruction() = call and
+    result = getIndirectArgumentOutNode(call, index, indirectionIndex) and
     output.isParameterDerefOrQualifierObject(index, indirectionIndex)
   )
   or
@@ -69,6 +78,7 @@ DataFlow::Node callInput(CallInstruction call, FunctionInput input, int d) {
   )
 }
 
+pragma[nomagic]
 private IndirectReturnOutNode getIndirectReturnOutNode(CallInstruction call, int d) {
   result.getCallInstruction() = call and
   result.getIndirectionIndex() = d
