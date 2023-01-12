@@ -32,7 +32,8 @@ predicate ignoreInstruction(Instruction instr) {
     instr instanceof ChiInstruction or
     instr instanceof InitializeIndirectionInstruction or
     instr instanceof AliasedDefinitionInstruction or
-    instr instanceof InitializeNonLocalInstruction
+    instr instanceof InitializeNonLocalInstruction or
+    instr instanceof ReturnIndirectionInstruction
   )
 }
 
@@ -403,9 +404,10 @@ predicate isModifiableByCall(ArgumentOperand operand, int indirectionIndex) {
 private predicate isModifiableAtImpl(CppType cppType, int indirectionIndex) {
   indirectionIndex = [1 .. countIndirectionsForCppType(cppType)] and
   (
-    exists(PointerOrReferenceType pointerType, Type base, Type t |
-      cppType.hasType(t, _) and
+    exists(Type pointerType, Type base, Type t |
       pointerType = t.getUnderlyingType() and
+      (pointerType instanceof PointerOrReferenceType or pointerType instanceof Cpp::ArrayType) and
+      cppType.hasType(t, _) and
       base = getTypeImpl(pointerType, indirectionIndex)
     |
       // The value cannot be modified if it has a const specifier,
@@ -428,7 +430,7 @@ private predicate isModifiableAtImpl(CppType cppType, int indirectionIndex) {
  * type `t` to a function function.
  */
 bindingset[indirectionIndex]
-private predicate isModifiableAt(CppType cppType, int indirectionIndex) {
+predicate isModifiableAt(CppType cppType, int indirectionIndex) {
   isModifiableAtImpl(cppType, indirectionIndex)
   or
   exists(PointerWrapper pw, Type t |
