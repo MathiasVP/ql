@@ -360,8 +360,8 @@ class FinalParameterUse extends UseImpl, TFinalParameterUse {
   override predicate isCertain() { any() }
 
   override predicate hasIndexInBlock(IRBlock block, int index) {
-    exists(ReturnIndirectionInstruction return |
-      block.getInstruction(index + 1) = return and
+    exists(ReturnInstruction return |
+      block.getInstruction(index) = return and
       return.getEnclosingFunction() = p.getFunction()
     )
   }
