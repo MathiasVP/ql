@@ -558,7 +558,7 @@ private module Cached {
       isChiAfterIteratorDef(memory, iteratorDerefAddress, value, numberOfLoads) and
       memorySucc*(begin, memory) and
       isChiAfterBegin(container, begin) and
-      upper = countIndirectionsForCppType(container.getResultLanguageType()) and
+      upper = countIndirectionsForCppType(getResultLanguageType(container)) and
       ind = numberOfLoads + [1 .. upper] and
       indirectionIndex = ind - (numberOfLoads + 1)
     )
@@ -579,7 +579,7 @@ private module Cached {
       isChiBeforeIteratorUse(iteratorDerefAddress, memory, numberOfLoads) and
       memorySucc*(begin, memory) and
       isChiAfterBegin(container, begin) and
-      upper = countIndirectionsForCppType(container.getResultLanguageType()) and
+      upper = countIndirectionsForCppType(getResultLanguageType(container)) and
       ind = numberOfLoads + [1 .. upper] and
       indirectionIndex = ind - (numberOfLoads + 1)
     )

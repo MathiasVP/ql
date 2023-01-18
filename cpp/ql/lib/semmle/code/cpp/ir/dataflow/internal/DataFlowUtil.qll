@@ -48,11 +48,6 @@ private newtype TIRDataFlowNode =
     Ssa::hasRawIndirectInstruction(instr, indirectionIndex)
   } or
   TFinalParameterNode(Parameter p, int indirectionIndex) {
-    // exists(Ssa::CppType type |
-    //   type.hasType(p.getUnderlyingType(), _) and
-    //   indirectionIndex = [1 .. Ssa::countIndirectionsForCppType(type)] and
-    //   Ssa::isModifiableAt(type, indirectionIndex + 1)
-    // ) and
     exists(Ssa::FinalParameterUse use |
       use.getParameter() = p and
       use.getIndirectionIndex() = indirectionIndex
