@@ -142,31 +142,13 @@ predicate modeledTaintStep(DataFlow::Node nodeIn, DataFlow::Node nodeOut) {
     call.getStaticCallTarget() = func and
     func.hasTaintFlow(modelIn, modelOut)
   |
-    (
-      nodeIn = callInput(call, modelIn)
-      or
-      exists(int n |
-        modelIn.isParameterDerefOrQualifierObject(n) and
-        if n = -1
-        then nodeIn = callInput(call, any(InQualifierAddress inQualifier))
-        else nodeIn = callInput(call, any(InParameter inParam | inParam.getIndex() = n))
-      )
-    ) and
+    nodeIn = callInput(call, modelIn) and
     nodeOut = callOutput(call, modelOut)
     or
     exists(int d |
-      nodeIn = callInput(call, modelIn, d)
-      or
-      exists(int n |
-        d = 1 and
-        modelIn.isParameterDerefOrQualifierObject(n) and
-        if n = -1
-        then nodeIn = callInput(call, any(InQualifierAddress inQualifier))
-        else nodeIn = callInput(call, any(InParameter inParam | inParam.getIndex() = n))
-      )
-    |
       call.getStaticCallTarget() = func and
       func.hasTaintFlow(modelIn, modelOut) and
+      nodeIn = callInput(call, modelIn, d) and
       nodeOut = callOutput(call, modelOut, d)
     )
   )
