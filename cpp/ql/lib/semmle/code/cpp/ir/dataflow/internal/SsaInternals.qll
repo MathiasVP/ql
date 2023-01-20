@@ -121,10 +121,10 @@ private newtype TDefOrUseImpl =
     not isDef(_, _, operand, _, _, _)
   } or
   TIteratorDef(
-    Operand iteratorAddress, BaseSourceVariableInstruction container, int indirectionIndex
+    Operand iteratorDerefAddress, BaseSourceVariableInstruction container, int indirectionIndex
   ) {
-    isIteratorDef(container, iteratorAddress, _, _, indirectionIndex) and
-    any(SsaInternals0::Def def | def.isIteratorDef()).getAddressOperand() = iteratorAddress
+    isIteratorDef(container, iteratorDerefAddress, _, _, indirectionIndex) and
+    any(SsaInternals0::Def def | def.isIteratorDef()).getAddressOperand() = iteratorDerefAddress
   } or
   TIteratorUse(
     Operand iteratorAddress, BaseSourceVariableInstruction container, int indirectionIndex
@@ -174,6 +174,9 @@ abstract private class DefOrUseImpl extends TDefOrUseImpl {
 
   /** Gets the location of this element. */
   abstract Cpp::Location getLocation();
+
+  /** Gets the node associated with this use. */
+  abstract Node getNode();
 
   /**
    * Gets the index (i.e., the number of loads required) of this
@@ -264,6 +267,12 @@ private class DirectDef extends DefImpl, TDefImpl {
   override Node0Impl getValue() { isDef(_, result, address, _, _, _) }
 
   override predicate isCertain() { isDef(true, _, address, _, _, ind) }
+
+  override Node getNode() {
+    nodeHasOperand(result, this.getValue().asOperand(), this.getIndirectionIndex())
+    or
+    nodeHasInstruction(result, this.getValue().asInstruction(), this.getIndirectionIndex())
+  }
 }
 
 private class IteratorDef extends DefImpl, TIteratorDef {
@@ -278,6 +287,12 @@ private class IteratorDef extends DefImpl, TIteratorDef {
   override Node0Impl getValue() { isIteratorDef(container, address, result, _, _) }
 
   override predicate isCertain() { none() }
+
+  override Node getNode() {
+    nodeHasOperand(result, this.getValue().asOperand(), this.getIndirectionIndex())
+    or
+    nodeHasInstruction(result, this.getValue().asInstruction(), this.getIndirectionIndex())
+  }
 }
 
 abstract class UseImpl extends DefOrUseImpl {
@@ -285,9 +300,6 @@ abstract class UseImpl extends DefOrUseImpl {
 
   bindingset[ind]
   UseImpl() { any() }
-
-  /** Gets the node associated with this use. */
-  abstract Node getNode();
 
   override string toString() { result = "UseImpl" }
 
@@ -421,11 +433,7 @@ predicate outNodeHasAddressAndIndex(
 }
 
 private predicate defToNode(Node nodeFrom, Def def, boolean uncertain) {
-  (
-    nodeHasOperand(nodeFrom, def.getValue().asOperand(), def.getIndirectionIndex())
-    or
-    nodeHasInstruction(nodeFrom, def.getValue().asInstruction(), def.getIndirectionIndex())
-  ) and
+  def.getNode() = nodeFrom and
   if def.isCertain() then uncertain = false else uncertain = true
 }
 
@@ -452,11 +460,20 @@ private predicate indirectConversionFlowStep(Node nFrom, Node nTo) {
     nodeToDefOrUse(nTo, defOrUse, _) and
     adjacentDefRead(defOrUse, _)
   ) and
-  exists(Operand op1, Operand op2, int indirectionIndex, Instruction instr |
-    hasOperandAndIndex(nFrom, op1, pragma[only_bind_into](indirectionIndex)) and
-    hasOperandAndIndex(nTo, op2, pragma[only_bind_into](indirectionIndex)) and
-    instr = op2.getDef() and
-    conversionFlow(op1, instr, _)
+  (
+    exists(Operand op1, Operand op2, int indirectionIndex, Instruction instr |
+      hasOperandAndIndex(nFrom, op1, pragma[only_bind_into](indirectionIndex)) and
+      hasOperandAndIndex(nTo, op2, pragma[only_bind_into](indirectionIndex)) and
+      instr = op2.getDef() and
+      conversionFlow(op1, instr, _)
+    )
+    or
+    exists(Operand op1, Operand op2, int indirectionIndex, Instruction instr |
+      hasOperandAndIndex(nFrom, op1, pragma[only_bind_into](indirectionIndex)) and
+      hasOperandAndIndex(nTo, op2, indirectionIndex - 1) and
+      instr = op2.getDef() and
+      isDereference(instr, op1)
+    )
   )
 }
 
@@ -699,7 +716,7 @@ class UseOrPhi extends SsaDefOrUse {
   final Node getNode() {
     result = this.(Phi).getNode()
     or
-    result = this.asDefOrUse().(UseImpl).getNode()
+    result = this.asDefOrUse().getNode()
   }
 }
 
@@ -720,6 +737,8 @@ class Def extends DefOrUse {
   }
 
   Node0Impl getValue() { result = defOrUse.getValue() }
+
+  final Node getNode() { result = defOrUse.getNode() }
 
   predicate isCertain() { defOrUse.isCertain() }
 }

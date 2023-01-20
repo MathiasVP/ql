@@ -354,47 +354,59 @@ class BaseCallVariable extends BaseSourceVariable, TBaseCallVariable {
   override DataFlowType getType() { result = call.getResultType() }
 }
 
-/**
- * Holds if the value pointed to by `operand` can potentially be
- * modified be the caller.
- */
-predicate isModifiableByCall(ArgumentOperand operand, int indirectionIndex) {
-  exists(CallInstruction call, int index, CppType type |
-    indirectionIndex = [1 .. countIndirectionsForCppType(type)] and
-    type = getLanguageType(operand) and
-    call.getArgumentOperand(index) = operand and
-    if index = -1
-    then
-      // A qualifier is "modifiable" if:
-      // 1. the member function is not const specified, or
-      // 2. the member function is `const` specified, but returns a pointer or reference
-      // type that is non-const.
-      //
-      // To see why this is necessary, consider the following function:
-      // ```
-      // struct C {
-      //   void* data_;
-      //   void* data() const { return data; }
-      // };
-      // ...
-      // C c;
-      // memcpy(c.data(), source, 16)
-      // ```
-      // the data pointed to by `c.data_` is potentially modified by the call to `memcpy` even though
-      // `C::data` has a const specifier. So we further place the restriction that the type returned
-      // by `call` should not be of the form `const T*` (for some deeply const type `T`).
-      if call.getStaticCallTarget() instanceof Cpp::ConstMemberFunction
+private module IsModifiableByCall {
+  private import semmle.code.cpp.models.interfaces.Iterator as Iterator
+
+  private predicate cannotUpdate(ArgumentOperand operand) {
+    operand.getType().getUnspecifiedType() instanceof Iterator::Iterator and
+    not operand.getType().getUnspecifiedType() instanceof Cpp::PointerType and
+    operand.getCall().getStaticCallTarget().hasName("operator*")
+  }
+
+  /**
+   * Holds if the value pointed to by `operand` can potentially be
+   * modified be the caller.
+   */
+  predicate isModifiableByCall(ArgumentOperand operand, int indirectionIndex) {
+    exists(CallInstruction call, int index, CppType type | not cannotUpdate(operand) |
+      indirectionIndex = [1 .. countIndirectionsForCppType(type)] and
+      type = getLanguageType(operand) and
+      call.getArgumentOperand(index) = operand and
+      if index = -1
       then
-        exists(PointerOrReferenceType resultType |
-          resultType = call.getResultType() and
-          not resultType.isDeeplyConstBelow()
-        )
-      else any()
-    else
-      // An argument is modifiable if it's a non-const pointer or reference type.
-      isModifiableAt(type, indirectionIndex)
-  )
+        // A qualifier is "modifiable" if:
+        // 1. the member function is not const specified, or
+        // 2. the member function is `const` specified, but returns a pointer or reference
+        // type that is non-const.
+        //
+        // To see why this is necessary, consider the following function:
+        // ```
+        // struct C {
+        //   void* data_;
+        //   void* data() const { return data; }
+        // };
+        // ...
+        // C c;
+        // memcpy(c.data(), source, 16)
+        // ```
+        // the data pointed to by `c.data_` is potentially modified by the call to `memcpy` even though
+        // `C::data` has a const specifier. So we further place the restriction that the type returned
+        // by `call` should not be of the form `const T*` (for some deeply const type `T`).
+        if call.getStaticCallTarget() instanceof Cpp::ConstMemberFunction
+        then
+          exists(PointerOrReferenceType resultType |
+            resultType = call.getResultType() and
+            not resultType.isDeeplyConstBelow()
+          )
+        else any()
+      else
+        // An argument is modifiable if it's a non-const pointer or reference type.
+        isModifiableAt(type, indirectionIndex)
+    )
+  }
 }
+
+import IsModifiableByCall
 
 /**
  * Holds if `t` is a pointer or reference type that supports at least `indirectionIndex` number
@@ -406,7 +418,10 @@ private predicate isModifiableAtImpl(CppType cppType, int indirectionIndex) {
   (
     exists(Type pointerType, Type base, Type t |
       pointerType = t.getUnderlyingType() and
-      (pointerType instanceof PointerOrReferenceType or pointerType instanceof Cpp::ArrayType) and
+      (
+        pointerType = any(Indirection ind).getUnderlyingType() or
+        pointerType instanceof Cpp::ArrayType
+      ) and
       cppType.hasType(t, _) and
       base = getTypeImpl(pointerType, indirectionIndex)
     |
@@ -478,9 +493,10 @@ private module Cached {
   }
 
   /**
-   * Holds if `iteratorDerefAddress` is an address of an iterator dereference (i.e., `*it`)
-   * that is used for a write operation that writes the value `value`. The `memory` instruction
-   * represents the memory that the IR's SSA analysis determined was read by the call to `operator*`.
+   * Holds if `iteratorAddress` is an address of an iterator (i.e., `it`)
+   * that is dereferenced and then used for a write operation that writes the value `value`.
+   * The `memory` instruction represents the memory that the IR's SSA analysis determined was
+   * read by the call to `operator*`.
    *
    * The `numberOfLoads` integer represents the number of dereferences this write corresponds to
    * on the underlying container that produced the iterator.
@@ -493,11 +509,81 @@ private module Cached {
       Operand iteratorAddress
     |
       numberOfLoads >= 0 and
-      isDef(_, value, iteratorDerefAddress, iteratorBase, numberOfLoads + 2, 0) and
-      isUse(_, iteratorAddress, iteratorBase, numberOfLoads + 1, 0) and
+      isDef(_, value, iteratorDerefAddress, iteratorBase, numberOfLoads + 1, 0) and
+      isUse(_, iteratorAddress, iteratorBase, numberOfLoads, 0) and
       iteratorBase.getResultType() instanceof Interfaces::Iterator and
       isDereference(iteratorAddress.getDef(), read.getArgumentDef().getAUse()) and
       memory = read.getSideEffectOperand().getAnyDef()
+    )
+  }
+
+  private predicate isSource(Instruction instr, Operand iteratorAddress, int numberOfLoads) {
+    getAUse(instr) = iteratorAddress and
+    exists(BaseSourceVariableInstruction iteratorBase |
+      iteratorBase.getResultType() instanceof Interfaces::Iterator and
+      not iteratorBase.getResultType() instanceof Cpp::PointerType and
+      isUse(_, iteratorAddress, iteratorBase, numberOfLoads, 0)
+    )
+  }
+
+  private predicate isSink(Instruction instr, CallInstruction call) {
+    getAUse(instr).(ArgumentOperand).getCall() = call and
+    // Don't include various operations that don't modify what the iterator points to.
+    not exists(Function f | f = call.getStaticCallTarget() |
+      f instanceof Iterator::IteratorCrementOperator or
+      f instanceof Iterator::IteratorAddOperator or
+      f instanceof Iterator::IteratorSubOperator or
+      f instanceof Iterator::IteratorAssignArithmeticOperator or
+      f instanceof Iterator::IteratorCrementMemberOperator or
+      f instanceof Iterator::IteratorBinaryArithmeticMemberOperator or
+      f instanceof Iterator::IteratorAssignArithmeticMemberOperator or
+      f instanceof Iterator::IteratorAssignmentMemberOperator
+    )
+  }
+
+  private predicate convertsIntoArgumentFwd(Instruction instr) {
+    isSource(instr, _, _)
+    or
+    exists(Instruction prev | convertsIntoArgumentFwd(prev) |
+      conversionFlow(unique( | | getAUse(prev)), instr, false)
+    )
+  }
+
+  private predicate convertsIntoArgumentRev(Instruction instr) {
+    convertsIntoArgumentFwd(instr) and
+    (
+      isSink(instr, _)
+      or
+      exists(Instruction next | convertsIntoArgumentRev(next) |
+        conversionFlow(unique( | | getAUse(instr)), next, false)
+      )
+    )
+  }
+
+  private predicate convertsIntoArgument(
+    Operand iteratorAddress, CallInstruction call, int numberOfLoads
+  ) {
+    exists(Instruction iteratorAddressDef |
+      iteratorAddressDef = iteratorAddress.getDef() and
+      isSource(iteratorAddressDef, _, numberOfLoads) and
+      isSink(iteratorAddressDef, call) and
+      convertsIntoArgumentRev(pragma[only_bind_into](iteratorAddressDef))
+    )
+  }
+
+  private predicate isChiAfterIteratorArgument(
+    Instruction memory, Operand iteratorAddress, int numberOfLoads
+  ) {
+    exists(CallInstruction call | convertsIntoArgument(iteratorAddress, call, numberOfLoads) |
+      exists(ReadSideEffectInstruction read |
+        read.getPrimaryInstruction() = call and
+        read.getSideEffectOperand().getAnyDef() = memory
+      )
+      or
+      exists(LoadInstruction load |
+        iteratorAddress.getDef() = load and
+        memory = load.getSourceValueOperand().getAnyDef()
+      )
     )
   }
 
@@ -529,13 +615,14 @@ private module Cached {
    * corresponds to on the underlying container that produced the iterator.
    */
   private predicate isChiBeforeIteratorUse(
-    Operand iteratorDerefAddress, Instruction memory, int numberOfLoads
+    Operand iteratorAddress, Instruction memory, int numberOfLoads
   ) {
     exists(
       BaseSourceVariableInstruction iteratorBase, LoadInstruction load,
-      ReadSideEffectInstruction read
+      ReadSideEffectInstruction read, Operand iteratorDerefAddress
     |
       numberOfLoads >= 0 and
+      isUse(_, iteratorAddress, iteratorBase, numberOfLoads + 1, 0) and
       isUse(_, iteratorDerefAddress, iteratorBase, numberOfLoads + 2, 0) and
       iteratorBase.getResultType() instanceof Interfaces::Iterator and
       read.getPrimaryInstruction() = load.getSourceAddress() and
@@ -554,6 +641,7 @@ private module Cached {
     BaseSourceVariableInstruction container, Operand iteratorDerefAddress, Node0Impl value,
     int numberOfLoads, int indirectionIndex
   ) {
+    // Direct def
     exists(Instruction memory, Instruction begin, int upper, int ind |
       isChiAfterIteratorDef(memory, iteratorDerefAddress, value, numberOfLoads) and
       memorySucc*(begin, memory) and
@@ -572,16 +660,27 @@ private module Cached {
    */
   cached
   predicate isIteratorUse(
-    BaseSourceVariableInstruction container, Operand iteratorDerefAddress, int numberOfLoads,
+    BaseSourceVariableInstruction container, Operand iteratorAddress, int numberOfLoads,
     int indirectionIndex
   ) {
+    // Direct use
     exists(Instruction begin, Instruction memory, int upper, int ind |
-      isChiBeforeIteratorUse(iteratorDerefAddress, memory, numberOfLoads) and
+      isChiBeforeIteratorUse(iteratorAddress, memory, numberOfLoads) and
       memorySucc*(begin, memory) and
       isChiAfterBegin(container, begin) and
       upper = countIndirectionsForCppType(getResultLanguageType(container)) and
       ind = numberOfLoads + [1 .. upper] and
       indirectionIndex = ind - (numberOfLoads + 1)
+    )
+    or
+    // Use through function output
+    exists(Instruction memory, Instruction begin, int upper, int ind |
+      isChiAfterIteratorArgument(memory, iteratorAddress, numberOfLoads - 1) and // TODO: What's the reason for numberOfLoads - 1?
+      memorySucc*(begin, memory) and
+      isChiAfterBegin(container, begin) and
+      upper = countIndirectionsForCppType(getResultLanguageType(container)) and
+      ind = numberOfLoads + [1 .. upper] and
+      indirectionIndex = ind - numberOfLoads + 1 // TODO: What's the reason for numberOfLoads + 1
     )
   }
 
