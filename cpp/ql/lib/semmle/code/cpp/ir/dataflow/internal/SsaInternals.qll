@@ -455,7 +455,7 @@ predicate nodeToDefOrUse(Node nodeFrom, SsaDefOrUse defOrUse, boolean uncertain)
  * Perform a single conversion-like step from `nFrom` to `nTo`. This relation
  * only holds when there is no use-use relation out of `nTo`.
  */
-private predicate indirectConversionFlowStep(Node nFrom, Node nTo) {
+private predicate preUpdateSsaFlowStep(Node nFrom, Node nTo) {
   not exists(UseOrPhi defOrUse |
     nodeToDefOrUse(nTo, defOrUse, _) and
     adjacentDefRead(defOrUse, _)
@@ -478,6 +478,34 @@ private predicate indirectConversionFlowStep(Node nFrom, Node nTo) {
 }
 
 /**
+ * Holds if there's a use-use step from `defOrUse` to `use`, and `use` maps to `nodeTo`
+ */
+bindingset[nodeFrom]
+private predicate adjacentDefReadGood(DefOrUse defOrUse, UseOrPhi use, Node nodeFrom, Node nodeTo) {
+  adjacentDefRead(defOrUse, use) and
+  useToNode(use, nodeTo) and
+  not nodeTo = nodeFrom
+}
+
+private predicate adjacentDefReadSteps(
+  Node nodeFrom, Node adjusted, Node nodeTo, boolean uncertain, DefOrUse defOrUse, UseOrPhi use
+) {
+  // We start at a pre-update node.
+  nodeFrom = any(PostUpdateNode pun).getPreUpdateNode() and
+  // First we go back along conversions and loads to find the first use that provides use-use flow.
+  preUpdateSsaFlowStep*(adjusted, nodeFrom) and
+  // Then we find the corresponding node.
+  nodeToDefOrUse(adjusted, defOrUse, uncertain) and
+  // And finally, we take a step that actually moves us forward.
+  adjacentDefReadGood(defOrUse, use, nodeFrom, nodeTo)
+  or
+  exists(UseOrPhi midUse |
+    adjacentDefReadSteps(nodeFrom, adjusted, _, uncertain, defOrUse, midUse) and
+    adjacentDefReadGood(midUse, use, adjusted, nodeTo)
+  )
+}
+
+/**
  * The reason for this predicate is a bit annoying:
  * We cannot mark a `PointerArithmeticInstruction` that computes an offset based on some SSA
  * variable `x` as a use of `x` since this creates taint-flow in the following example:
@@ -492,21 +520,13 @@ private predicate indirectConversionFlowStep(Node nFrom, Node nTo) {
  * So this predicate recurses back along conversions and `PointerArithmeticInstruction`s to find the
  * first use that has provides use-use flow, and uses that target as the target of the `nodeFrom`.
  */
-private predicate adjustForPointerArith(Node nodeFrom, UseOrPhi use, boolean uncertain) {
-  nodeFrom = any(PostUpdateNode pun).getPreUpdateNode() and
-  exists(DefOrUse defOrUse, Node adjusted |
-    indirectConversionFlowStep*(adjusted, nodeFrom) and
-    nodeToDefOrUse(adjusted, defOrUse, uncertain) and
-    adjacentDefRead(defOrUse, use)
-  )
+private predicate preUpdateSsaFlowImpl(Node nodeFrom, Node nodeTo, boolean uncertain) {
+  adjacentDefReadSteps(nodeFrom, _, nodeTo, uncertain, _, _)
 }
 
 private predicate ssaFlowImpl(Node nodeFrom, Node nodeTo, boolean uncertain) {
-  // `nodeFrom = any(PostUpdateNode pun).getPreUpdateNode()` is implied by adjustedForPointerArith.
-  exists(UseOrPhi use |
-    adjustForPointerArith(nodeFrom, use, uncertain) and
-    useToNode(use, nodeTo)
-  )
+  // `nodeFrom = any(PostUpdateNode pun).getPreUpdateNode()` is implied by preUpdateSsaFlowImpl.
+  preUpdateSsaFlowImpl(nodeFrom, nodeTo, uncertain)
   or
   not nodeFrom = any(PostUpdateNode pun).getPreUpdateNode() and
   exists(DefOrUse defOrUse1, UseOrPhi use |

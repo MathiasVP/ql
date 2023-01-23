@@ -533,7 +533,7 @@ void test_set_through_const_pointer(int *e)
 }
 
 void sink_then_source(int* p) {
-    sink(*p); // $ SPURIOUS: ir=537:10 ir=541:9
+    sink(*p); // $ SPURIOUS: ir
     *p = source();
 }
 
