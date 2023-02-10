@@ -12,6 +12,77 @@ private import DataFlowImplSpecific::Private
 import DataFlowImplSpecific::Public
 import DataFlowImplCommonPublic
 
+// private module Test {
+//   import cpp
+//   import semmle.code.cpp.security.FunctionWithWrappers
+//   import semmle.code.cpp.security.FlowSources
+//   import semmle.code.cpp.ir.IR
+//   import semmle.code.cpp.ir.dataflow.TaintTracking
+//   /**
+//    * A function for opening a file.
+//    */
+//   class FileFunction extends FunctionWithWrappers {
+//     FileFunction() {
+//       exists(string nme | this.hasGlobalName(nme) |
+//         nme = ["fopen", "_fopen", "_wfopen", "open", "_open", "_wopen"]
+//         or
+//         // create file function on windows
+//         nme.matches("CreateFile%")
+//       )
+//       or
+//       this.hasQualifiedName("std", "fopen")
+//       or
+//       // on any of the fstream classes, or filebuf
+//       exists(string nme | this.getDeclaringType().hasQualifiedName("std", nme) |
+//         nme = ["basic_fstream", "basic_ifstream", "basic_ofstream", "basic_filebuf"]
+//       ) and
+//       // we look for either the open method or the constructor
+//       (this.getName() = "open" or this instanceof Constructor)
+//     }
+//     // conveniently, all of these functions take the path as the first parameter!
+//     override predicate interestingArg(int arg) { arg = 0 }
+//   }
+//   /**
+//    * Holds for a variable that has any kind of upper-bound check anywhere in the program.
+//    * This is biased towards being inclusive and being a coarse overapproximation because
+//    * there are a lot of valid ways of doing an upper bounds checks if we don't consider
+//    * where it occurs, for example:
+//    * ```cpp
+//    *   if (x < 10) { sink(x); }
+//    *
+//    *   if (10 > y) { sink(y); }
+//    *
+//    *   if (z > 10) { z = 10; }
+//    *   sink(z);
+//    * ```
+//    */
+//   predicate hasUpperBoundsCheck(Variable var) {
+//     exists(RelationalOperation oper, VariableAccess access |
+//       oper.getAnOperand() = access and
+//       access.getTarget() = var and
+//       // Comparing to 0 is not an upper bound check
+//       not oper.getAnOperand().getValue() = "0"
+//     )
+//   }
+//   class TaintedPathConfiguration extends TaintTracking::Configuration {
+//     TaintedPathConfiguration() { this = "TaintedPathConfiguration" }
+//     override predicate isSource(DataFlow::Node node) { node instanceof FlowSource }
+//     override predicate isSink(DataFlow::Node node) {
+//       exists(FileFunction fileFunction |
+//         fileFunction.outermostWrapperFunctionCall(node.asIndirectArgument(), _)
+//       )
+//     }
+//     override predicate isSanitizer(DataFlow::Node node) {
+//       node.asExpr().(Call).getTarget().getUnspecifiedType() instanceof ArithmeticType
+//       or
+//       exists(LoadInstruction load, Variable checkedVar |
+//         load = node.asInstruction() and
+//         checkedVar = load.getSourceAddress().(VariableAddressInstruction).getAstVariable() and
+//         hasUpperBoundsCheck(checkedVar)
+//       )
+//     }
+//   }
+// }
 /**
  * A configuration of interprocedural data flow analysis. This defines
  * sources, sinks, and any other configurable aspect of the analysis. Each
@@ -3786,6 +3857,128 @@ private predicate pathThroughCallable(
   )
 }
 
+private predicate subpathsPathNodes(
+  PathNodeImpl arg, PathNodeImpl par, PathNodeImpl ret, PathNodeImpl out
+) {
+  Subpaths::subpaths(arg, par, ret, out)
+}
+
+private predicate subpathsNodeEx(NodeEx arg, NodeEx par, NodeEx ret, NodeEx out) {
+  exists(PathNodeImpl pathArg, PathNodeImpl pathPar, PathNodeImpl pathRet, PathNodeImpl pathOut |
+    pathArg.getNodeEx() = arg and
+    pathPar.getNodeEx() = par and
+    pathRet.getNodeEx() = ret and
+    pathOut.getNodeEx() = out and
+    Subpaths::subpaths(pathArg, pathPar, pathRet, pathOut)
+  )
+}
+
+private predicate apFanout2(PathNodeMid pathArg, NodeEx out, AccessPath apIn, int n) {
+  pathArg.toString() = "lp indirection [rightp, ... (2)]" and
+  pathArg.hasLocationInfo(_, 703, _, _, _) and
+  exists(NodeEx arg |
+    pathArg.getAp() = apIn and
+    pathArg.getNodeEx() = arg and
+    subpathsNodeEx(arg, _, _, out) and
+    n =
+      strictcount(AccessPath apOut |
+        exists(PathNodeMid pathOut |
+          pathOut.getNodeEx() = out and
+          pathOut.getAp() = apOut and
+          Subpaths::subpaths(pathArg, _, _, pathOut)
+        )
+      )
+  )
+}
+
+private predicate apFanout(PathNodeMid pathPar, NodeEx ret, AccessPath apIn, int n) {
+  exists(NodeEx par |
+    pathPar.getAp() = apIn and
+    pathPar.getNodeEx() = par and
+    subpathsNodeEx(_, par, ret, _) and
+    n =
+      strictcount(AccessPath apRet |
+        exists(PathNodeMid pathRet |
+          pathRet.getNodeEx() = ret and
+          pathRet.getAp() = apRet and
+          Subpaths::subpaths(_, pathPar, pathRet, _)
+        )
+      )
+  )
+}
+
+// predicate foo(PathNodeMid par, PathNodeMid ret) {
+//   apFanout(par, ret.getNodeEx(), _, 49) and
+//   par.toString() = "p indirection [*leftp, ... (3)]" and
+//   Subpaths::subpaths(_, par, ret, _)
+// }
+// predicate bar(PathNodeMid par, PathNodeMid ret) {
+//   par.hasLocationInfo(_, 567, _, _, _) and
+//   apFanout(par, ret.getNodeEx(), _, 36) and
+//   par.toString() = "p indirection [rightp, ... (2)]" and
+//   Subpaths::subpaths(_, par, ret, _)
+// }
+// module TestStep {
+//   predicate step(PathNodeImpl node1, PathNodeImpl node2) {
+//     stepFwd(_, node1) and
+//     node1.getASuccessorImpl() = node2
+//   }
+//   private predicate stepFwd(PathNodeImpl node1, PathNodeImpl node2) {
+//     node1 = node2 and
+//     isSource(node1)
+//     or
+//     exists(PathNodeImpl mid |
+//       stepFwd(node1, mid) and
+//       step(mid, node2)
+//     )
+//   }
+//   predicate isSource(PathNodeImpl source) { bar(source, _) }
+//   predicate isSink(PathNodeImpl sink, string s) {
+//     s = "" and
+//     // bar(_, sink) and
+//     // s = sink.getAp().toString()
+//     sink.isFlowSink()
+//   }
+//   private predicate stepRev(PathNodeImpl node1, PathNodeImpl node2) {
+//     stepFwd(_, node1) and
+//     stepFwd(_, node2) and
+//     (
+//       node1 = node2 and
+//       isSink(node1, _)
+//       or
+//       exists(PathNodeImpl mid |
+//         stepRev(mid, node2) and
+//         step2(node1, mid)
+//       )
+//     )
+//   }
+//   predicate step2(PathNodeImpl node1, PathNodeImpl node2) {
+//     stepRev(node2, _) and
+//     node1.getASuccessorImpl() = node2
+//   }
+// }
+// private predicate apFanIn(PathNodeMid pathOut, AccessPath apOut, int n) {
+//   exists(NodeEx arg, NodeEx par, NodeEx ret, NodeEx out |
+//     pathOut.getAp() = apOut and
+//     subpathsNodeEx(arg, par, ret, out) and
+//     n =
+//       strictcount(AccessPath apIn |
+//         exists(PathNodeMid pathArg |
+//           pathArg.getAp() = apIn and
+//           Subpaths::subpaths(pathArg, _, _, pathOut)
+//         )
+//       )
+//   )
+// }
+// private predicate into(NodeEx arg, int n) {
+//   n = strictcount(NodeEx par, NodeEx ret, NodeEx out | subpathsNodeEx(arg, par, ret, out))
+// }
+// private predicate outof1(NodeEx par, int n) {
+//   n = strictcount(NodeEx out | subpathsNodeEx(_, par, _, out))
+// }
+// private predicate outof2(NodeEx arg, NodeEx par, int n) {
+//   n = strictcount(NodeEx out | subpathsNodeEx(arg, par, _, out))
+// }
 private module Subpaths {
   /**
    * Holds if `(arg, par, ret, out)` forms a subpath-tuple and `ret` is determined by

@@ -281,6 +281,36 @@ private module IteratorIndirections {
   }
 }
 
+private module SmartPointerIndirections {
+  class IteratorIndirection extends Indirection instanceof PointerWrapper {
+    IteratorIndirection() { baseType = PointerWrapper.super.getBaseType() }
+
+    override int getNumberOfIndirections() {
+      result = 1 + countIndirections(this.getBaseType().getUnspecifiedType())
+    }
+
+    override predicate isAdditionalDereference(Instruction deref, Operand address) {
+      exists(CallInstruction call |
+        operandForFullyConvertedCall(getAUse(deref), call) and
+        this = call.getStaticCallTarget().getClassAndName("operator*") and
+        address = call.getThisArgumentOperand()
+      )
+    }
+
+    override predicate isAdditionalWrite(Node0Impl value, Operand address, boolean certain) {
+      exists(CallInstruction call | call.getArgumentOperand(0) = value.asOperand() |
+        this = call.getStaticCallTarget().getClassAndName("operator=") and
+        address = call.getThisArgumentOperand() and
+        certain = false
+      )
+    }
+
+    override predicate isAdditionalTaintStep(Node node1, Node node2) { none() }
+
+    override predicate isAdditionalConversionFlow(Operand opFrom, Instruction instrTo) { none() }
+  }
+}
+
 predicate isDereference(Instruction deref, Operand address) {
   any(Indirection ind).isAdditionalDereference(deref, address)
   or

@@ -84,7 +84,9 @@ module IRTest {
     override predicate isSource(DataFlow::Node source) {
       source.asConvertedExpr().(FunctionCall).getTarget().getName() = "source"
       or
-      source.asParameter().getName().matches("source%")
+      source.asIndirectConvertedExpr().(FunctionCall).getTarget().getName() = "source"
+      or
+      source.asParameter(_).getName().matches("source%")
       or
       exists(FunctionCall fc |
         fc.getAnArgument() = source.asDefiningArgument() and

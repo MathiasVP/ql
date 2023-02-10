@@ -25,7 +25,13 @@ class IRFlowTest extends InlineExpectationsTest {
     exists(IRDataFlow::Node source, IRDataFlow::Node sink, IRDataFlow::Configuration conf, int n |
       tag = "ir" and
       conf.hasFlow(source, sink) and
-      n = strictcount(IRDataFlow::Node otherSource | conf.hasFlow(otherSource, sink)) and
+      n =
+        strictcount(int line, int column |
+          exists(IRDataFlow::Node otherSource |
+            otherSource.hasLocationInfo(_, line, column, _, _) and
+            conf.hasFlow(otherSource, sink)
+          )
+        ) and
       (
         n = 1 and value = ""
         or

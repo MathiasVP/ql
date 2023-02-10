@@ -918,12 +918,25 @@ class Def extends DefOrUse {
   Instruction getAddress() { result = this.getAddressOperand().getDef() }
 
   /**
+   * Gets the indirection index of this definition.
+   * 
    * This predicate ensures that joins go from `defOrUse` to the result
    * instead of the other way around.
    */
   pragma[inline]
   int getIndirectionIndex() {
     pragma[only_bind_into](result) = pragma[only_bind_out](defOrUse).getIndirectionIndex()
+  }
+
+  /**
+   * Gets the number of loads on the destination address of this definition.
+   * 
+   * This predicate ensures that joins go from `defOrUse` to the result
+   * instead of the other way around.
+   */
+  pragma[inline]
+  int getIndirection() {
+    pragma[only_bind_into](result) = pragma[only_bind_out](defOrUse).getIndirection()
   }
 
   Node0Impl getValue() { result = defOrUse.getValue() }

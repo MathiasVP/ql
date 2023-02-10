@@ -73,7 +73,7 @@ private module VirtualDispatch {
         allowFromArg = true
         or
         // Call return
-        exists(DataFlowCall call, ReturnKind returnKind |
+        exists(DataFlowCall call, DataFlowImplCommon::ReturnKindExt returnKind |
           other = getAnOutNode(call, returnKind) and
           returnNodeWithKindAndEnclosingCallable(src, returnKind, call.getStaticCallTarget())
         ) and
@@ -133,7 +133,7 @@ private module VirtualDispatch {
    */
   pragma[noinline]
   private predicate returnNodeWithKindAndEnclosingCallable(
-    ReturnNode node, ReturnKind kind, DataFlowCallable callable
+    ReturnNode node, DataFlowImplCommon::ReturnKindExt kind, DataFlowCallable callable
   ) {
     node.getKind() = kind and
     node.getEnclosingCallable() = callable

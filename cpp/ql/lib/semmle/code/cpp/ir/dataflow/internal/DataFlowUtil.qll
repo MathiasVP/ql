@@ -50,9 +50,13 @@ private newtype TIRDataFlowNode =
     Ssa::hasRawIndirectInstruction(instr, indirectionIndex)
   } or
   TFinalParameterNode(Parameter p, int indirectionIndex) {
-    exists(Ssa::FinalParameterUse use |
+    exists(Ssa::FinalParameterUse use, Ssa::Def def |
       use.getParameter() = p and
-      use.getIndirectionIndex() = indirectionIndex
+      use.getIndirectionIndex() = indirectionIndex and
+      def.getSourceVariable().getBaseVariable().(Ssa::BaseIRVariable).getIRVariable().getAst() = p and
+      def.getIndirectionIndex() = 0 and
+      def.getIndirection() > 1 and
+      not def.getValue().asInstruction() instanceof InitializeParameterInstruction
     )
   } or
   TFinalGlobalValue(Ssa::GlobalUse globalUse) or
@@ -1489,11 +1493,6 @@ private module Cached {
     |
       nodeFrom = callInput(call, modelIn) and
       nodeTo = callOutput(call, modelOut)
-      or
-      exists(int d |
-        nodeFrom = callInput(call, modelIn, d) and
-        nodeTo = callOutput(call, modelOut, d)
-      )
     )
   }
 }
@@ -1596,18 +1595,16 @@ predicate localExprFlow(Expr e1, Expr e2) {
 cached
 private newtype TContent =
   TFieldContent(Field f, int indirectionIndex) {
-    indirectionIndex = [1 .. Ssa::getMaxIndirectionsForType(f.getUnspecifiedType())] and
-    // Reads and writes of union fields are tracked using `UnionContent`.
-    not f.getDeclaringType() instanceof Union
-  } or
-  TUnionContent(Union u, int indirectionIndex) {
-    // We key `UnionContent` by the union instead of its fields since a write to one
-    // field can be read by any read of the union's fields.
-    indirectionIndex =
-      [1 .. max(Ssa::getMaxIndirectionsForType(u.getAField().getUnspecifiedType()))]
-  } or
-  TCollectionContent() or // Not used in C/C++
-  TArrayContent() // Not used in C/C++.
+    indirectionIndex = [1 .. Ssa::getMaxIndirectionsForType(f.getUnspecifiedType())] // and
+    // // Reads and writes of union fields are tracked using `UnionContent`.
+    // not f.getDeclaringType() instanceof Union
+  } // or
+  // TUnionContent(Union u, int indirectionIndex) {
+  //   // We key `UnionContent` by the union instead of its fields since a write to one
+  //   // field can be read by any read of the union's fields.
+  //   indirectionIndex =
+  //     [1 .. max(Ssa::getMaxIndirectionsForType(u.getAField().getUnspecifiedType()))]
+  // }
 
 /**
  * A description of the way data may be stored inside an object. Examples
@@ -1633,7 +1630,7 @@ class FieldContent extends Content, TFieldContent {
   override string toString() {
     indirectionIndex = 1 and result = f.toString()
     or
-    indirectionIndex > 1 and result = f.toString() + " indirection"
+    indirectionIndex > 1 and result = "************".prefix(indirectionIndex - 1) + f.toString()
   }
 
   Field getField() { result = f }
@@ -1644,36 +1641,28 @@ class FieldContent extends Content, TFieldContent {
   }
 }
 
-/** A reference through an instance field of a union. */
-class UnionContent extends Content, TUnionContent {
-  Union u;
-  int indirectionIndex;
+// /** A reference through an instance field of a union. */
+// class UnionContent extends Content, TUnionContent {
+//   Union u;
+//   int indirectionIndex;
 
-  UnionContent() { this = TUnionContent(u, indirectionIndex) }
+//   UnionContent() { this = TUnionContent(u, indirectionIndex) }
 
-  override string toString() {
-    indirectionIndex = 1 and result = u.toString()
-    or
-    indirectionIndex > 1 and result = u.toString() + " indirection"
-  }
+//   override string toString() {
+//     indirectionIndex = 1 and result = u.toString()
+//     or
+//     indirectionIndex > 1 and result = "************".prefix(indirectionIndex - 1) + u.toString()
+//   }
 
-  Field getAField() { result = u.getAField() }
+//   Field getAField() { result = u.getAField() }
 
-  pragma[inline]
-  int getIndirectionIndex() {
-    pragma[only_bind_into](result) = pragma[only_bind_out](indirectionIndex)
-  }
-}
+//   Union getUnion() { result = u }
 
-/** A reference through an array. */
-class ArrayContent extends Content, TArrayContent {
-  override string toString() { result = "[]" }
-}
-
-/** A reference through the contents of some collection-like container. */
-private class CollectionContent extends Content, TCollectionContent {
-  override string toString() { result = "<element>" }
-}
+//   pragma[inline]
+//   int getIndirectionIndex() {
+//     pragma[only_bind_into](result) = pragma[only_bind_out](indirectionIndex)
+//   }
+// }
 
 /**
  * An entity that represents a set of `Content`s.

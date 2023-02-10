@@ -119,7 +119,7 @@ private module LambdaFlow {
   }
 
   private newtype TReturnPositionSimple =
-    TReturnPositionSimple0(DataFlowCallable c, ReturnKind kind) {
+    TReturnPositionSimple0(DataFlowCallable c, ReturnKindExt kind) {
       exists(ReturnNode ret |
         c = getNodeEnclosingCallable(ret) and
         kind = ret.getKind()
@@ -127,18 +127,18 @@ private module LambdaFlow {
     }
 
   pragma[noinline]
-  private TReturnPositionSimple getReturnPositionSimple(ReturnNode ret, ReturnKind kind) {
+  private TReturnPositionSimple getReturnPositionSimple(ReturnNode ret, ReturnKindExt kind) {
     result = TReturnPositionSimple0(getNodeEnclosingCallable(ret), kind)
   }
 
   pragma[nomagic]
-  private TReturnPositionSimple viableReturnPosNonLambda(DataFlowCall call, ReturnKind kind) {
+  private TReturnPositionSimple viableReturnPosNonLambda(DataFlowCall call, ReturnKindExt kind) {
     result = TReturnPositionSimple0(viableCallable(call), kind)
   }
 
   pragma[nomagic]
   private TReturnPositionSimple viableReturnPosLambda(
-    DataFlowCall call, DataFlowCallOption lastCall, ReturnKind kind
+    DataFlowCall call, DataFlowCallOption lastCall, ReturnKindExt kind
   ) {
     result = TReturnPositionSimple0(viableCallableLambda(call, lastCall), kind)
   }
@@ -146,7 +146,7 @@ private module LambdaFlow {
   private predicate viableReturnPosOutNonLambda(
     DataFlowCall call, TReturnPositionSimple pos, OutNode out
   ) {
-    exists(ReturnKind kind |
+    exists(ReturnKindExt kind |
       pos = viableReturnPosNonLambda(call, kind) and
       out = getAnOutNode(call, kind)
     )
@@ -155,7 +155,7 @@ private module LambdaFlow {
   private predicate viableReturnPosOutLambda(
     DataFlowCall call, DataFlowCallOption lastCall, TReturnPositionSimple pos, OutNode out
   ) {
-    exists(ReturnKind kind |
+    exists(ReturnKindExt kind |
       pos = viableReturnPosLambda(call, lastCall, kind) and
       out = getAnOutNode(call, kind)
     )
@@ -345,7 +345,7 @@ private module Cached {
 
   cached
   OutNodeExt getAnOutNodeExt(DataFlowCall call, ReturnKindExt k) {
-    result = getAnOutNode(call, k.(ValueReturnKind).getKind())
+    result = getAnOutNode(call, k)
     or
     exists(ArgNode arg |
       result.(PostUpdateNode).getPreUpdateNode() = arg and
@@ -355,7 +355,7 @@ private module Cached {
 
   cached
   predicate returnNodeExt(Node n, ReturnKindExt k) {
-    k = TValueReturn(n.(ReturnNode).getKind())
+    k = n.(ReturnNode).getKind()
     or
     exists(ParamNode p, ParameterPosition pos |
       parameterValueFlowsToPreUpdate(p, n) and
@@ -506,7 +506,7 @@ private module Cached {
        * `read` indicates whether it is contents of `p` that can flow to the return
        * node.
        */
-      predicate parameterValueFlowReturnCand(ParamNode p, ReturnKind kind, boolean read) {
+      predicate parameterValueFlowReturnCand(ParamNode p, ReturnKindExt kind, boolean read) {
         exists(ReturnNode ret |
           parameterValueFlowCand(p, ret, read) and
           kind = ret.getKind()
@@ -515,7 +515,7 @@ private module Cached {
 
       pragma[nomagic]
       private predicate argumentValueFlowsThroughCand0(
-        DataFlowCall call, ArgNode arg, ReturnKind kind, boolean read
+        DataFlowCall call, ArgNode arg, ReturnKindExt kind, boolean read
       ) {
         exists(ParamNode param | viableParamArg(call, param, arg) |
           parameterValueFlowReturnCand(param, kind, read)
@@ -529,7 +529,7 @@ private module Cached {
        * `read` indicates whether it is contents of `arg` that can flow to `out`.
        */
       predicate argumentValueFlowsThroughCand(ArgNode arg, Node out, boolean read) {
-        exists(DataFlowCall call, ReturnKind kind |
+        exists(DataFlowCall call, ReturnKindExt kind |
           argumentValueFlowsThroughCand0(call, arg, kind, read) and
           out = getAnOutNode(call, kind)
         )
@@ -624,7 +624,7 @@ private module Cached {
 
       pragma[nomagic]
       private predicate argumentValueFlowsThrough0(
-        DataFlowCall call, ArgNode arg, ReturnKind kind, ReadStepTypesOption read
+        DataFlowCall call, ArgNode arg, ReturnKindExt kind, ReadStepTypesOption read
       ) {
         exists(ParamNode param | viableParamArg(call, param, arg) |
           parameterValueFlowReturn(param, kind, read)
@@ -641,7 +641,7 @@ private module Cached {
        */
       pragma[nomagic]
       predicate argumentValueFlowsThrough(ArgNode arg, ReadStepTypesOption read, Node out) {
-        exists(DataFlowCall call, ReturnKind kind |
+        exists(DataFlowCall call, ReturnKindExt kind |
           argumentValueFlowsThrough0(call, arg, kind, read) and
           out = getAnOutNode(call, kind)
         |
@@ -675,7 +675,7 @@ private module Cached {
        * container type, and the content type.
        */
       private predicate parameterValueFlowReturn(
-        ParamNode p, ReturnKind kind, ReadStepTypesOption read
+        ParamNode p, ReturnKindExt kind, ReadStepTypesOption read
       ) {
         exists(ReturnNode ret |
           parameterValueFlow(p, ret, read) and

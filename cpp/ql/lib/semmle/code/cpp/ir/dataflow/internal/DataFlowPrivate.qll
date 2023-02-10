@@ -5,6 +5,7 @@ private import DataFlowDispatch
 private import DataFlowImplConsistency
 private import semmle.code.cpp.ir.internal.IRCppLanguage
 private import SsaInternals as Ssa
+private import DataFlowImplCommon as DataFlowImplCommon
 
 cached
 private module Cached {
@@ -301,12 +302,6 @@ private newtype TReturnKind =
       return.isNormalReturn() and
       index = return.getIndirectionIndex() - 1 // We subtract one because the return loads the value.
     )
-  } or
-  TIndirectReturnKind(int argumentIndex, int indirectionIndex) {
-    exists(IndirectReturnNode return |
-      return.isParameterReturn(argumentIndex) and
-      indirectionIndex = return.getIndirectionIndex()
-    )
   }
 
 /**
@@ -326,19 +321,10 @@ private class NormalReturnKind extends ReturnKind, TNormalReturnKind {
   override string toString() { result = "indirect return" }
 }
 
-private class IndirectReturnKind extends ReturnKind, TIndirectReturnKind {
-  int argumentIndex;
-  int indirectionIndex;
-
-  IndirectReturnKind() { this = TIndirectReturnKind(argumentIndex, indirectionIndex) }
-
-  override string toString() { result = "indirect outparam[" + argumentIndex.toString() + "]" }
-}
-
 /** A data flow node that occurs as the result of a `ReturnStmt`. */
 class ReturnNode extends Node instanceof IndirectReturnNode {
   /** Gets the kind of this returned value. */
-  abstract ReturnKind getKind();
+  abstract DataFlowImplCommon::ReturnKindExt getKind();
 }
 
 pragma[nomagic]
@@ -350,19 +336,22 @@ private predicate finalParameterNodeHasArgumentAndIndex(
 }
 
 class ReturnIndirectionNode extends IndirectReturnNode, ReturnNode {
-  override ReturnKind getKind() {
+  override DataFlowImplCommon::ReturnKindExt getKind() {
     exists(Operand op, int indirectionIndex |
       hasOperandAndIndex(this, pragma[only_bind_into](op), pragma[only_bind_into](indirectionIndex))
     |
       exists(ReturnValueInstruction return |
         op = return.getReturnAddressOperand() and
-        result = TNormalReturnKind(indirectionIndex - 1)
+        result.(DataFlowImplCommon::ValueReturnKind).getKind() =
+          TNormalReturnKind(indirectionIndex - 1)
       )
     )
     or
-    exists(int argumentIndex, int indirectionIndex |
+    exists(int argumentIndex, int indirectionIndex, IndirectionPosition p |
       finalParameterNodeHasArgumentAndIndex(this, argumentIndex, indirectionIndex) and
-      result = TIndirectReturnKind(argumentIndex, indirectionIndex)
+      p = result.(DataFlowImplCommon::ParamUpdateReturnKind).getPosition() and
+      p.getArgumentIndex() = argumentIndex and
+      p.getIndirectionIndex() = indirectionIndex
     )
   }
 }
@@ -467,9 +456,9 @@ predicate instructionForFullyConvertedCall(Instruction instr, CallInstruction ca
 
 /** Holds if `node` represents the output node for `call`. */
 private predicate simpleOutNode(Node node, CallInstruction call) {
-  operandForFullyConvertedCall(node.asOperand(), call)
-  or
   instructionForFullyConvertedCall(node.asInstruction(), call)
+  or
+  operandForFullyConvertedCall(node.asOperand(), call)
 }
 
 /** A data flow node that represents the output of a call. */
@@ -488,7 +477,7 @@ class OutNode extends Node {
   /** Gets the underlying call. */
   abstract DataFlowCall getCall();
 
-  abstract ReturnKind getReturnKind();
+  abstract DataFlowImplCommon::ReturnKindExt getReturnKind();
 }
 
 private class DirectCallOutNode extends OutNode {
@@ -498,20 +487,29 @@ private class DirectCallOutNode extends OutNode {
 
   override DataFlowCall getCall() { result = call }
 
-  override ReturnKind getReturnKind() { result = TNormalReturnKind(0) }
+  override DataFlowImplCommon::ReturnKindExt getReturnKind() {
+    result.(DataFlowImplCommon::ValueReturnKind).getKind() = TNormalReturnKind(0)
+  }
 }
 
 private class IndirectCallOutNode extends OutNode, IndirectReturnOutNode {
   override DataFlowCall getCall() { result = this.getCallInstruction() }
 
-  override ReturnKind getReturnKind() { result = TNormalReturnKind(this.getIndirectionIndex()) }
+  override DataFlowImplCommon::ReturnKindExt getReturnKind() {
+    result.(DataFlowImplCommon::ValueReturnKind).getKind() =
+      TNormalReturnKind(this.getIndirectionIndex())
+  }
 }
 
 private class SideEffectOutNode extends OutNode, IndirectArgumentOutNode {
   override DataFlowCall getCall() { result = this.getCallInstruction() }
 
-  override ReturnKind getReturnKind() {
-    result = TIndirectReturnKind(this.getArgumentIndex(), this.getIndirectionIndex())
+  override DataFlowImplCommon::ReturnKindExt getReturnKind() {
+    exists(IndirectionPosition p |
+      p = result.(DataFlowImplCommon::ParamUpdateReturnKind).getPosition() and
+      p.getArgumentIndex() = this.getArgumentIndex() and
+      p.getIndirectionIndex() = this.getIndirectionIndex()
+    )
   }
 }
 
@@ -519,7 +517,7 @@ private class SideEffectOutNode extends OutNode, IndirectArgumentOutNode {
  * Gets a node that can read the value returned from `call` with return kind
  * `kind`.
  */
-OutNode getAnOutNode(DataFlowCall call, ReturnKind kind) {
+OutNode getAnOutNode(DataFlowCall call, DataFlowImplCommon::ReturnKindExt kind) {
   result.getCall() = call and
   result.getReturnKind() = kind
 }
@@ -569,11 +567,11 @@ predicate storeStep(Node node1, Content c, PostFieldUpdateNode node2) {
       fc.getField() = node2.getUpdatedField() and
       fc.getIndirectionIndex() = 1 + indirectionIndex1 + numberOfLoads
     )
-    or
-    exists(UnionContent uc | uc = c |
-      uc.getAField() = node2.getUpdatedField() and
-      uc.getIndirectionIndex() = 1 + indirectionIndex1 + numberOfLoads
-    )
+    // or
+    // exists(UnionContent uc | uc = c |
+    //   uc.getAField() = node2.getUpdatedField() and
+    //   uc.getIndirectionIndex() = 1 + indirectionIndex1 + numberOfLoads
+    // )
   )
 }
 
@@ -641,11 +639,11 @@ predicate readStep(Node node1, Content c, Node node2) {
       fc.getField() = fa1.getField() and
       fc.getIndirectionIndex() = indirectionIndex2 + numberOfLoads
     )
-    or
-    exists(UnionContent uc | uc = c |
-      uc.getAField() = fa1.getField() and
-      uc.getIndirectionIndex() = indirectionIndex2 + numberOfLoads
-    )
+    // or
+    // exists(UnionContent uc | uc = c |
+    //   uc.getAField() = fa1.getField() and
+    //   uc.getIndirectionIndex() = indirectionIndex2 + numberOfLoads
+    // )
   )
 }
 
@@ -757,12 +755,63 @@ predicate additionalLambdaFlowStep(Node nodeFrom, Node nodeTo, boolean preserves
  */
 predicate allowParameterReturnInSelf(ParameterNode p) { none() }
 
+private predicate fieldHasApproxName(Field f, string s) {
+  s = f.getName().charAt(0) // and
+  // // Reads and writes of union fields are tracked using `UnionContent`.
+  // not f.getDeclaringType() instanceof Cpp::Union
+}
+
+// private predicate unionHasApproxName(Cpp::Union u, string s) { s = u.getName().charAt(0) }
+
+cached
+private newtype TContentApprox =
+  TFieldApproxContent(string s) { fieldHasApproxName(_, s) } // or
+  // TUnionApproxContent(string s) { unionHasApproxName(_, s) }
+
 /** An approximated `Content`. */
-class ContentApprox = Unit;
+class ContentApprox extends TContentApprox {
+  string toString() { none() } // overriden in subclasses
+}
+
+private class FieldApproxContent extends ContentApprox, TFieldApproxContent {
+  string s;
+
+  FieldApproxContent() { this = TFieldApproxContent(s) }
+
+  Field getAField() { fieldHasApproxName(result, s) }
+
+  string getPrefix() { result = s }
+
+  final override string toString() { result = s }
+}
+
+// private class UnionApproxContent extends ContentApprox, TUnionApproxContent {
+//   string s;
+
+//   UnionApproxContent() { this = TUnionApproxContent(s) }
+
+//   Cpp::Union getAUnion() { unionHasApproxName(result, s) }
+
+//   string getPrefix() { result = s }
+
+//   final override string toString() { result = s }
+// }
 
 /** Gets an approximated value for content `c`. */
 pragma[inline]
-ContentApprox getContentApprox(Content c) { any() }
+ContentApprox getContentApprox(Content c) {
+  exists(string prefix, Field f |
+    prefix = result.(FieldApproxContent).getPrefix() and
+    f = c.(FieldContent).getField() and
+    fieldHasApproxName(f, prefix)
+  )
+  // or
+  // exists(string prefix, Cpp::Union u |
+  //   prefix = result.(UnionApproxContent).getPrefix() and
+  //   u = c.(UnionContent).getUnion() and
+  //   unionHasApproxName(u, prefix)
+  // )
+}
 
 private class MyConsistencyConfiguration extends Consistency::ConsistencyConfiguration {
   override predicate argHasPostUpdateExclude(ArgumentNode n) {
