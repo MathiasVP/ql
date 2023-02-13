@@ -1637,11 +1637,19 @@ private newtype TContent =
     // Reads and writes of union fields are tracked using `UnionContent`.
     not f.getDeclaringType() instanceof Union
   } or
-  TUnionContent(Union u, int indirectionIndex) {
-    // We key `UnionContent` by the union instead of its fields since a write to one
-    // field can be read by any read of the union's fields.
-    indirectionIndex =
-      [1 .. max(Ssa::getMaxIndirectionsForType(u.getAField().getUnspecifiedType()))]
+  TUnionContent(Union u, int bytes, int indirectionIndex) {
+    exists(Field f |
+      f = u.getAField() and
+      f.getType().getSize() = bytes and
+      // We key `UnionContent` by the union instead of its fields since a write to one
+      // field can be read by any read of the union's fields.
+      indirectionIndex =
+        [1 .. max(Field g |
+            g.getType().getSize() = bytes
+          |
+            Ssa::getMaxIndirectionsForType(g.getUnspecifiedType())
+          )]
+    )
   }
 
 /**
@@ -1683,8 +1691,9 @@ class FieldContent extends Content, TFieldContent {
 class UnionContent extends Content, TUnionContent {
   Union u;
   int indirectionIndex;
+  int bytes;
 
-  UnionContent() { this = TUnionContent(u, indirectionIndex) }
+  UnionContent() { this = TUnionContent(u, bytes, indirectionIndex) }
 
   override string toString() {
     indirectionIndex = 1 and result = u.toString()
@@ -1692,7 +1701,7 @@ class UnionContent extends Content, TUnionContent {
     indirectionIndex > 1 and result = u.toString() + " indirection"
   }
 
-  Field getAField() { result = u.getAField() }
+  Field getAField() { result = u.getAField() and result.getType().getSize() = bytes }
 
   Union getUnion() { result = u }
 
