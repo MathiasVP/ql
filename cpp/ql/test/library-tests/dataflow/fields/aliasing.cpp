@@ -1,4 +1,4 @@
-int user_input();
+int user_input_int();
 void sink(int);
 
 struct S {
@@ -6,15 +6,15 @@ struct S {
 };
 
 void pointerSetter(S *s) {
-  s->m1 = user_input();
+  s->m1 = user_input_int();
 }
 
 void referenceSetter(S &s) {
-  s.m1 = user_input();
+  s.m1 = user_input_int();
 }
 
 void copySetter(S s) {
-  s.m1 = user_input();
+  s.m1 = user_input_int();
 }
 
 void callSetters() {
@@ -34,30 +34,30 @@ void callSetters() {
 void assignAfterAlias() {
   S s1 = { 0, 0 };
   S &ref1 = s1;
-  ref1.m1 = user_input();
+  ref1.m1 = user_input_int();
   sink(s1.m1); // $ MISSING: ast,ir
 
   S s2 = { 0, 0 };
   S &ref2 = s2;
-  s2.m1 = user_input();
+  s2.m1 = user_input_int();
   sink(ref2.m1); // $ MISSING: ast,ir
 }
 
 void assignAfterCopy() {
   S s1 = { 0, 0 };
   S copy1 = s1;
-  copy1.m1 = user_input();
+  copy1.m1 = user_input_int();
   sink(s1.m1); // no flow
 
   S s2 = { 0, 0 };
   S copy2 = s2;
-  s2.m1 = user_input();
+  s2.m1 = user_input_int();
   sink(copy2.m1); // no flow
 }
 
 void assignBeforeCopy() {
   S s2 = { 0, 0 };
-  s2.m1 = user_input();
+  s2.m1 = user_input_int();
   S copy2 = s2;
   sink(copy2.m1); // $ ast,ir
 }
@@ -69,33 +69,33 @@ struct Wrapper {
 void copyIntermediate() {
   Wrapper w = { { 0, 0 } };
   S s = w.s;
-  s.m1 = user_input();
+  s.m1 = user_input_int();
   sink(w.s.m1); // no flow
 }
 
 void pointerIntermediate() {
   Wrapper w = { { 0, 0 } };
   S *s = &w.s;
-  s->m1 = user_input();
+  s->m1 = user_input_int();
   sink(w.s.m1); // $ MISSING: ast,ir
 }
 
 void referenceIntermediate() {
   Wrapper w = { { 0, 0 } };
   S &s = w.s;
-  s.m1 = user_input();
+  s.m1 = user_input_int();
   sink(w.s.m1); // $ MISSING: ast,ir
 }
 
 void nestedAssign() {
   Wrapper w = { { 0, 0 } };
-  w.s.m1 = user_input();
+  w.s.m1 = user_input_int();
   sink(w.s.m1); // $ ast,ir
 }
 
 void addressOfField() {
   S s;
-  s.m1 = user_input();
+  s.m1 = user_input_int();
 
   S s_copy = s;
   int* px = &s_copy.m1;
@@ -103,7 +103,7 @@ void addressOfField() {
 }
 
 void taint_a_ptr(int* pa) {
-  *pa = user_input();
+  *pa = user_input_int();
 }
 
 void test_field_conflation_array_content() {

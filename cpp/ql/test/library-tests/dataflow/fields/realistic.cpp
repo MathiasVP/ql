@@ -35,7 +35,7 @@ void * memcpy ( void * destination, const void * source, size_t num ) {
     }
     return destination;
 }
-void *user_input(void) {
+void *user_input_voidptr_realistic(void) {
     return (void*)"\x0a\x00\x00\x00\x00\x00\x00\x00The quick brown fox jumps over the lazy dog";
 }
 void sink(void *o) {
@@ -50,8 +50,8 @@ int main(int argc, char** argv) {
     }
     int i = 0;
     while(i < MAX_BAZ) {
-        foo.bar[i].baz->userInput.bufferLen = (size_t)user_input();
-        memcpy(foo.bar[i].baz->userInput.buffer, user_input(), sizeof(foo.bar[i].baz->userInput.buffer));
+        foo.bar[i].baz->userInput.bufferLen = (size_t)user_input_voidptr_realistic();
+        memcpy(foo.bar[i].baz->userInput.buffer, user_input_voidptr_realistic(), sizeof(foo.bar[i].baz->userInput.buffer));
         if(foo.bar[i].baz->userInput.bufferLen > sizeof(foo.bar[i].baz->userInput.buffer))
         {
             printf("The user-supplied input 0x%lx is larger than the buffer 0x%lx!\n", foo.bar[i].baz->userInput.bufferLen, sizeof(foo.bar[i].baz->userInput.buffer));
@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
         memcpy(dst, foo.bar[i].baz->userInput.buffer, foo.bar[i].baz->userInput.bufferLen);
         sink((void*)foo.bar[i].baz->userInput.bufferLen); // $ ast ir=53:47 ir=53:55
         // There is no flow to the following two `sink` calls because the
-        // source is the _pointer_ returned by `user_input` rather than the
+        // source is the _pointer_ returned by `user_input_voidptr_realistic` rather than the
         // _data_ to which it points.
         sink((void*)foo.bar[i].baz->userInput.buffer); // $ MISSING: ir,ast
         sink((void*)dst); // ir MISSING: ast

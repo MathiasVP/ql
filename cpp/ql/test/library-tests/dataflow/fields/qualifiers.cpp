@@ -1,5 +1,5 @@
 void sink(void *o);
-void *user_input(void);
+void *user_input_voidptr(void);
 
 namespace qualifiers {
 
@@ -19,32 +19,32 @@ namespace qualifiers {
   };
 
   void assignToGetter(Outer outer) {
-    outer.getInner()->a = user_input();
+    outer.getInner()->a = user_input_voidptr();
     sink(outer.inner->a); // $ ast,ir
   }
 
   void getterArgument1(Outer outer) {
-    outer.getInner()->setA(user_input());
+    outer.getInner()->setA(user_input_voidptr());
     sink(outer.inner->a); // $ ast,ir
   }
 
   void getterArgument2(Outer outer) {
-    pointerSetA(outer.getInner(), user_input());
+    pointerSetA(outer.getInner(), user_input_voidptr());
     sink(outer.inner->a); // $ ast,ir
   }
 
   void getterArgument2Ref(Outer outer) {
-    referenceSetA(*outer.getInner(), user_input());
+    referenceSetA(*outer.getInner(), user_input_voidptr());
     sink(outer.inner->a); // $ ast,ir
   }
 
   void assignToGetterStar(Outer outer) {
-    (*outer.getInner()).a = user_input();
+    (*outer.getInner()).a = user_input_voidptr();
     sink(outer.inner->a); // $ ast,ir
   }
 
   void assignToGetterAmp(Outer outer) {
-    (&outer)->getInner()->a = user_input();
+    (&outer)->getInner()->a = user_input_voidptr();
     sink(outer.inner->a); // $ ast,ir
   }
 }

@@ -1,9 +1,9 @@
 void sink(void *o);
-void *user_input(void);
+void *user_input_voidptr(void);
 
 void local_array() {
   void *arr[10] = { 0 };
-  arr[0] = user_input();
+  arr[0] = user_input_voidptr();
   sink(arr[0]); // $ ast,ir
   sink(arr[1]); // $ SPURIOUS: ast,ir
   sink(*arr); // $ ast,ir
@@ -12,7 +12,7 @@ void local_array() {
 
 void local_array_convoluted_assign() {
   void *arr[10] = { 0 };
-  *&arr[0] = user_input();
+  *&arr[0] = user_input_voidptr();
   sink(arr[0]); // $ ast,ir
   sink(arr[1]); // $ SPURIOUS: ast,ir
 }
@@ -33,19 +33,19 @@ struct outer {
 };
 
 void nested_array_1(outer o) {
-  o.nested.arr[1].data = user_input();
+  o.nested.arr[1].data = user_input_voidptr();
   sink(o.nested.arr[1].data); // $ ast,ir
   sink(o.nested.arr[0].data); // $ SPURIOUS: ast,ir
 }
 
 void nested_array_2(outer o) {
-  o.indirect->arr[1].data = user_input();
+  o.indirect->arr[1].data = user_input_voidptr();
   sink(o.indirect->arr[1].data); // $ ast,ir
   sink(o.indirect->arr[0].data); // $ SPURIOUS: ast,ir
 }
 
 void nested_array_3(outer o) {
-  o.indirect->ptr[1].data = user_input();
+  o.indirect->ptr[1].data = user_input_voidptr();
   sink(o.indirect->ptr[1].data); // $ ir MISSING: ast
   sink(o.indirect->ptr[0].data); // $ SPURIOUS: ir
 }

@@ -1,6 +1,6 @@
 namespace Constructors
 {
-int user_input()
+int user_input_int()
 {
     return 42;
 }
@@ -31,9 +31,9 @@ void bar(Foo &f)
 
 void foo()
 {
-    Foo f(user_input(), 0);
-    Foo g(0, user_input());
-    Foo h(user_input(), user_input());
+    Foo f(user_input_int(), 0);
+    Foo g(0, user_input_int());
+    Foo h(user_input_int(), user_input_int());
     Foo i(0, 0);
 
     // Only a() should alert

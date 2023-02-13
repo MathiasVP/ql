@@ -335,19 +335,19 @@
 | by_reference.cpp:40:12:40:15 | this |
 | by_reference.cpp:44:26:44:29 | this |
 | by_reference.cpp:50:3:50:3 | s |
-| by_reference.cpp:50:17:50:26 | call to user_input |
+| by_reference.cpp:50:17:50:34 | call to user_input_voidptr |
 | by_reference.cpp:51:8:51:8 | s |
 | by_reference.cpp:51:10:51:20 | call to getDirectly |
 | by_reference.cpp:56:3:56:3 | s |
-| by_reference.cpp:56:19:56:28 | call to user_input |
+| by_reference.cpp:56:19:56:36 | call to user_input_voidptr |
 | by_reference.cpp:57:8:57:8 | s |
 | by_reference.cpp:57:10:57:22 | call to getIndirectly |
 | by_reference.cpp:62:3:62:3 | s |
-| by_reference.cpp:62:25:62:34 | call to user_input |
+| by_reference.cpp:62:25:62:42 | call to user_input_voidptr |
 | by_reference.cpp:63:8:63:8 | s |
 | by_reference.cpp:63:10:63:28 | call to getThroughNonMember |
 | by_reference.cpp:68:17:68:18 | & ... |
-| by_reference.cpp:68:21:68:30 | call to user_input |
+| by_reference.cpp:68:21:68:38 | call to user_input_voidptr |
 | by_reference.cpp:69:8:69:20 | call to nonMemberGetA |
 | by_reference.cpp:69:22:69:23 | & ... |
 | by_reference.cpp:84:3:84:7 | inner |
@@ -474,19 +474,19 @@
 | qualifiers.cpp:23:23:23:23 | a |
 | qualifiers.cpp:27:5:27:9 | outer |
 | qualifiers.cpp:27:11:27:18 | call to getInner |
-| qualifiers.cpp:27:28:27:37 | call to user_input |
+| qualifiers.cpp:27:28:27:45 | call to user_input_voidptr |
 | qualifiers.cpp:28:10:28:14 | outer |
 | qualifiers.cpp:28:16:28:20 | inner |
 | qualifiers.cpp:28:23:28:23 | a |
 | qualifiers.cpp:32:17:32:21 | outer |
 | qualifiers.cpp:32:23:32:30 | call to getInner |
-| qualifiers.cpp:32:35:32:44 | call to user_input |
+| qualifiers.cpp:32:35:32:52 | call to user_input_voidptr |
 | qualifiers.cpp:33:10:33:14 | outer |
 | qualifiers.cpp:33:16:33:20 | inner |
 | qualifiers.cpp:33:23:33:23 | a |
 | qualifiers.cpp:37:19:37:35 | * ... |
 | qualifiers.cpp:37:20:37:24 | outer |
-| qualifiers.cpp:37:38:37:47 | call to user_input |
+| qualifiers.cpp:37:38:37:55 | call to user_input_voidptr |
 | qualifiers.cpp:38:10:38:14 | outer |
 | qualifiers.cpp:38:16:38:20 | inner |
 | qualifiers.cpp:38:23:38:23 | a |

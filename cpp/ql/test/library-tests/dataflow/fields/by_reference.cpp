@@ -1,5 +1,5 @@
 void sink(void *o);
-void *user_input(void);
+void *user_input_voidptr(void);
 
 struct S {
   void *a;
@@ -47,25 +47,25 @@ struct S {
 
 void test_setDirectly() {
   S s;
-  s.setDirectly(user_input());
+  s.setDirectly(user_input_voidptr());
   sink(s.getDirectly()); // $ast ir
 }
 
 void test_setIndirectly() {
   S s;
-  s.setIndirectly(user_input());
+  s.setIndirectly(user_input_voidptr());
   sink(s.getIndirectly()); // $ast ir
 }
 
 void test_setThroughNonMember() {
   S s;
-  s.setThroughNonMember(user_input());
+  s.setThroughNonMember(user_input_voidptr());
   sink(s.getThroughNonMember()); // $ast ir
 }
 
 void test_nonMemberSetA() {
   S s;
-  nonMemberSetA(&s, user_input());
+  nonMemberSetA(&s, user_input_voidptr());
   sink(nonMemberGetA(&s)); // $ast,ir
 }
 
@@ -81,19 +81,19 @@ struct Outer {
 };
 
 void taint_inner_a_ptr(Inner *inner) {
-  inner->a = user_input();
+  inner->a = user_input_voidptr();
 }
 
 void taint_inner_a_ref(Inner &inner) {
-  inner.a = user_input();
+  inner.a = user_input_voidptr();
 }
 
 void taint_a_ptr(void **pa) {
-  *pa = user_input();
+  *pa = user_input_voidptr();
 }
 
 void taint_a_ref(void *&pa) {
-  pa = user_input();
+  pa = user_input_voidptr();
 }
 
 void test_outer_with_ptr(Outer *pouter) {

@@ -1,5 +1,5 @@
 void sink(void *o);
-void *user_input(void);
+void *user_input_voidptr(void);
 
 struct AB {
   void *a;
@@ -17,14 +17,14 @@ void absink(struct AB *ab) {
 }
 
 int struct_init(void) {
-  struct AB ab = { user_input(), 0 };
+  struct AB ab = { user_input_voidptr(), 0 };
 
   sink(ab.a); //$ ast,ir
   sink(ab.b); // no flow
   absink(&ab);
 
   struct Outer outer = {
-    { user_input(), 0 },
+    { user_input_voidptr(), 0 },
     &ab,
   };
 
@@ -37,9 +37,9 @@ int struct_init(void) {
 }
 
 int struct_init2(void) {
-  struct AB ab = { user_input(), 0 };
+  struct AB ab = { user_input_voidptr(), 0 };
   struct Outer outer = {
-    { user_input(), 0 },
+    { user_input_voidptr(), 0 },
     &ab,
   };
 

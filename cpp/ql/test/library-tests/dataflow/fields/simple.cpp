@@ -1,6 +1,6 @@
 namespace Simple
 {
-int user_input()
+int user_input_int()
 {
     return 42;
 }
@@ -36,10 +36,10 @@ void foo()
     Foo h(0, 0);
     Foo i(0, 0);
 
-    f.setA(user_input());
-    g.setB(user_input());
-    h.setA(user_input());
-    h.setB(user_input());
+    f.setA(user_input_int());
+    g.setB(user_input_int());
+    h.setA(user_input_int());
+    h.setB(user_input_int());
 
     // Only a() should alert
     bar(f);
@@ -62,7 +62,7 @@ struct A
 void single_field_test()
 {
     A a;
-    a.i = user_input();
+    a.i = user_input_int();
     A a2 = a;
     sink(a2.i); //$ ast,ir
 }
@@ -80,7 +80,7 @@ struct C2
     }
 
     void m() {
-        f2.f1 = user_input();
+        f2.f1 = user_input_int();
         sink(getf2f1()); //$ ast,ir
     }
 };
@@ -89,7 +89,7 @@ typedef A A_typedef;
 
 void single_field_test_typedef(A_typedef a)
 {
-    a.i = user_input();
+    a.i = user_input_int();
     A_typedef a2 = a;
     sink(a2.i); //$ ast,ir
 }

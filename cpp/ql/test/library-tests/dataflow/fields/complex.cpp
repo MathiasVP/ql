@@ -28,7 +28,7 @@ public:
   Bar inner;
 };
 
-int user_input()
+int user_input_int()
 {
   return 42;
 }
@@ -50,10 +50,10 @@ void foo()
   Outer b3;
   Outer b4;
 
-  b1.inner.f.setA(user_input());
-  b2.inner.f.setB(user_input());
-  b3.inner.f.setA(user_input());
-  b3.inner.f.setB(user_input());
+  b1.inner.f.setA(user_input_int());
+  b2.inner.f.setB(user_input_int());
+  b3.inner.f.setA(user_input_int());
+  b3.inner.f.setB(user_input_int());
 
   // Only a() should alert
   bar(b1);
