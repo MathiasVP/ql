@@ -69,6 +69,17 @@ class Node0Impl extends TIRDataFlowNode0 {
 
   /** Gets a textual representation of this node. */
   final string toString() { result = this.toStringImpl() }
+
+  /** Holds if the value of this node is a glvalue */
+  predicate isGLValue() { none() } // overridden in subclasses
+}
+
+DataFlowType getOperandType(Operand op, boolean isGLValue) {
+  Ssa::getLanguageType(op).hasType(result, isGLValue)
+}
+
+DataFlowType getInstructionType(Instruction instr, boolean isGLValue) {
+  Ssa::getResultLanguageType(instr).hasType(result, isGLValue)
 }
 
 /**
@@ -84,7 +95,7 @@ abstract class InstructionNode0 extends Node0Impl {
 
   override Declaration getFunction() { result = instr.getEnclosingFunction() }
 
-  override DataFlowType getType() { result = instr.getResultType() }
+  override DataFlowType getType() { result = getInstructionType(instr, _) }
 
   final override Location getLocationImpl() { result = instr.getLocation() }
 
@@ -93,6 +104,8 @@ abstract class InstructionNode0 extends Node0Impl {
     // does not use `Instruction.toString` because that's expensive to compute.
     result = instr.getOpcode().toString()
   }
+
+  final override predicate isGLValue() { instr.isGLValue() }
 }
 
 /**
@@ -127,11 +140,13 @@ abstract class OperandNode0 extends Node0Impl {
 
   override Declaration getFunction() { result = op.getUse().getEnclosingFunction() }
 
-  override DataFlowType getType() { result = op.getType() }
+  override DataFlowType getType() { result = getOperandType(op, _) }
 
   final override Location getLocationImpl() { result = op.getLocation() }
 
   override string toStringImpl() { result = op.toString() }
+
+  final override predicate isGLValue() { op.isGLValue() }
 }
 
 /**
@@ -702,8 +717,8 @@ predicate expectsContent(Node n, ContentSet c) { none() }
 
 /** Gets the type of `n` used for type pruning. */
 DataFlowType getNodeType(Node n) {
-  suppressUnusedNode(n) and
-  result instanceof VoidType // stub implementation
+  exists(n) and
+  result instanceof VoidType
 }
 
 /** Gets a string representation of a type returned by `getNodeType`. */
@@ -717,8 +732,6 @@ pragma[inline]
 predicate compatibleTypes(DataFlowType t1, DataFlowType t2) {
   any() // stub implementation
 }
-
-private predicate suppressUnusedNode(Node n) { any() }
 
 //////////////////////////////////////////////////////////////////////////////
 // Java QL library compatibility wrappers

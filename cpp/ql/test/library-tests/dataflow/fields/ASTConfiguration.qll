@@ -7,7 +7,7 @@ class AstConf extends Configuration {
   override predicate isSource(Node src) {
     src.asExpr() instanceof NewExpr
     or
-    src.asExpr().(Call).getTarget().hasName("user_input")
+    src.asExpr().(Call).getTarget().getName().matches("user\\_input%")
     or
     exists(FunctionCall fc |
       fc.getAnArgument() = src.asDefiningArgument() and
