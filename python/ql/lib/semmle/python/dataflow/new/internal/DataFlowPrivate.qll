@@ -955,3 +955,6 @@ class ContentApprox = Unit;
 /** Gets an approximated value for content `c`. */
 pragma[inline]
 ContentApprox getContentApprox(Content c) { any() }
+
+pragma[inline]
+int getAdditionalFieldFlowBranchLimitTerm(DataFlowCall call, ParameterNode p1, ArgumentNode n1) { none() }

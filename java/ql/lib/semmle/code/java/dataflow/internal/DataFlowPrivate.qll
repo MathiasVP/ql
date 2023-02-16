@@ -478,3 +478,6 @@ predicate containerContent(Content c) {
   c instanceof MapKeyContent or
   c instanceof MapValueContent
 }
+
+pragma[inline]
+int getAdditionalFieldFlowBranchLimitTerm(DataFlowCall call, ParameterNode p1, ArgumentNode n1) { none() }

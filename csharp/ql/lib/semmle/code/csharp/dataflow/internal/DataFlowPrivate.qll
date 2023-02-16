@@ -2374,3 +2374,6 @@ module Csv {
     )
   }
 }
+
+pragma[inline]
+int getAdditionalFieldFlowBranchLimitTerm(DataFlowCall call, ParameterNode p1, ArgumentNode n1) { none() }

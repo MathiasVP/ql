@@ -3,6 +3,7 @@ private import DataFlowUtil
 private import semmle.code.cpp.ir.IR
 private import DataFlowDispatch
 private import DataFlowImplConsistency
+private import DataFlowImplCommon
 private import semmle.code.cpp.ir.internal.IRCppLanguage
 private import SsaInternals as Ssa
 
@@ -691,6 +692,20 @@ predicate nodeHasInstruction(Node node, Instruction instr, int indirectionIndex)
   hasInstructionAndIndex(node, instr, indirectionIndex)
 }
 
+IRBlock getBasicBlock(Node node) {
+  node.asInstruction().getBlock() = result
+  or
+  node.asOperand().getUse().getBlock() = result
+  or
+  node.(SsaPhiNode).getPhiNode().getBasicBlock() = result
+  or
+  node.(RawIndirectOperand).getOperand().getUse().getBlock() = result
+  or
+  node.(RawIndirectInstruction).getInstruction().getBlock() = result
+  or
+  result = getBasicBlock(node.(PostUpdateNode).getPreUpdateNode())
+}
+
 /**
  * Holds if data can flow from `node1` to `node2` via a read of `f`.
  * Thus, `node1` references an object with a field `f` whose value ends up in
@@ -888,4 +903,28 @@ private class MyConsistencyConfiguration extends Consistency::ConsistencyConfigu
     // complex to model here.
     any()
   }
+}
+
+bindingset[call, p1, n1]
+pragma[inline_late]
+int getAdditionalFieldFlowBranchLimitTerm(DataFlowCall call, ParamNode p1, ArgNode n1) {
+  exists(ParamNode pSwitch, ArgNode argSwitch, Node switch |
+    viableParamArg(call, pSwitch, argSwitch) and
+    localFlow(pSwitch, switch) and
+    result = isSwitch(switch, p1)
+  )
+}
+
+bindingset[p1]
+pragma[inline_late]
+int isSwitch(Node switchee, ParamNode p1) {
+  exists(SwitchInstruction switch |
+    pragma[only_bind_out](switchee.asOperand()) =
+      pragma[only_bind_out](switch.getExpressionOperand()) and
+    result =
+      count(IRBlock block |
+        block = switch.getACaseSuccessor().getBlock() and
+        block.dominates(getBasicBlock(any(Node n | localFlow(p1, n))))
+      )
+  )
 }

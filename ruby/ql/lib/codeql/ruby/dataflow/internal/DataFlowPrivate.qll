@@ -1484,3 +1484,6 @@ ContentApprox getContentApprox(Content c) {
   or
   result = TNonElementContentApprox(c)
 }
+
+pragma[inline]
+int getAdditionalFieldFlowBranchLimitTerm(DataFlowCall call, ParameterNode p1, ArgumentNode n1) { none() }
