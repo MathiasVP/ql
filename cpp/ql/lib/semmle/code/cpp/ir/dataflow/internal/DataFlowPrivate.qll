@@ -1,6 +1,7 @@
 private import cpp as Cpp
 private import DataFlowUtil
 private import semmle.code.cpp.ir.IR
+private import semmle.code.cpp.ir.ValueNumbering
 private import DataFlowDispatch
 private import DataFlowImplConsistency
 private import DataFlowImplCommon
@@ -905,22 +906,19 @@ private class MyConsistencyConfiguration extends Consistency::ConsistencyConfigu
   }
 }
 
-bindingset[call, p1, n1]
-pragma[inline_late]
-int getAdditionalFieldFlowBranchLimitTerm(DataFlowCall call, ParamNode p1, ArgNode n1) {
-  exists(ParamNode pSwitch, ArgNode argSwitch, Node switch |
-    viableParamArg(call, pSwitch, argSwitch) and
-    localFlow(pSwitch, switch) and
-    result = isSwitch(switch, p1)
+bindingset[call, p, arg]
+int getAdditionalFieldFlowBranchLimitTerm(DataFlowCall call, ParameterNode p, ArgumentNode arg) {
+  exists(ParameterNode switchee, ConditionOperand op |
+    viableParamArg(call, switchee, _) and
+    valueNumber(switchee.asInstruction()).getAUse() = op and
+    result = countNumberOfBranchesUsingParameter(op, p)
   )
 }
 
 bindingset[p1]
-pragma[inline_late]
-int isSwitch(Node switchee, ParamNode p1) {
+int countNumberOfBranchesUsingParameter(ConditionOperand op, ParameterNode p1) {
   exists(SwitchInstruction switch |
-    pragma[only_bind_out](switchee.asOperand()) =
-      pragma[only_bind_out](switch.getExpressionOperand()) and
+    switch.getExpressionOperand() = op and
     result =
       count(IRBlock block |
         block = switch.getACaseSuccessor().getBlock() and

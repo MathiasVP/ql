@@ -318,3 +318,8 @@ private class MyConsistencyConfiguration extends Consistency::ConsistencyConfigu
     // consistency alerts enough that most of them are interesting.
   }
 }
+
+bindingset[call, p, arg]
+int getAdditionalFieldFlowBranchLimitTerm(DataFlowCall call, ParameterNode p, ArgumentNode arg) {
+  none()
+}
