@@ -1752,20 +1752,6 @@ class ContentSet instanceof Content {
   }
 }
 
-private IRBlock getBasicBlock(Node node) {
-  node.asInstruction().getBlock() = result
-  or
-  node.asOperand().getUse().getBlock() = result
-  or
-  node.(SsaPhiNode).getPhiNode().getBasicBlock() = result
-  or
-  node.(RawIndirectOperand).getOperand().getUse().getBlock() = result
-  or
-  node.(RawIndirectInstruction).getInstruction().getBlock() = result
-  or
-  result = getBasicBlock(node.(PostUpdateNode).getPreUpdateNode())
-}
-
 /**
  * Holds if the guard `g` validates the expression `e` upon evaluating to `branch`.
  *

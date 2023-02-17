@@ -1,8 +1,10 @@
 private import cpp as Cpp
 private import DataFlowUtil
 private import semmle.code.cpp.ir.IR
+private import semmle.code.cpp.ir.ValueNumbering
 private import DataFlowDispatch
 private import DataFlowImplConsistency
+private import DataFlowImplCommon
 private import semmle.code.cpp.ir.internal.IRCppLanguage
 private import SsaInternals as Ssa
 
@@ -890,6 +892,21 @@ private class MyConsistencyConfiguration extends Consistency::ConsistencyConfigu
   }
 }
 
+/** Gets the basic block that contains `node`, if any. */
+IRBlock getBasicBlock(Node node) {
+  node.asInstruction().getBlock() = result
+  or
+  node.asOperand().getUse().getBlock() = result
+  or
+  node.(SsaPhiNode).getPhiNode().getBasicBlock() = result
+  or
+  node.(RawIndirectOperand).getOperand().getUse().getBlock() = result
+  or
+  node.(RawIndirectInstruction).getInstruction().getBlock() = result
+  or
+  result = getBasicBlock(node.(PostUpdateNode).getPreUpdateNode())
+}
+
 /**
  * Gets an additional term that is added to the `join` and `branch` computations to reflect
  * an additional forward or backwards branching factor that is not taken into account
@@ -903,5 +920,39 @@ private class MyConsistencyConfiguration extends Consistency::ConsistencyConfigu
  */
 bindingset[call, p, arg]
 int getAdditionalFlowIntoCallNodeTerm(DataFlowCall call, ParameterNode p, ArgumentNode arg) {
-  none()
+  exists(ParameterNode switchee, ConditionOperand op |
+    viableParamArg(call, switchee, _) and
+    valueNumber(switchee.asInstruction()).getAUse() = op and
+    result = countNumberOfBranchesUsingParameter(op, p)
+  )
+}
+
+bindingset[p1]
+int countNumberOfBranchesUsingParameter(ConditionOperand op, ParameterNode p1) {
+  exists(SwitchInstruction switch |
+    switch.getExpressionOperand() = op and
+    // Count the number of cases that use the parameter.
+    // This isn't totally correct. Consider this example:
+    // ```cpp
+    // switch(...) {
+    //   case 0:
+    //    use(p);
+    //     break;
+    //   case 1:
+    //     ...
+    // label:
+    //     use(p)
+    //     break;
+    // }
+    // ...
+    // goto label1;
+    // ```
+    // Here, `case 1` isn't counted as a branch that uses p since
+    // the ... block doesn't dominate `use(p)`.
+    result =
+      count(IRBlock block |
+        block = switch.getACaseSuccessor().getBlock() and
+        block.dominates(getBasicBlock(any(Node n | localFlow(p1, n))))
+      )
+  )
 }
