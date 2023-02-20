@@ -529,6 +529,8 @@ class SsaPhiNode extends Node, TSsaPhiNode {
 
   /** Gets a node that is used as input to this phi node. */
   final Node getAnInput() { result = this.getAnInput(_) }
+
+  Ssa::SourceVariable getSourceVariable() { result = phi.getSourceVariable() }
 }
 
 /**
@@ -1187,8 +1189,12 @@ class ParameterNode extends Node {
   predicate isParameterOf(Function f, ParameterPosition pos) { none() } // overridden by subclasses
 }
 
-/** An explicit positional parameter, not including `this` or `...`. */
-private class ExplicitParameterNode extends ParameterNode, InstructionNode {
+/**
+ * INTERNAL: Do not use.
+ *
+ * An explicit positional parameter, not including `this` or `...`.
+ */
+class ExplicitParameterNode extends ParameterNode, InstructionNode {
   override InitializeParameterInstruction instr;
 
   ExplicitParameterNode() { exists(instr.getParameter()) }
@@ -1757,20 +1763,6 @@ class ContentSet instanceof Content {
   predicate hasLocationInfo(string path, int sl, int sc, int el, int ec) {
     super.hasLocationInfo(path, sl, sc, el, ec)
   }
-}
-
-private IRBlock getBasicBlock(Node node) {
-  node.asInstruction().getBlock() = result
-  or
-  node.asOperand().getUse().getBlock() = result
-  or
-  node.(SsaPhiNode).getPhiNode().getBasicBlock() = result
-  or
-  node.(RawIndirectOperand).getOperand().getUse().getBlock() = result
-  or
-  node.(RawIndirectInstruction).getInstruction().getBlock() = result
-  or
-  result = getBasicBlock(node.(PostUpdateNode).getPreUpdateNode())
 }
 
 /**

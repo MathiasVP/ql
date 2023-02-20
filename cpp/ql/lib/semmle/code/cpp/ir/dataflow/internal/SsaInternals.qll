@@ -58,6 +58,10 @@ private module SourceVariables {
      * to `getType()`".
      */
     abstract DataFlowType getType();
+
+    Variable getVariable(int numLoads) { none() }
+
+    final Variable getVariable() { result = this.getVariable(1) }
   }
 
   class SourceIRVariable extends SourceVariable, TSourceIRVariable {
@@ -81,6 +85,10 @@ private module SourceVariables {
 
     override DataFlowType getType() {
       if ind = 0 then result = var.getType() else result = getTypeImpl(var.getType(), ind - 1)
+    }
+
+    override Variable getVariable(int numLoads) {
+      result = var.getIRVariable().getAst() and ind = numLoads
     }
   }
 
