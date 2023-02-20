@@ -48,6 +48,16 @@ private module SourceVariables {
      * indirections) of this source variable.
      */
     abstract BaseSourceVariable getBaseVariable();
+
+    /** Holds if this variable is a glvalue. */
+    predicate isGLValue() { none() }
+
+    /**
+     * Gets the type of this source variable. If `isGLValue()` holds, then
+     * the type of this source variable should be thought of as "pointer
+     * to `getType()`".
+     */
+    abstract DataFlowType getType();
   }
 
   class SourceIRVariable extends SourceVariable, TSourceIRVariable {
@@ -65,6 +75,12 @@ private module SourceVariables {
       or
       ind > 0 and
       result = this.getIRVariable().toString() + " indirection"
+    }
+
+    override predicate isGLValue() { ind = 0 }
+
+    override DataFlowType getType() {
+      if ind = 0 then result = var.getType() else result = getTypeImpl(var.getType(), ind - 1)
     }
   }
 
@@ -84,6 +100,8 @@ private module SourceVariables {
       ind > 0 and
       result = "Call indirection"
     }
+
+    override DataFlowType getType() { result = getTypeImpl(call.getResultType(), ind) }
   }
 }
 
@@ -548,15 +566,15 @@ predicate adjacentDefRead(DefOrUse defOrUse1, UseOrPhi use) {
   exists(IRBlock bb1, int i1, SourceVariable v |
     defOrUse1.asDefOrUse().hasIndexInBlock(bb1, i1, v)
   |
-    exists(IRBlock bb2, int i2, Definition def |
-      adjacentDefRead(pragma[only_bind_into](def), pragma[only_bind_into](bb1),
+    exists(IRBlock bb2, int i2, DefinitionExt def |
+      adjacentDefReadExt(pragma[only_bind_into](def), pragma[only_bind_into](bb1),
         pragma[only_bind_into](i1), pragma[only_bind_into](bb2), pragma[only_bind_into](i2)) and
       def.getSourceVariable() = v and
       use.asDefOrUse().(UseImpl).hasIndexInBlock(bb2, i2, v)
     )
     or
     exists(PhiNode phi |
-      lastRefRedef(_, bb1, i1, phi) and
+      lastRefRedefExt(_, bb1, i1, phi) and
       use.asPhi() = phi and
       phi.getSourceVariable() = pragma[only_bind_into](v)
     )
@@ -570,7 +588,7 @@ predicate adjacentDefRead(DefOrUse defOrUse1, UseOrPhi use) {
 private predicate globalDefToUse(GlobalDef globalDef, UseOrPhi useOrPhi) {
   exists(IRBlock bb1, int i1, IRBlock bb2, int i2, SourceVariable v |
     globalDef.hasIndexInBlock(bb1, i1, v) and
-    adjacentDefRead(_, pragma[only_bind_into](bb1), pragma[only_bind_into](i1),
+    adjacentDefReadExt(_, pragma[only_bind_into](bb1), pragma[only_bind_into](i1),
       pragma[only_bind_into](bb2), pragma[only_bind_into](i2)) and
     useOrPhi.asDefOrUse().hasIndexInBlock(bb2, i2, v)
   )
@@ -686,16 +704,16 @@ private predicate ssaFlowImpl(Node nodeFrom, Node nodeTo, boolean uncertain) {
  * Holds if `def` is the corresponding definition of
  * the SSA library's `definition`.
  */
-private predicate ssaDefinition(Def def, Definition definition) {
+private predicate ssaDefinition(Def def, DefinitionExt definition) {
   exists(IRBlock block, int i, SourceVariable sv |
     def.hasIndexInBlock(block, i, sv) and
-    definition.definesAt(sv, block, i)
+    definition.definesAt(sv, block, i, _)
   )
 }
 
 /** Gets a node that represents the prior definition of `node`. */
 private Node getAPriorDefinition(Node node) {
-  exists(Def def, Definition definition, Definition inp, Def input |
+  exists(Def def, DefinitionExt definition, DefinitionExt inp, Def input |
     defToNode(node, def, true) and
     ssaDefinition(def, definition) and
     uncertainWriteDefinitionInput(pragma[only_bind_into](definition), pragma[only_bind_into](inp)) and
@@ -722,7 +740,7 @@ pragma[nomagic]
 private predicate fromPhiNodeToUse(PhiNode phi, SourceVariable sv, IRBlock bb1, int i1, UseOrPhi use) {
   exists(IRBlock bb2, int i2 |
     use.asDefOrUse().hasIndexInBlock(bb2, i2, sv) and
-    adjacentDefRead(pragma[only_bind_into](phi), pragma[only_bind_into](bb1),
+    adjacentDefReadExt(pragma[only_bind_into](phi), pragma[only_bind_into](bb1),
       pragma[only_bind_into](i1), pragma[only_bind_into](bb2), pragma[only_bind_into](i2))
   )
 }
@@ -731,13 +749,13 @@ private predicate fromPhiNodeToUse(PhiNode phi, SourceVariable sv, IRBlock bb1, 
 predicate fromPhiNode(SsaPhiNode nodeFrom, Node nodeTo) {
   exists(PhiNode phi, SourceVariable sv, IRBlock bb1, int i1, UseOrPhi use |
     phi = nodeFrom.getPhiNode() and
-    phi.definesAt(sv, bb1, i1) and
+    phi.definesAt(sv, bb1, i1, _) and
     useToNode(use, nodeTo)
   |
     fromPhiNodeToUse(phi, sv, bb1, i1, use)
     or
     exists(PhiNode phiTo |
-      lastRefRedef(phi, _, _, phiTo) and
+      lastRefRedefExt(phi, _, _, phiTo) and
       nodeTo.(SsaPhiNode).getPhiNode() = phiTo
     )
   )
@@ -816,8 +834,8 @@ module SsaCached {
    * path between them without any read of `def`.
    */
   cached
-  predicate adjacentDefRead(Definition def, IRBlock bb1, int i1, IRBlock bb2, int i2) {
-    SsaImpl::adjacentDefRead(def, bb1, i1, bb2, i2)
+  predicate adjacentDefReadExt(DefinitionExt def, IRBlock bb1, int i1, IRBlock bb2, int i2) {
+    SsaImpl::adjacentDefReadExt(def, _, bb1, i1, bb2, i2)
   }
 
   /**
@@ -826,12 +844,12 @@ module SsaCached {
    * without passing through another read or write.
    */
   cached
-  predicate lastRefRedef(Definition def, IRBlock bb, int i, Definition next) {
-    SsaImpl::lastRefRedef(def, bb, i, next)
+  predicate lastRefRedefExt(DefinitionExt def, IRBlock bb, int i, DefinitionExt next) {
+    SsaImpl::lastRefRedefExt(def, _, bb, i, next)
   }
 
   cached
-  predicate uncertainWriteDefinitionInput(SsaImpl::UncertainWriteDefinition def, Definition inp) {
+  predicate uncertainWriteDefinitionInput(SsaImpl::UncertainWriteDefinition def, DefinitionExt inp) {
     SsaImpl::uncertainWriteDefinitionInput(def, inp)
   }
 }
@@ -843,8 +861,8 @@ private newtype TSsaDefOrUse =
     or
     // Like in the pruning stage, we only include definition that's live after the
     // write as the final definitions computed by SSA.
-    exists(Definition def, SourceVariable sv, IRBlock bb, int i |
-      def.definesAt(sv, bb, i) and
+    exists(DefinitionExt def, SourceVariable sv, IRBlock bb, int i |
+      def.definesAt(sv, bb, i, _) and
       defOrUse.(DefImpl).hasIndexInBlock(bb, i, sv)
     )
   } or
@@ -948,9 +966,14 @@ class Def extends DefOrUse {
 
 private module SsaImpl = SsaImplCommon::Make<SsaInput>;
 
-class PhiNode = SsaImpl::PhiNode;
+class PhiNode extends SsaImpl::DefinitionExt {
+  PhiNode() {
+    this instanceof SsaImpl::PhiNode or
+    this instanceof SsaImpl::PhiReadNode
+  }
+}
 
-class Definition = SsaImpl::Definition;
+class DefinitionExt = SsaImpl::DefinitionExt;
 
 class UncertainWriteDefinition = SsaImpl::UncertainWriteDefinition;
 
