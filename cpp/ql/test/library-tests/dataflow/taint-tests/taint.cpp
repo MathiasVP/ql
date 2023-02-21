@@ -651,7 +651,7 @@ void test__strnextc(const char* source) {
 		sink(c); // $ ast,ir
 	} while(c != '\0');
 	c = _strnextc("");
-	sink(c); // $ SPURIOUS: ir
+	sink(c);
 }
 
 // --- taint through const specified function ---
