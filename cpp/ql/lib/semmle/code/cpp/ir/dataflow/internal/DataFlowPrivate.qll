@@ -2,7 +2,9 @@ private import cpp as Cpp
 private import DataFlowUtil
 private import semmle.code.cpp.ir.IR
 private import DataFlowDispatch
+private import semmle.code.cpp.ir.ValueNumbering
 private import DataFlowImplConsistency
+private import DataFlowImplCommon
 private import semmle.code.cpp.ir.internal.IRCppLanguage
 private import SsaInternals as Ssa
 
@@ -903,5 +905,32 @@ private class MyConsistencyConfiguration extends Consistency::ConsistencyConfigu
  */
 bindingset[call, p, arg]
 int getAdditionalFlowIntoCallNodeTerm(DataFlowCall call, ParameterNode p, ArgumentNode arg) {
-  none()
+  exists(ParameterNode switchee, ConditionOperand op |
+    viableParamArg(call, switchee, _) and
+    valueNumber(switchee.asInstruction()).getAUse() = op and
+    result = countNumberOfBranchesUsingParameter(op, p)
+  )
+}
+
+private SsaPhiNode getAPhiForVariable(Ssa::SourceVariable sv) { result.getSourceVariable() = sv }
+
+private EdgeKind caseOrDefaultEdge() {
+  result instanceof CaseEdge or
+  result instanceof DefaultEdge
+}
+
+bindingset[p1]
+int countNumberOfBranchesUsingParameter(ConditionOperand op, ParameterNode p1) {
+  exists(SwitchInstruction switch, Ssa::SourceVariable sv |
+    switch.getExpressionOperand() = op and
+    sv.getVariable() = p1.getParameter() and
+    // Count the number of cases that use the parameter.
+    result =
+      max(SsaPhiNode phi |
+        switch.getSuccessor(caseOrDefaultEdge()).getBlock().dominanceFrontier() = getBasicBlock(phi) and
+        phi = getAPhiForVariable(sv)
+      |
+        strictcount(phi.getAnInput())
+      )
+  )
 }

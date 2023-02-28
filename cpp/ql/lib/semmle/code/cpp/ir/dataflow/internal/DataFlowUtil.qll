@@ -525,6 +525,8 @@ class SsaPhiNode extends Node, TSsaPhiNode {
 
   /** Gets a node that is used as input to this phi node. */
   final Node getAnInput() { result = this.getAnInput(_) }
+
+  Ssa::SourceVariable getSourceVariable() { result = phi.getSourceVariable() }
 }
 
 /**
@@ -1199,6 +1201,9 @@ class ParameterNode extends Node {
    * pointer-indirection parameters are at further negative positions.
    */
   predicate isParameterOf(Function f, ParameterPosition pos) { none() } // overridden by subclasses
+
+  /** Gets the `Parameter` associated with this node. */
+  Parameter getParameter() { none() } // overridden by subclasses
 }
 
 /** An explicit positional parameter, not including `this` or `...`. */
@@ -1211,8 +1216,7 @@ private class ExplicitParameterNode extends ParameterNode, InstructionNode {
     f.getParameter(pos.(DirectPosition).getIndex()) = instr.getParameter()
   }
 
-  /** Gets the `Parameter` associated with this node. */
-  Parameter getParameter() { result = instr.getParameter() }
+  override Parameter getParameter() { result = instr.getParameter() }
 
   override string toStringImpl() { result = instr.getParameter().toString() }
 }
@@ -1255,6 +1259,8 @@ class ParameterIndirectionNode extends ParameterNode instanceof IndirectParamete
       indirectParameterNodeHasArgumentIndexAndIndex(this, argumentIndex, indirectionIndex)
     )
   }
+
+  override Parameter getParameter() { result = super.IndirectParameterNode.getParameter() }
 }
 
 /**
