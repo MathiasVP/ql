@@ -12,6 +12,8 @@
 #include "swift/extractor/infra/TargetDomains.h"
 #include "swift/extractor/SwiftBuiltinSymbols.h"
 #include "swift/extractor/infra/file/Path.h"
+#include "swift/extractor/infra/SwiftLocationExtractor.h"
+#include "swift/extractor/infra/SwiftBodyEmissionStrategy.h"
 
 using namespace codeql;
 using namespace std::string_literals;
@@ -139,7 +141,10 @@ static std::unordered_set<swift::ModuleDecl*> extractDeclarations(
     }
   }
 
-  SwiftVisitor visitor(compiler.getSourceMgr(), *trap, module, primaryFile);
+  SwiftLocationExtractor locationExtractor(*trap);
+  locationExtractor.emitFile(primaryFile);
+  SwiftBodyEmissionStrategy bodyEmissionStrategy(module, primaryFile);
+  SwiftVisitor visitor(compiler.getSourceMgr(), *trap, locationExtractor, bodyEmissionStrategy);
   auto topLevelDecls = getTopLevelDecls(module, primaryFile);
   for (auto decl : topLevelDecls) {
     visitor.extract(decl);
