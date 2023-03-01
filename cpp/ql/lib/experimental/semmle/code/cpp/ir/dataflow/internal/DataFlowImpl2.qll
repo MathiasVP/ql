@@ -1170,7 +1170,7 @@ private int branch(NodeEx n1, Configuration conf) {
   result =
     strictcount(NodeEx n |
         flowOutOfCallNodeCand1(_, n1, _, n, conf) or flowIntoCallNodeCand1(_, n1, n, conf)
-      ) + sum(getLanguageSpecificFlowIntoCallNodeCand1(_, n1, conf))
+      ) + sum(ParamNodeEx p1 | | getLanguageSpecificFlowIntoCallNodeCand1(p1, n1, conf))
 }
 
 /**
@@ -1198,7 +1198,7 @@ private int join(NodeEx n2, Configuration conf) {
   result =
     strictcount(NodeEx n |
         flowOutOfCallNodeCand1(_, n, _, n2, conf) or flowIntoCallNodeCand1(_, n, n2, conf)
-      ) + sum(getLanguageSpecificFlowIntoCallNodeCand1(n2, _, conf))
+      ) + sum(ArgNodeEx arg2 | | getLanguageSpecificFlowIntoCallNodeCand1(n2, arg2, conf))
 }
 
 /**
