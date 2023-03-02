@@ -834,22 +834,41 @@ module SsaCached {
   predicate lastRefRedefExt(DefinitionExt def, IRBlock bb, int i, DefinitionExt next) {
     SsaImpl::lastRefRedefExt(def, _, bb, i, next)
   }
+
+  /**
+   * Holds if the SSA definition of `v` at `def` reaches a read at index `i` in
+   * basic block `bb`, without crossing another SSA definition of `v`.
+   */
+  cached
+  predicate ssaDefReachesReadExt(SourceVariable sv, IRBlock bb, int i) {
+    SsaImpl::ssaDefReachesReadExt(sv, _, bb, i)
+  }
+
+  cached
+  newtype TSsaDefOrUse =
+    TDefOrUse(DefOrUseImpl defOrUse) {
+      exists(SourceVariable sv, IRBlock bb, int i |
+        defOrUse.(UseImpl).hasIndexInBlock(bb, i, sv) and
+        ssaDefReachesReadExt(sv, bb, i)
+      )
+      or
+      // Like in the pruning stage, we only include definition that's live after the
+      // write as the final definitions computed by SSA.
+      exists(DefinitionExt def, SourceVariable sv, IRBlock bb, int i |
+        def.definesAt(sv, bb, i, _) and
+        defOrUse.(DefImpl).hasIndexInBlock(bb, i, sv)
+      )
+    } or
+    TPhi(PhiNode phi) or
+    TGlobalDef(GlobalDefImpl global) {
+      exists(DefinitionExt def, SourceVariable sv, IRBlock bb, int i |
+        def.definesAt(sv, bb, i, _) and
+        global.hasIndexInBlock(bb, i, sv)
+      )
+    }
 }
 
-cached
-private newtype TSsaDefOrUse =
-  TDefOrUse(DefOrUseImpl defOrUse) {
-    defOrUse instanceof UseImpl
-    or
-    // Like in the pruning stage, we only include definition that's live after the
-    // write as the final definitions computed by SSA.
-    exists(DefinitionExt def, SourceVariable sv, IRBlock bb, int i |
-      def.definesAt(sv, bb, i, _) and
-      defOrUse.(DefImpl).hasIndexInBlock(bb, i, sv)
-    )
-  } or
-  TPhi(PhiNode phi) or
-  TGlobalDef(GlobalDefImpl global)
+private import SsaCached
 
 abstract private class SsaDefOrUse extends TSsaDefOrUse {
   /** Gets a textual representation of this element. */
