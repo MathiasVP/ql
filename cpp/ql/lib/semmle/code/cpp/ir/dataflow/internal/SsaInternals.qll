@@ -6,7 +6,6 @@ private import semmle.code.cpp.models.interfaces.Allocation as Alloc
 private import semmle.code.cpp.models.interfaces.DataFlow as DataFlow
 private import semmle.code.cpp.ir.internal.IRCppLanguage
 private import DataFlowPrivate
-private import ssa0.SsaInternals as SsaInternals0
 import SsaInternalsCommon
 
 private module SourceVariables {
@@ -119,17 +118,7 @@ predicate hasRawIndirectInstruction(Instruction instr, int indirectionIndex) {
 
 cached
 private newtype TDefOrUseImpl =
-  TDefImpl(Operand address, int indirectionIndex) {
-    exists(Instruction base | isDef(_, _, address, base, _, indirectionIndex) |
-      // We only include the definition if the SSA pruning stage
-      // concluded that the definition is live after the write.
-      any(SsaInternals0::Def def).getAddressOperand() = address
-      or
-      // Since the pruning stage doesn't know about global variables we can't use the above check to
-      // rule out dead assignments to globals.
-      base.(VariableAddressInstruction).getAstVariable() instanceof Cpp::GlobalOrNamespaceVariable
-    )
-  } or
+  TDefImpl(Operand address, int indirectionIndex) { isDef(_, _, address, _, _, indirectionIndex) } or
   TUseImpl(Operand operand, int indirectionIndex) {
     isUse(_, operand, _, _, indirectionIndex) and
     not isDef(_, _, operand, _, _, _)
@@ -157,8 +146,7 @@ private newtype TDefOrUseImpl =
   TIteratorDef(
     Operand iteratorDerefAddress, BaseSourceVariableInstruction container, int indirectionIndex
   ) {
-    isIteratorDef(container, iteratorDerefAddress, _, _, indirectionIndex) and
-    any(SsaInternals0::Def def | def.isIteratorDef()).getAddressOperand() = iteratorDerefAddress
+    isIteratorDef(container, iteratorDerefAddress, _, _, indirectionIndex)
   } or
   TIteratorUse(
     Operand iteratorAddress, BaseSourceVariableInstruction container, int indirectionIndex
@@ -166,12 +154,7 @@ private newtype TDefOrUseImpl =
     isIteratorUse(container, iteratorAddress, _, indirectionIndex)
   } or
   TFinalParameterUse(Parameter p, int indirectionIndex) {
-    // Avoid creating parameter nodes if there is no definitions of the variable other than the initializaion.
-    exists(SsaInternals0::Def def |
-      def.getSourceVariable().getBaseVariable().(BaseIRVariable).getIRVariable().getAst() = p and
-      not def.getValue().asInstruction() instanceof InitializeParameterInstruction and
-      unspecifiedTypeIsModifiableAt(p.getUnspecifiedType(), indirectionIndex)
-    )
+    unspecifiedTypeIsModifiableAt(p.getUnspecifiedType(), indirectionIndex)
   }
 
 private predicate unspecifiedTypeIsModifiableAt(Type unspecified, int indirectionIndex) {
@@ -723,17 +706,6 @@ predicate fromPhiNode(SsaPhiNode nodeFrom, Node nodeTo) {
   )
 }
 
-/**
- * Holds if there is a write at index `i` in basic block `bb` to variable `v` that's
- * subsequently read (as determined by the SSA pruning stage).
- */
-private predicate variableWriteCand(IRBlock bb, int i, SourceVariable v) {
-  exists(SsaInternals0::Def def, SsaInternals0::SourceVariable v0 |
-    def.asDefOrUse().hasIndexInBlock(bb, i, v0) and
-    v0 = v.getBaseVariable()
-  )
-}
-
 private predicate sourceVariableIsGlobal(
   SourceVariable sv, Cpp::GlobalOrNamespaceVariable global, IRFunction func, int indirectionIndex
 ) {
@@ -756,16 +728,14 @@ private module SsaInput implements SsaImplCommon::InputSig {
   predicate variableWrite(IRBlock bb, int i, SourceVariable v, boolean certain) {
     DataFlowImplCommon::forceCachingInSameStage() and
     (
-      variableWriteCand(bb, i, v) or
-      sourceVariableIsGlobal(v, _, _, _)
-    ) and
-    exists(DefImpl def | def.hasIndexInBlock(bb, i, v) |
-      if def.isCertain() then certain = true else certain = false
-    )
-    or
-    exists(GlobalDefImpl global |
-      global.hasIndexInBlock(bb, i, v) and
-      certain = true
+      exists(DefImpl def | def.hasIndexInBlock(bb, i, v) |
+        if def.isCertain() then certain = true else certain = false
+      )
+      or
+      exists(GlobalDefImpl global |
+        global.hasIndexInBlock(bb, i, v) and
+        certain = true
+      )
     )
   }
 
