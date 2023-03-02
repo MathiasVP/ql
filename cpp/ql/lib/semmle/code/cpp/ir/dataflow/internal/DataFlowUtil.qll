@@ -525,6 +525,8 @@ class SsaPhiNode extends Node, TSsaPhiNode {
 
   /** Gets a node that is used as input to this phi node. */
   final Node getAnInput() { result = this.getAnInput(_) }
+
+  Ssa::SourceVariable getSourceVariable() { result = phi.getSourceVariable() }
 }
 
 /**
@@ -1199,6 +1201,9 @@ class ParameterNode extends Node {
    * pointer-indirection parameters are at further negative positions.
    */
   predicate isParameterOf(Function f, ParameterPosition pos) { none() } // overridden by subclasses
+
+  /** Gets the `Parameter` associated with this node. */
+  Parameter getParameter() { none() } // overridden by subclasses
 }
 
 /** An explicit positional parameter, not including `this` or `...`. */
@@ -1211,8 +1216,7 @@ private class ExplicitParameterNode extends ParameterNode, InstructionNode {
     f.getParameter(pos.(DirectPosition).getIndex()) = instr.getParameter()
   }
 
-  /** Gets the `Parameter` associated with this node. */
-  Parameter getParameter() { result = instr.getParameter() }
+  override Parameter getParameter() { result = instr.getParameter() }
 
   override string toStringImpl() { result = instr.getParameter().toString() }
 }
@@ -1255,6 +1259,8 @@ class ParameterIndirectionNode extends ParameterNode instanceof IndirectParamete
       indirectParameterNodeHasArgumentIndexAndIndex(this, argumentIndex, indirectionIndex)
     )
   }
+
+  override Parameter getParameter() { result = IndirectParameterNode.super.getParameter() }
 }
 
 /**
@@ -1771,20 +1777,6 @@ class ContentSet instanceof Content {
   predicate hasLocationInfo(string path, int sl, int sc, int el, int ec) {
     super.hasLocationInfo(path, sl, sc, el, ec)
   }
-}
-
-private IRBlock getBasicBlock(Node node) {
-  node.asInstruction().getBlock() = result
-  or
-  node.asOperand().getUse().getBlock() = result
-  or
-  node.(SsaPhiNode).getPhiNode().getBasicBlock() = result
-  or
-  node.(RawIndirectOperand).getOperand().getUse().getBlock() = result
-  or
-  node.(RawIndirectInstruction).getInstruction().getBlock() = result
-  or
-  result = getBasicBlock(node.(PostUpdateNode).getPreUpdateNode())
 }
 
 /**

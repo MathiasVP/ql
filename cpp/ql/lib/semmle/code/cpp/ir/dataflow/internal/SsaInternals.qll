@@ -58,6 +58,9 @@ private module SourceVariables {
      * to `getType()`".
      */
     abstract DataFlowType getType();
+
+    /** Gets the AST variable associated with this source variable, if any. */
+    Cpp::Variable getVariable() { none() }
   }
 
   class SourceIRVariable extends SourceVariable, TSourceIRVariable {
@@ -82,6 +85,8 @@ private module SourceVariables {
     override DataFlowType getType() {
       if ind = 0 then result = var.getType() else result = getTypeImpl(var.getType(), ind - 1)
     }
+
+    override Cpp::Variable getVariable() { result = var.getIRVariable().getAst() }
   }
 
   class CallVariable extends SourceVariable, TCallVariable {
