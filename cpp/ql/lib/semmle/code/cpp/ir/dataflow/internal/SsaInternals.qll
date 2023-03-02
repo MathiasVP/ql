@@ -136,6 +136,7 @@ private newtype TDefOrUseImpl =
     not isDef(_, _, operand, _, _, _)
   } or
   TGlobalUse(Cpp::GlobalOrNamespaceVariable v, IRFunction f, int indirectionIndex) {
+    any(SsaInternals0::Use use).isGlobalUseInFunction(v, f) and
     // Represents a final "use" of a global variable to ensure that
     // the assignment to a global variable isn't ruled out as dead.
     exists(VariableAddressInstruction vai, int defIndex |
@@ -146,6 +147,7 @@ private newtype TDefOrUseImpl =
     )
   } or
   TGlobalDefImpl(Cpp::GlobalOrNamespaceVariable v, IRFunction f, int indirectionIndex) {
+    SsaInternals0::globalDefHasFunctionAndVariable(_, f, v) and
     // Represents the initial "definition" of a global variable when entering
     // a function body.
     exists(VariableAddressInstruction vai |
@@ -819,25 +821,32 @@ module SsaCached {
   predicate ssaDefReachesRead(SourceVariable sv, IRBlock bb, int i) {
     SsaImpl::ssaDefReachesRead(sv, _, bb, i)
   }
+
+  cached
+  newtype TSsaDefOrUse =
+    TDefOrUse(DefOrUseImpl defOrUse) {
+      exists(IRBlock bb, int i, SourceVariable sv |
+        ssaDefReachesRead(sv, bb, i) and
+        defOrUse.(UseImpl).hasIndexInBlock(bb, i, sv)
+      )
+      or
+      // Like in the pruning stage, we only include definition that's live after the
+      // write as the final definitions computed by SSA.
+      exists(Definition def, SourceVariable sv, IRBlock bb, int i |
+        def.definesAt(sv, bb, i) and
+        defOrUse.(DefImpl).hasIndexInBlock(bb, i, sv)
+      )
+    } or
+    TPhi(PhiNode phi) or
+    TGlobalDef(GlobalDefImpl global) {
+      exists(Definition def, SourceVariable sv, IRBlock bb, int i |
+        def.definesAt(sv, bb, i) and
+        global.hasIndexInBlock(bb, i, sv)
+      )
+    }
 }
 
-cached
-private newtype TSsaDefOrUse =
-  TDefOrUse(DefOrUseImpl defOrUse) {
-    exists(IRBlock bb, int i, SourceVariable sv |
-      ssaDefReachesRead(sv, bb, i) and
-      defOrUse.(UseImpl).hasIndexInBlock(bb, i, sv)
-    )
-    or
-    // Like in the pruning stage, we only include definition that's live after the
-    // write as the final definitions computed by SSA.
-    exists(Definition def, SourceVariable sv, IRBlock bb, int i |
-      def.definesAt(sv, bb, i) and
-      defOrUse.(DefImpl).hasIndexInBlock(bb, i, sv)
-    )
-  } or
-  TPhi(PhiNode phi) or
-  TGlobalDef(GlobalDefImpl global)
+private import SsaCached
 
 abstract private class SsaDefOrUse extends TSsaDefOrUse {
   /** Gets a textual representation of this element. */

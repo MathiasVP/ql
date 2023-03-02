@@ -347,7 +347,13 @@ module SsaCached {
         defOrUse.(DefImpl).hasIndexInBlock(bb, i, sv)
       )
     } or
-    TPhi(PhiNode phi)
+    TPhi(PhiNode phi) or
+    TGlobalDef(GlobalDefImpl global) {
+      exists(Definition def, SourceVariable sv, IRBlock bb, int i |
+        def.definesAt(sv, bb, i) and
+        global.hasIndexInBlock(bb, i, sv)
+      )
+    }
 }
 
 private import SsaCached
@@ -372,6 +378,54 @@ class DefOrUse extends TDefOrUse, SsaDefOrUse {
   final override Location getLocation() { result = defOrUse.getLocation() }
 
   final SourceVariable getSourceVariable() { result = defOrUse.getSourceVariable() }
+}
+
+class GlobalDef extends TGlobalDef, SsaDefOrUse {
+  GlobalDefImpl global;
+
+  GlobalDef() { this = TGlobalDef(global) }
+
+  /** Gets the location of this definition. */
+  final override Location getLocation() { result = global.getLocation() }
+
+  /** Gets a textual representation of this definition. */
+  override string toString() { result = "GlobalDef" }
+
+  /**
+   * Holds if this definition has index `index` in block `block`, and
+   * is a definition of the variable `sv`.
+   */
+  predicate hasIndexInBlock(IRBlock block, int index, SourceVariable sv) {
+    global.hasIndexInBlock(block, index, sv)
+  }
+
+  /**
+   * Gets the type of this definition after specifiers have been deeply stripped
+   * and typedefs have been resolved.
+   */
+  DataFlowType getUnspecifiedType() { result = global.getUnspecifiedType() }
+
+  /** Gets the `IRFunction` whose body is evaluated after this definition. */
+  IRFunction getIRFunction() { result = global.getIRFunction() }
+
+  /** Gets the global variable associated with this definition. */
+  Cpp::GlobalOrNamespaceVariable getVariable() { result = global.getVariable() }
+}
+
+pragma[nomagic]
+predicate globalDefHasFunctionAndVariable(
+  GlobalDef globalDef, IRFunction func, Cpp::GlobalOrNamespaceVariable v
+) {
+  globalDef.getIRFunction() = func and
+  globalDef.getVariable() = v
+}
+
+pragma[nomagic]
+predicate globalUseHasFunctionAndVariable(
+  GlobalUse globalUse, IRFunction func, Cpp::GlobalOrNamespaceVariable v
+) {
+  globalUse.getIRFunction() = func and
+  globalUse.getVariable() = v
 }
 
 class Phi extends TPhi, SsaDefOrUse {
@@ -426,6 +480,10 @@ class Use extends DefOrUse {
    * Gets the operand associated with this use, if any.
    */
   Operand getAddressOperand() { result = defOrUse.(OperandBasedUse).getOperand() }
+
+  predicate isGlobalUseInFunction(Cpp::GlobalOrNamespaceVariable v, IRFunction f) {
+    globalUseHasFunctionAndVariable(defOrUse, f, v)
+  }
 }
 
 private module SsaImpl = SsaImplCommon::Make<SsaInput>;
