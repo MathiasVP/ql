@@ -34,6 +34,25 @@ private newtype TDefOrUseImpl =
     isUse(_, operand, _, _, _) and
     not isDef(true, _, operand, _, _, _)
   } or
+  TGlobalUse(Cpp::GlobalOrNamespaceVariable v, IRFunction f) {
+    // Represents a final "use" of a global variable to ensure that
+    // the assignment to a global variable isn't ruled out as dead.
+    exists(VariableAddressInstruction vai |
+      vai.getEnclosingIRFunction() = f and
+      vai.getAstVariable() = v and
+      isDef(_, _, _, vai, _, _)
+    )
+  } or
+  TGlobalDefImpl(Cpp::GlobalOrNamespaceVariable v, IRFunction f) {
+    // Represents the initial "definition" of a global variable when entering
+    // a function body.
+    exists(VariableAddressInstruction vai |
+      vai.getEnclosingIRFunction() = f and
+      vai.getAstVariable() = v and
+      isUse(_, _, vai, _, _) and
+      not isDef(_, _, vai.getAUse(), _, _, _)
+    )
+  } or
   TIteratorDef(BaseSourceVariableInstruction container, Operand iteratorAddress) {
     isIteratorDef(container, iteratorAddress, _, _, _)
   } or
@@ -64,9 +83,7 @@ abstract private class DefOrUseImpl extends TDefOrUseImpl {
 
   abstract BaseSourceVariableInstruction getBase();
 
-  final BaseSourceVariable getBaseSourceVariable() {
-    result = this.getBase().getBaseSourceVariable()
-  }
+  BaseSourceVariable getBaseSourceVariable() { result = this.getBase().getBaseSourceVariable() }
 
   /** Gets the variable that is defined or used. */
   final SourceVariable getSourceVariable() {
@@ -126,6 +143,8 @@ abstract private class OperandBasedUse extends UseImpl {
   }
 
   final override Cpp::Location getLocation() { result = operand.getLocation() }
+
+  final Operand getOperand() { result = operand }
 }
 
 private class DirectUse extends OperandBasedUse, TUseImpl {
@@ -193,6 +212,83 @@ private class FinalParameterUse extends UseImpl, TFinalParameterUse {
   override predicate isCertain() { any() }
 }
 
+class GlobalUse extends UseImpl, TGlobalUse {
+  Cpp::GlobalOrNamespaceVariable global;
+  IRFunction f;
+
+  GlobalUse() { this = TGlobalUse(global, f) }
+
+  /** Gets the global variable associated with this use. */
+  Cpp::GlobalOrNamespaceVariable getVariable() { result = global }
+
+  /** Gets the `IRFunction` whose body is exited from after this use. */
+  IRFunction getIRFunction() { result = f }
+
+  final override predicate hasIndexInBlock(IRBlock block, int index) {
+    exists(ExitFunctionInstruction exit |
+      exit = f.getExitFunctionInstruction() and
+      block.getInstruction(index) = exit
+    )
+  }
+
+  final override Cpp::Location getLocation() { result = f.getLocation() }
+
+  override BaseSourceVariable getBaseSourceVariable() {
+    result.(BaseIRVariable).getIRVariable().getAst() = global
+  }
+
+  /**
+   * Gets the type of this use after specifiers have been deeply stripped
+   * and typedefs have been resolved.
+   */
+  Type getUnspecifiedType() { result = global.getUnspecifiedType() }
+
+  override predicate isCertain() { any() }
+
+  override string toString() { result = "GlobalUse" }
+
+  override BaseSourceVariableInstruction getBase() { none() }
+}
+
+class GlobalDefImpl extends DefOrUseImpl, TGlobalDefImpl {
+  Cpp::GlobalOrNamespaceVariable global;
+  IRFunction f;
+
+  GlobalDefImpl() { this = TGlobalDefImpl(global, f) }
+
+  /** Gets the global variable associated with this definition. */
+  Cpp::GlobalOrNamespaceVariable getVariable() { result = global }
+
+  /** Gets the `IRFunction` whose body is evaluated after this definition. */
+  IRFunction getIRFunction() { result = f }
+
+  /** Holds if this definition or use has index `index` in block `block`. */
+  final override predicate hasIndexInBlock(IRBlock block, int index) {
+    exists(EnterFunctionInstruction enter |
+      enter = f.getEnterFunctionInstruction() and
+      block.getInstruction(index) = enter
+    )
+  }
+
+  override BaseSourceVariable getBaseSourceVariable() {
+    result.(BaseIRVariable).getIRVariable().getAst() = global
+  }
+
+  /**
+   * Gets the type of this use after specifiers have been deeply stripped
+   * and typedefs have been resolved.
+   */
+  Type getUnspecifiedType() { result = global.getUnspecifiedType() }
+
+  override string toString() { result = "GlobalDef" }
+
+  override Location getLocation() { result = f.getLocation() }
+
+  override BaseSourceVariableInstruction getBase() { none() }
+
+  override predicate isCertain() { any() }
+}
+
 private module SsaInput implements SsaImplCommon::InputSig {
   import InputSigCommon
   import SourceVariables
@@ -203,8 +299,15 @@ private module SsaInput implements SsaImplCommon::InputSig {
    */
   predicate variableWrite(IRBlock bb, int i, SourceVariable v, boolean certain) {
     DataFlowImplCommon::forceCachingInSameStage() and
-    exists(DefImpl def | def.hasIndexInBlock(bb, i, v) |
-      if def.isCertain() then certain = true else certain = false
+    (
+      exists(DefImpl def | def.hasIndexInBlock(bb, i, v) |
+        if def.isCertain() then certain = true else certain = false
+      )
+      or
+      exists(GlobalDefImpl global |
+        global.hasIndexInBlock(bb, i, v) and
+        certain = true
+      )
     )
   }
 
@@ -219,18 +322,35 @@ private module SsaInput implements SsaImplCommon::InputSig {
   }
 }
 
-private newtype TSsaDefOrUse =
-  TDefOrUse(DefOrUseImpl defOrUse) {
-    defOrUse instanceof UseImpl
-    or
-    // If `defOrUse` is a definition we only include it if the
-    // SSA library concludes that it's live after the write.
-    exists(Definition def, SourceVariable sv, IRBlock bb, int i |
-      def.definesAt(sv, bb, i) and
-      defOrUse.(DefImpl).hasIndexInBlock(bb, i, sv)
-    )
-  } or
-  TPhi(PhiNode phi)
+cached
+module SsaCached {
+  /**
+   * Holds if the SSA definition of `v` at `def` reaches a read at index `i` in
+   * basic block `bb`, without crossing another SSA definition of `v`.
+   */
+  private predicate ssaDefReachesRead(SourceVariable sv, IRBlock bb, int i) {
+    SsaImpl::ssaDefReachesRead(sv, _, bb, i)
+  }
+
+  cached
+  newtype TSsaDefOrUse =
+    TDefOrUse(DefOrUseImpl defOrUse) {
+      exists(IRBlock bb, int i, SourceVariable sv |
+        ssaDefReachesRead(sv, bb, i) and
+        defOrUse.(UseImpl).hasIndexInBlock(bb, i, sv)
+      )
+      or
+      // If `defOrUse` is a definition we only include it if the
+      // SSA library concludes that it's live after the write.
+      exists(Definition def, SourceVariable sv, IRBlock bb, int i |
+        def.definesAt(sv, bb, i) and
+        defOrUse.(DefImpl).hasIndexInBlock(bb, i, sv)
+      )
+    } or
+    TPhi(PhiNode phi)
+}
+
+private import SsaCached
 
 abstract private class SsaDefOrUse extends TSsaDefOrUse {
   string toString() { result = "SsaDefOrUse" }
@@ -297,6 +417,15 @@ class Def extends DefOrUse {
   BaseSourceVariableInstruction getBase() { result = defOrUse.getBase() }
 
   predicate isIteratorDef() { defOrUse instanceof IteratorDef }
+}
+
+class Use extends DefOrUse {
+  override UseImpl defOrUse;
+
+  /**
+   * Gets the operand associated with this use, if any.
+   */
+  Operand getAddressOperand() { result = defOrUse.(OperandBasedUse).getOperand() }
 }
 
 private module SsaImpl = SsaImplCommon::Make<SsaInput>;

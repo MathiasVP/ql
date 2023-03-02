@@ -131,6 +131,7 @@ private newtype TDefOrUseImpl =
     )
   } or
   TUseImpl(Operand operand, int indirectionIndex) {
+    any(SsaInternals0::Use use).getAddressOperand() = operand and
     isUse(_, operand, _, _, indirectionIndex) and
     not isDef(_, _, operand, _, _, _)
   } or
@@ -809,12 +810,24 @@ module SsaCached {
   predicate lastRefRedef(Definition def, IRBlock bb, int i, Definition next) {
     SsaImpl::lastRefRedef(def, bb, i, next)
   }
+
+  /**
+   * Holds if the SSA definition of `v` at `def` reaches a read at index `i` in
+   * basic block `bb`, without crossing another SSA definition of `v`.
+   */
+  cached
+  predicate ssaDefReachesRead(SourceVariable sv, IRBlock bb, int i) {
+    SsaImpl::ssaDefReachesRead(sv, _, bb, i)
+  }
 }
 
 cached
 private newtype TSsaDefOrUse =
   TDefOrUse(DefOrUseImpl defOrUse) {
-    defOrUse instanceof UseImpl
+    exists(IRBlock bb, int i, SourceVariable sv |
+      ssaDefReachesRead(sv, bb, i) and
+      defOrUse.(UseImpl).hasIndexInBlock(bb, i, sv)
+    )
     or
     // Like in the pruning stage, we only include definition that's live after the
     // write as the final definitions computed by SSA.
