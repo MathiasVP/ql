@@ -1169,8 +1169,23 @@ pragma[nomagic]
 private int branch(NodeEx n1, Configuration conf) {
   result =
     strictcount(NodeEx n |
-      flowOutOfCallNodeCand1(_, n1, _, n, conf) or flowIntoCallNodeCand1(_, n1, n, conf)
-    )
+        flowOutOfCallNodeCand1(_, n1, _, n, conf) or flowIntoCallNodeCand1(_, n1, n, conf)
+      ) + sum(ParamNodeEx p1 | | getLanguageSpecificFlowIntoCallNodeCand1(p1, n1, conf))
+}
+
+/**
+ * Gets an additional term that is added to `branch` and `join` when deciding whether
+ * the amount of forward or backward branching is within the limit specified by the
+ * configuration.
+ */
+pragma[nomagic]
+private int getLanguageSpecificFlowIntoCallNodeCand1(
+  ParamNodeEx p1, ArgNodeEx n1, Configuration conf
+) {
+  exists(DataFlowCall call |
+    flowIntoCallNodeCand1(call, n1, p1, conf) and
+    result = getAdditionalFlowIntoCallNodeTerm(call, p1.projectToNode(), n1.projectToNode())
+  )
 }
 
 /**
@@ -1182,8 +1197,8 @@ pragma[nomagic]
 private int join(NodeEx n2, Configuration conf) {
   result =
     strictcount(NodeEx n |
-      flowOutOfCallNodeCand1(_, n, _, n2, conf) or flowIntoCallNodeCand1(_, n, n2, conf)
-    )
+        flowOutOfCallNodeCand1(_, n, _, n2, conf) or flowIntoCallNodeCand1(_, n, n2, conf)
+      ) + sum(ArgNodeEx arg2 | | getLanguageSpecificFlowIntoCallNodeCand1(n2, arg2, conf))
 }
 
 /**

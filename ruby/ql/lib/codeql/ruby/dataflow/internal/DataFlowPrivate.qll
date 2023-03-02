@@ -1157,6 +1157,8 @@ predicate jumpStep(Node pred, Node succ) {
   succ.asExpr().getExpr().(ConstantReadAccess).getValue() = pred.asExpr().getExpr()
   or
   FlowSummaryImpl::Private::Steps::summaryJumpStep(pred, succ)
+  or
+  any(AdditionalJumpStep s).step(pred, succ)
 }
 
 private ContentSet getKeywordContent(string name) {
@@ -1483,4 +1485,32 @@ ContentApprox getContentApprox(Content c) {
   result = TKnownElementContentApprox(approxKnownElementIndex(c))
   or
   result = TNonElementContentApprox(c)
+}
+
+/**
+ * A unit class for adding additional jump steps.
+ *
+ * Extend this class to add additional jump steps.
+ */
+class AdditionalJumpStep extends Unit {
+  /**
+   * Holds if data can flow from `pred` to `succ` in a way that discards call contexts.
+   */
+  abstract predicate step(Node pred, Node succ);
+}
+
+/**
+ * Gets an additional term that is added to the `join` and `branch` computations to reflect
+ * an additional forward or backwards branching factor that is not taken into account
+ * when calculating the (virtual) dispatch cost.
+ *
+ * `call` is a call with an argument `arg` that is part of a path from a source to a sink, and
+ * `p` is the target parameter of a callable to which `call` may resolve.
+ *
+ * All these values are bound by the dataflow library, and if this predicate is implemented it
+ * should be specified with a bindingset annotation that binds all the columns.
+ */
+bindingset[call, p, arg]
+int getAdditionalFlowIntoCallNodeTerm(DataFlowCall call, ParameterNode p, ArgumentNode arg) {
+  none()
 }
