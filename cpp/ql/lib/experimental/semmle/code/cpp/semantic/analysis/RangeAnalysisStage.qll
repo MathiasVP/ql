@@ -243,10 +243,22 @@ signature module BoundSig<DeltaSig D> {
   }
 }
 
-module RangeStage<DeltaSig D, BoundSig<D> Bounds, LangSig<D> LangParam, UtilSig<D> UtilParam> {
+signature module NonlinearRecursionSig<
+  DeltaSig D, BoundSig<D> Bounds, LangSig<D> LangParam, UtilSig<D> UtilParam>
+{
+  predicate bounded(
+    SemExpr e, Bounds::SemBound b, D::Delta delta, boolean upper, boolean fromBackEdge,
+    D::Delta origdelta
+  );
+}
+
+module RangeStage<
+  DeltaSig D, BoundSig<D> Bounds, LangSig<D> LangParam, UtilSig<D> UtilParam,
+  NonlinearRecursionSig<D, Bounds, LangParam, UtilParam> NonlinearRecursion>
+{
   private import Bounds
   private import LangParam
-  private import UtilParam
+  import UtilParam
   private import D
 
   /**
@@ -583,7 +595,7 @@ module RangeStage<DeltaSig D, BoundSig<D> Bounds, LangSig<D> LangParam, UtilSig<
    * - `upper = true`  : `e2 <= e1 + delta`
    * - `upper = false` : `e2 >= e1 + delta`
    */
-  private predicate boundFlowStep(SemExpr e2, SemExpr e1, D::Delta delta, boolean upper) {
+  predicate boundFlowStep(SemExpr e2, SemExpr e1, D::Delta delta, boolean upper) {
     semValueFlowStep(e2, e1, delta) and
     (upper = true or upper = false)
     or
@@ -955,7 +967,7 @@ module RangeStage<DeltaSig D, BoundSig<D> Bounds, LangSig<D> LangParam, UtilSig<
    * - `upper = true`  : `e <= b + delta`
    * - `upper = false` : `e >= b + delta`
    */
-  private predicate bounded(
+  predicate bounded(
     SemExpr e, SemBound b, D::Delta delta, boolean upper, boolean fromBackEdge, D::Delta origdelta,
     SemReason reason
   ) {
@@ -1043,6 +1055,9 @@ module RangeStage<DeltaSig D, BoundSig<D> Bounds, LangSig<D> LangParam, UtilSig<
         delta = D::fromFloat(f) and
         if semPositive(e) then f >= 0 else any()
       )
+      or
+      NonlinearRecursion::bounded(e, b, delta, upper, fromBackEdge, origdelta) and
+      reason = TSemNoReason()
     )
   }
 

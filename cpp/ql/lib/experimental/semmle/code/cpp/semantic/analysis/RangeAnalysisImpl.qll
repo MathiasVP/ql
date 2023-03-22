@@ -46,11 +46,67 @@ private module RelativeBounds implements BoundSig<FloatDelta> {
   }
 }
 
+module WithoutNonlinearRecursion<
+  DeltaSig D, BoundSig<D> Bounds, LangSig<D> LangParam, UtilSig<D> UtilParam> implements
+  NonlinearRecursionSig<D, Bounds, LangParam, UtilParam>
+{
+  predicate bounded(
+    SemExpr e, Bounds::SemBound b, D::Delta delta, boolean upper, boolean fromBackEdge,
+    D::Delta origdelta
+  ) {
+    none()
+  }
+}
+
+module WithNonlinearRecursion<
+  DeltaSig D, BoundSig<D> Bounds, LangSig<D> LangParam, UtilSig<D> UtilParam> implements
+  NonlinearRecursionSig<D, Bounds, LangParam, UtilParam>
+{
+  private module Self = WithNonlinearRecursion<D, Bounds, LangParam, UtilParam>;
+
+  private module Main = RangeStage<D, Bounds, LangParam, UtilParam, Self>;
+
+  predicate bounded(
+    SemExpr e, Bounds::SemBound b, D::Delta delta, boolean upper, boolean fromBackEdge,
+    D::Delta origdelta
+  ) {
+    fromBackEdge = false and
+    b instanceof Bounds::SemZeroBound and
+    exists(
+      SemAddExpr add, SemExpr left, SemExpr right, D::Delta dLeft, D::Delta dRight,
+      D::Delta origdeltaLeft, D::Delta origdeltaRight
+    |
+      // Don't compute non-linear bounds if we can already compute the bounds in the main recursion.
+      not Main::boundFlowStep(add, _, _, _) and
+      not Main::semValueFlowStep(add, _, _) and
+      e = add and
+      add.getLeftOperand() = left and
+      add.getRightOperand() = right and
+      // Requiring that both `fromBackEdge`s are `false` prevents us from entering an ever-increasing
+      // sequence of recursive calls that continiously increments (or decrements) the bound.
+      Main::bounded(left, any(Bounds::SemZeroBound zb), dLeft, upper, false, origdeltaLeft, _) and
+      Main::bounded(right, any(Bounds::SemZeroBound zb), dRight, upper, false, origdeltaRight, _)
+    |
+      upper = true and
+      delta = D::fromFloat(D::toFloat(dLeft) + D::toFloat(dRight)) and
+      origdelta = D::fromFloat(D::toFloat(origdeltaLeft) + D::toFloat(origdeltaRight))
+      or
+      upper = false and
+      delta = D::fromFloat(D::toFloat(dLeft) - D::toFloat(dRight)) and
+      origdelta = D::fromFloat(D::toFloat(origdeltaLeft) - D::toFloat(origdeltaRight))
+    )
+  }
+}
+
+module Utils = RangeUtil<FloatDelta, CppLangImpl>;
+
 private module ConstantStage =
-  RangeStage<FloatDelta, ConstantBounds, CppLangImpl, RangeUtil<FloatDelta, CppLangImpl>>;
+  RangeStage<FloatDelta, ConstantBounds, CppLangImpl, Utils,
+    WithNonlinearRecursion<FloatDelta, ConstantBounds, CppLangImpl, Utils>>;
 
 private module RelativeStage =
-  RangeStage<FloatDelta, RelativeBounds, CppLangImpl, RangeUtil<FloatDelta, CppLangImpl>>;
+  RangeStage<FloatDelta, RelativeBounds, CppLangImpl, Utils,
+    WithoutNonlinearRecursion<FloatDelta, RelativeBounds, CppLangImpl, Utils>>;
 
 private newtype TSemReason =
   TSemNoReason() or
