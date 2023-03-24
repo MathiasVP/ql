@@ -1,0 +1,163 @@
+| SimpleRangeAnalysis_tests.cpp:43:11:43:15 | Load: total | Unexpected result: range=>=0 |
+| SimpleRangeAnalysis_tests.cpp:45:11:45:15 | Load: total | Unexpected result: range=<=i+1 |
+| SimpleRangeAnalysis_tests.cpp:45:11:45:15 | Load: total | Unexpected result: range=>=0 |
+| SimpleRangeAnalysis_tests.cpp:45:11:45:15 | Load: total | Unexpected result: range=>=i+0 |
+| SimpleRangeAnalysis_tests.cpp:47:9:47:13 | Load: total | Unexpected result: range=>=0 |
+| SimpleRangeAnalysis_tests.cpp:49:9:49:17 | Add: ... + ... | Unexpected result: range===i+2 |
+| SimpleRangeAnalysis_tests.cpp:49:9:49:17 | Add: ... + ... | Unexpected result: range=>=2 |
+| SimpleRangeAnalysis_tests.cpp:49:9:49:17 | Add: ... + ... | Unexpected result: range=>=i+0 |
+| SimpleRangeAnalysis_tests.cpp:49:21:49:36 | // $ range=>=i+1 | Missing result:range=>=i+1 |
+| SimpleRangeAnalysis_tests.cpp:58:11:58:15 | Load: total | Unexpected result: range=>=0 |
+| SimpleRangeAnalysis_tests.cpp:60:11:60:15 | Load: total | Unexpected result: range=<=i+1 |
+| SimpleRangeAnalysis_tests.cpp:60:11:60:15 | Load: total | Unexpected result: range=>=0 |
+| SimpleRangeAnalysis_tests.cpp:60:11:60:15 | Load: total | Unexpected result: range=>=i+0 |
+| SimpleRangeAnalysis_tests.cpp:62:9:62:13 | Load: total | Unexpected result: range=>=0 |
+| SimpleRangeAnalysis_tests.cpp:64:9:64:17 | Add: ... + ... | Unexpected result: range===i+2 |
+| SimpleRangeAnalysis_tests.cpp:64:9:64:17 | Add: ... + ... | Unexpected result: range=>=2 |
+| SimpleRangeAnalysis_tests.cpp:64:9:64:17 | Add: ... + ... | Unexpected result: range=>=i+0 |
+| SimpleRangeAnalysis_tests.cpp:64:21:64:36 | // $ range=>=i+1 | Missing result:range=>=i+1 |
+| SimpleRangeAnalysis_tests.cpp:73:11:73:15 | Load: total | Unexpected result: range=>=0 |
+| SimpleRangeAnalysis_tests.cpp:75:11:75:15 | Load: total | Unexpected result: range=<=i+1 |
+| SimpleRangeAnalysis_tests.cpp:75:11:75:15 | Load: total | Unexpected result: range=>=0 |
+| SimpleRangeAnalysis_tests.cpp:75:11:75:15 | Load: total | Unexpected result: range=>=i+0 |
+| SimpleRangeAnalysis_tests.cpp:178:19:178:32 | // $ range=>=0 | Missing result:range=>=0 |
+| SimpleRangeAnalysis_tests.cpp:181:19:181:82 | // $ range=>=1 range=>=Start+1 range=">=call to test12_helper+1" | Missing result:range=">=call to test12_helper+1" |
+| SimpleRangeAnalysis_tests.cpp:181:19:181:82 | // $ range=>=1 range=>=Start+1 range=">=call to test12_helper+1" | Missing result:range=>=1 |
+| SimpleRangeAnalysis_tests.cpp:181:19:181:82 | // $ range=>=1 range=>=Start+1 range=">=call to test12_helper+1" | Missing result:range=>=Start+1 |
+| SimpleRangeAnalysis_tests.cpp:183:18:183:31 | // $ range=>=0 | Missing result:range=>=0 |
+| SimpleRangeAnalysis_tests.cpp:197:34:197:69 | // $ range=>=1 range=">=... - ...+0" | Missing result:range=">=... - ...+0" |
+| SimpleRangeAnalysis_tests.cpp:197:34:197:69 | // $ range=>=1 range=">=... - ...+0" | Missing result:range=>=1 |
+| SimpleRangeAnalysis_tests.cpp:198:44:198:79 | // $ range=>=1 range=">=... - ...+0" | Missing result:range=">=... - ...+0" |
+| SimpleRangeAnalysis_tests.cpp:198:44:198:79 | // $ range=>=1 range=">=... - ...+0" | Missing result:range=>=1 |
+| SimpleRangeAnalysis_tests.cpp:236:11:236:13 | Add: ... + ... | Unexpected result: range=<=8 |
+| SimpleRangeAnalysis_tests.cpp:236:11:236:13 | Add: ... + ... | Unexpected result: range=>=-8 |
+| SimpleRangeAnalysis_tests.cpp:236:17:236:81 | // $ range=<=10 range="<=+ ...:a-1" range=">=- ...+1" range=>=-10 | Missing result:range="<=+ ...:a-1" |
+| SimpleRangeAnalysis_tests.cpp:236:17:236:81 | // $ range=<=10 range="<=+ ...:a-1" range=">=- ...+1" range=>=-10 | Missing result:range=">=- ...+1" |
+| SimpleRangeAnalysis_tests.cpp:236:17:236:81 | // $ range=<=10 range="<=+ ...:a-1" range=">=- ...+1" range=>=-10 | Missing result:range=<=10 |
+| SimpleRangeAnalysis_tests.cpp:236:17:236:81 | // $ range=<=10 range="<=+ ...:a-1" range=">=- ...+1" range=>=-10 | Missing result:range=>=-10 |
+| SimpleRangeAnalysis_tests.cpp:238:11:238:15 | Load: total | Unexpected result: range=<=8 |
+| SimpleRangeAnalysis_tests.cpp:238:11:238:15 | Load: total | Unexpected result: range=>=-8 |
+| SimpleRangeAnalysis_tests.cpp:246:17:246:81 | // $ range=<=11 range="<=+ ...:a+0" range=">=- ...+0" range=>=-11 | Missing result:range="<=+ ...:a+0" |
+| SimpleRangeAnalysis_tests.cpp:246:17:246:81 | // $ range=<=11 range="<=+ ...:a+0" range=">=- ...+0" range=>=-11 | Missing result:range=">=- ...+0" |
+| SimpleRangeAnalysis_tests.cpp:248:11:248:15 | Load: total | Unexpected result: range=<=0+11 |
+| SimpleRangeAnalysis_tests.cpp:248:11:248:15 | Load: total | Unexpected result: range=<=19 |
+| SimpleRangeAnalysis_tests.cpp:248:11:248:15 | Load: total | Unexpected result: range=>=0-11 |
+| SimpleRangeAnalysis_tests.cpp:248:11:248:15 | Load: total | Unexpected result: range=>=-19 |
+| SimpleRangeAnalysis_tests.cpp:256:11:256:13 | Add: ... + ... | Unexpected result: range=<=18 |
+| SimpleRangeAnalysis_tests.cpp:256:11:256:13 | Add: ... + ... | Unexpected result: range=>=-18 |
+| SimpleRangeAnalysis_tests.cpp:258:11:258:15 | Load: total | Unexpected result: range="<=- ...+18" |
+| SimpleRangeAnalysis_tests.cpp:258:11:258:15 | Load: total | Unexpected result: range=">=- ...-18" |
+| SimpleRangeAnalysis_tests.cpp:258:11:258:15 | Load: total | Unexpected result: range=<=0+29 |
+| SimpleRangeAnalysis_tests.cpp:258:11:258:15 | Load: total | Unexpected result: range=<=37 |
+| SimpleRangeAnalysis_tests.cpp:258:11:258:15 | Load: total | Unexpected result: range=>=0-29 |
+| SimpleRangeAnalysis_tests.cpp:258:11:258:15 | Load: total | Unexpected result: range=>=-37 |
+| SimpleRangeAnalysis_tests.cpp:266:11:266:13 | Add: ... + ... | Unexpected result: range=<=8 |
+| SimpleRangeAnalysis_tests.cpp:266:11:266:13 | Add: ... + ... | Unexpected result: range=>=-8 |
+| SimpleRangeAnalysis_tests.cpp:268:11:268:15 | Load: total | Unexpected result: range="<=- ...+8" |
+| SimpleRangeAnalysis_tests.cpp:268:11:268:15 | Load: total | Unexpected result: range="<=- ...+26" |
+| SimpleRangeAnalysis_tests.cpp:268:11:268:15 | Load: total | Unexpected result: range=">=- ...-8" |
+| SimpleRangeAnalysis_tests.cpp:268:11:268:15 | Load: total | Unexpected result: range=">=- ...-26" |
+| SimpleRangeAnalysis_tests.cpp:268:11:268:15 | Load: total | Unexpected result: range=<=0+37 |
+| SimpleRangeAnalysis_tests.cpp:268:11:268:15 | Load: total | Unexpected result: range=<=45 |
+| SimpleRangeAnalysis_tests.cpp:268:11:268:15 | Load: total | Unexpected result: range=>=0-37 |
+| SimpleRangeAnalysis_tests.cpp:268:11:268:15 | Load: total | Unexpected result: range=>=-45 |
+| SimpleRangeAnalysis_tests.cpp:276:17:276:79 | // $ range="<=- ...+0" range=">=+ ...:a+0" range=>=-7 range=<=7 | Missing result:range="<=- ...+0" |
+| SimpleRangeAnalysis_tests.cpp:276:17:276:79 | // $ range="<=- ...+0" range=">=+ ...:a+0" range=>=-7 range=<=7 | Missing result:range=">=+ ...:a+0" |
+| SimpleRangeAnalysis_tests.cpp:278:11:278:15 | Load: total | Unexpected result: range="<=- ...+7" |
+| SimpleRangeAnalysis_tests.cpp:278:11:278:15 | Load: total | Unexpected result: range="<=- ...+15" |
+| SimpleRangeAnalysis_tests.cpp:278:11:278:15 | Load: total | Unexpected result: range="<=- ...+33" |
+| SimpleRangeAnalysis_tests.cpp:278:11:278:15 | Load: total | Unexpected result: range=">=- ...-7" |
+| SimpleRangeAnalysis_tests.cpp:278:11:278:15 | Load: total | Unexpected result: range=">=- ...-15" |
+| SimpleRangeAnalysis_tests.cpp:278:11:278:15 | Load: total | Unexpected result: range=">=- ...-33" |
+| SimpleRangeAnalysis_tests.cpp:278:11:278:15 | Load: total | Unexpected result: range=<=0+44 |
+| SimpleRangeAnalysis_tests.cpp:278:11:278:15 | Load: total | Unexpected result: range=<=52 |
+| SimpleRangeAnalysis_tests.cpp:278:11:278:15 | Load: total | Unexpected result: range=>=0-44 |
+| SimpleRangeAnalysis_tests.cpp:278:11:278:15 | Load: total | Unexpected result: range=>=-52 |
+| SimpleRangeAnalysis_tests.cpp:286:11:286:13 | Add: ... + ... | Unexpected result: range=<=5 |
+| SimpleRangeAnalysis_tests.cpp:286:11:286:13 | Add: ... + ... | Unexpected result: range=>=-5 |
+| SimpleRangeAnalysis_tests.cpp:286:17:286:79 | // $ range="<=- ...-1" range=">=+ ...:a+1" range=>=-6 range=<=6 | Missing result:range="<=- ...-1" |
+| SimpleRangeAnalysis_tests.cpp:286:17:286:79 | // $ range="<=- ...-1" range=">=+ ...:a+1" range=>=-6 range=<=6 | Missing result:range=">=+ ...:a+1" |
+| SimpleRangeAnalysis_tests.cpp:286:17:286:79 | // $ range="<=- ...-1" range=">=+ ...:a+1" range=>=-6 range=<=6 | Missing result:range=<=6 |
+| SimpleRangeAnalysis_tests.cpp:286:17:286:79 | // $ range="<=- ...-1" range=">=+ ...:a+1" range=>=-6 range=<=6 | Missing result:range=>=-6 |
+| SimpleRangeAnalysis_tests.cpp:288:11:288:15 | Load: total | Unexpected result: range="<=- ...+5" |
+| SimpleRangeAnalysis_tests.cpp:288:11:288:15 | Load: total | Unexpected result: range="<=- ...+12" |
+| SimpleRangeAnalysis_tests.cpp:288:11:288:15 | Load: total | Unexpected result: range="<=- ...+20" |
+| SimpleRangeAnalysis_tests.cpp:288:11:288:15 | Load: total | Unexpected result: range="<=- ...+38" |
+| SimpleRangeAnalysis_tests.cpp:288:11:288:15 | Load: total | Unexpected result: range=">=- ...-5" |
+| SimpleRangeAnalysis_tests.cpp:288:11:288:15 | Load: total | Unexpected result: range=">=- ...-12" |
+| SimpleRangeAnalysis_tests.cpp:288:11:288:15 | Load: total | Unexpected result: range=">=- ...-20" |
+| SimpleRangeAnalysis_tests.cpp:288:11:288:15 | Load: total | Unexpected result: range=">=- ...-38" |
+| SimpleRangeAnalysis_tests.cpp:288:11:288:15 | Load: total | Unexpected result: range=<=0+49 |
+| SimpleRangeAnalysis_tests.cpp:288:11:288:15 | Load: total | Unexpected result: range=<=57 |
+| SimpleRangeAnalysis_tests.cpp:288:11:288:15 | Load: total | Unexpected result: range=>=0-49 |
+| SimpleRangeAnalysis_tests.cpp:288:11:288:15 | Load: total | Unexpected result: range=>=-57 |
+| SimpleRangeAnalysis_tests.cpp:290:9:290:13 | Load: total | Unexpected result: range="<=- ...+5" |
+| SimpleRangeAnalysis_tests.cpp:290:9:290:13 | Load: total | Unexpected result: range="<=- ...+12" |
+| SimpleRangeAnalysis_tests.cpp:290:9:290:13 | Load: total | Unexpected result: range="<=- ...+20" |
+| SimpleRangeAnalysis_tests.cpp:290:9:290:13 | Load: total | Unexpected result: range="<=- ...+38" |
+| SimpleRangeAnalysis_tests.cpp:290:9:290:13 | Load: total | Unexpected result: range=">=- ...-5" |
+| SimpleRangeAnalysis_tests.cpp:290:9:290:13 | Load: total | Unexpected result: range=">=- ...-12" |
+| SimpleRangeAnalysis_tests.cpp:290:9:290:13 | Load: total | Unexpected result: range=">=- ...-20" |
+| SimpleRangeAnalysis_tests.cpp:290:9:290:13 | Load: total | Unexpected result: range=">=- ...-38" |
+| SimpleRangeAnalysis_tests.cpp:290:9:290:13 | Load: total | Unexpected result: range=<=0+49 |
+| SimpleRangeAnalysis_tests.cpp:290:9:290:13 | Load: total | Unexpected result: range=<=57 |
+| SimpleRangeAnalysis_tests.cpp:290:9:290:13 | Load: total | Unexpected result: range=>=0-49 |
+| SimpleRangeAnalysis_tests.cpp:290:9:290:13 | Load: total | Unexpected result: range=>=-57 |
+| SimpleRangeAnalysis_tests.cpp:305:19:305:32 | // $ range=>=1 | Missing result:range=>=1 |
+| SimpleRangeAnalysis_tests.cpp:313:19:313:44 | // $ range=>=0 range=>=3+0 | Missing result:range=>=0 |
+| SimpleRangeAnalysis_tests.cpp:313:19:313:44 | // $ range=>=0 range=>=3+0 | Missing result:range=>=3+0 |
+| SimpleRangeAnalysis_tests.cpp:329:19:329:34 | // $ range=<=3+0 | Missing result:range=<=3+0 |
+| SimpleRangeAnalysis_tests.cpp:337:19:337:34 | // $ range=<=3-1 | Missing result:range=<=3-1 |
+| SimpleRangeAnalysis_tests.cpp:339:17:339:32 | // $ range=<=3+0 | Missing result:range=<=3+0 |
+| SimpleRangeAnalysis_tests.cpp:353:19:353:32 | // $ range=>=0 | Missing result:range=>=0 |
+| SimpleRangeAnalysis_tests.cpp:361:19:361:44 | // $ range=>=0 range=>=0+0 | Missing result:range=>=0 |
+| SimpleRangeAnalysis_tests.cpp:361:19:361:44 | // $ range=>=0 range=>=0+0 | Missing result:range=>=0+0 |
+| SimpleRangeAnalysis_tests.cpp:377:19:377:34 | // $ range=<=0+0 | Missing result:range=<=0+0 |
+| SimpleRangeAnalysis_tests.cpp:385:19:385:34 | // $ range=<=0+0 | Missing result:range=<=0+0 |
+| SimpleRangeAnalysis_tests.cpp:387:17:387:32 | // $ range=<=0+0 | Missing result:range=<=0+0 |
+| SimpleRangeAnalysis_tests.cpp:448:19:448:32 | // $ range=<=0 | Missing result:range=<=0 |
+| SimpleRangeAnalysis_tests.cpp:456:19:456:50 | // $ range="<=- ...+0" range=<=0 | Missing result:range="<=- ...+0" |
+| SimpleRangeAnalysis_tests.cpp:456:19:456:50 | // $ range="<=- ...+0" range=<=0 | Missing result:range=<=0 |
+| SimpleRangeAnalysis_tests.cpp:472:19:472:40 | // $ range=">=- ...+0" | Missing result:range=">=- ...+0" |
+| SimpleRangeAnalysis_tests.cpp:480:19:480:40 | // $ range=">=- ...+0" | Missing result:range=">=- ...+0" |
+| SimpleRangeAnalysis_tests.cpp:482:17:482:38 | // $ range=">=- ...+0" | Missing result:range=">=- ...+0" |
+| SimpleRangeAnalysis_tests.cpp:496:19:496:33 | // $ range=<=-1 | Missing result:range=<=-1 |
+| SimpleRangeAnalysis_tests.cpp:504:19:504:50 | // $ range="<=- ...+0" range=<=0 | Missing result:range="<=- ...+0" |
+| SimpleRangeAnalysis_tests.cpp:504:19:504:50 | // $ range="<=- ...+0" range=<=0 | Missing result:range=<=0 |
+| SimpleRangeAnalysis_tests.cpp:520:19:520:40 | // $ range=">=- ...+0" | Missing result:range=">=- ...+0" |
+| SimpleRangeAnalysis_tests.cpp:528:19:528:40 | // $ range=">=- ...+1" | Missing result:range=">=- ...+1" |
+| SimpleRangeAnalysis_tests.cpp:530:17:530:38 | // $ range=">=- ...+0" | Missing result:range=">=- ...+0" |
+| SimpleRangeAnalysis_tests.cpp:601:49:601:116 | // $ range=">=... = ...:... ? ... : ...+0" range=">=call to range+0" | Missing result:range=">=... = ...:... ? ... : ...+0" |
+| SimpleRangeAnalysis_tests.cpp:601:49:601:116 | // $ range=">=... = ...:... ? ... : ...+0" range=">=call to range+0" | Missing result:range=">=call to range+0" |
+| SimpleRangeAnalysis_tests.cpp:631:34:631:101 | // $ range=">=... = ...:... ? ... : ...+0" range=">=call to range+0" | Missing result:range=">=... = ...:... ? ... : ...+0" |
+| SimpleRangeAnalysis_tests.cpp:631:34:631:101 | // $ range=">=... = ...:... ? ... : ...+0" range=">=call to range+0" | Missing result:range=">=call to range+0" |
+| SimpleRangeAnalysis_tests.cpp:650:19:650:131 | // $ range=">=++ ...:... = ...+5" range=">=... +++4" range=">=... += ...:... = ...+1" range=">=... ? ... : ...+6" | Missing result:range=">=++ ...:... = ...+5" |
+| SimpleRangeAnalysis_tests.cpp:650:19:650:131 | // $ range=">=++ ...:... = ...+5" range=">=... +++4" range=">=... += ...:... = ...+1" range=">=... ? ... : ...+6" | Missing result:range=">=... +++4" |
+| SimpleRangeAnalysis_tests.cpp:650:19:650:131 | // $ range=">=++ ...:... = ...+5" range=">=... +++4" range=">=... += ...:... = ...+1" range=">=... ? ... : ...+6" | Missing result:range=">=... += ...:... = ...+1" |
+| SimpleRangeAnalysis_tests.cpp:650:19:650:131 | // $ range=">=++ ...:... = ...+5" range=">=... +++4" range=">=... += ...:... = ...+1" range=">=... ? ... : ...+6" | Missing result:range=">=... ? ... : ...+6" |
+| SimpleRangeAnalysis_tests.cpp:688:19:688:32 | // $ range=>=1 | Missing result:range=>=1 |
+| SimpleRangeAnalysis_tests.cpp:696:19:696:62 | // $ range=">=(unsigned int)...+0" range=>=0 | Missing result:range=">=(unsigned int)...+0" |
+| SimpleRangeAnalysis_tests.cpp:696:19:696:62 | // $ range=">=(unsigned int)...+0" range=>=0 | Missing result:range=>=0 |
+| SimpleRangeAnalysis_tests.cpp:704:19:704:62 | // $ range=">=(unsigned int)...+1" range=>=1 | Missing result:range=">=(unsigned int)...+1" |
+| SimpleRangeAnalysis_tests.cpp:704:19:704:62 | // $ range=">=(unsigned int)...+1" range=>=1 | Missing result:range=>=1 |
+| SimpleRangeAnalysis_tests.cpp:706:17:706:60 | // $ range=">=(unsigned int)...+0" range=>=0 | Missing result:range=">=(unsigned int)...+0" |
+| SimpleRangeAnalysis_tests.cpp:706:17:706:60 | // $ range=">=(unsigned int)...+0" range=>=0 | Missing result:range=>=0 |
+| SimpleRangeAnalysis_tests.cpp:718:19:718:32 | // $ range=>=1 | Missing result:range=>=1 |
+| SimpleRangeAnalysis_tests.cpp:725:19:725:62 | // $ range=">=(unsigned int)...+0" range=>=0 | Missing result:range=">=(unsigned int)...+0" |
+| SimpleRangeAnalysis_tests.cpp:725:19:725:62 | // $ range=">=(unsigned int)...+0" range=>=0 | Missing result:range=>=0 |
+| SimpleRangeAnalysis_tests.cpp:732:19:732:62 | // $ range=">=(unsigned int)...+1" range=>=1 | Missing result:range=">=(unsigned int)...+1" |
+| SimpleRangeAnalysis_tests.cpp:732:19:732:62 | // $ range=">=(unsigned int)...+1" range=>=1 | Missing result:range=>=1 |
+| SimpleRangeAnalysis_tests.cpp:734:17:734:60 | // $ range=">=(unsigned int)...+0" range=>=0 | Missing result:range=">=(unsigned int)...+0" |
+| SimpleRangeAnalysis_tests.cpp:734:17:734:60 | // $ range=">=(unsigned int)...+0" range=>=0 | Missing result:range=>=0 |
+| SimpleRangeAnalysis_tests.cpp:793:9:793:25 | Add: ... + ... | Unexpected result: range===80 |
+| SimpleRangeAnalysis_tests.cpp:793:29:793:66 | // $ range=">=... *= ...+1" range=>=41 | Missing result:range=">=... *= ...+1" |
+| SimpleRangeAnalysis_tests.cpp:793:29:793:66 | // $ range=">=... *= ...+1" range=>=41 | Missing result:range=>=41 |
+| SimpleRangeAnalysis_tests.cpp:945:11:945:16 | Load: result | Unexpected result: range=<=18 |
+| SimpleRangeAnalysis_tests.cpp:945:11:945:16 | Load: result | Unexpected result: range=<=s+9 |
+| SimpleRangeAnalysis_tests.cpp:945:11:945:16 | Load: result | Unexpected result: range=>=0 |
+| SimpleRangeAnalysis_tests.cpp:945:11:945:16 | Load: result | Unexpected result: range=>=s+0 |
+| test.cpp:10:15:10:19 | Add: ... + ... | Unexpected result: range=<=802 |
+| test.cpp:10:15:10:19 | Add: ... + ... | Unexpected result: range=>=600 |
+| test.cpp:10:24:10:63 | // $ range=>=300 range=>=x+1 range=>=y-1 | Missing result:range=>=300 |
+| test.cpp:10:24:10:63 | // $ range=>=300 range=>=x+1 range=>=y-1 | Missing result:range=>=x+1 |
+| test.cpp:10:24:10:63 | // $ range=>=300 range=>=x+1 range=>=y-1 | Missing result:range=>=y-1 |
