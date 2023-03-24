@@ -20,12 +20,68 @@ predicate useExpr(DataFlow::Node dfe, Expr e) {
   e = dfe.asExpr() and
   (
     e = any(ReturnStmt rs).getExpr() or
-    e = any(FunctionCall fc).getAChild() or
+    alwaysDerefs(_, _, e) or
     e = any(PointerDereferenceExpr pde).getOperand() or
     e = any(PointerFieldAccess pfa).getQualifier() or
     e = any(ArrayExpr ae).getArrayBase()
-  ) and
-  not Flow::freeExpr(dfe, e)
+  )
+}
+
+predicate useExpr0(DataFlow::Node dfe, Expr e) {
+  e = dfe.asExpr() and
+  (
+    e = any(PointerDereferenceExpr pde).getOperand() or
+    e = any(PointerFieldAccess pfa).getQualifier() or
+    e = any(ArrayExpr ae).getArrayBase()
+  )
+}
+
+predicate flowsFromParameter(DataFlow::Node n) {
+  exists(Expr e | flowsToFree(n, e) |
+    exists(Parameter p |
+      n.asParameter() = p and
+      bbPostDominates(e.getBasicBlock(), p.getFunction().getBlock())
+    )
+    or
+    exists(DataFlow::Node prev |
+      flowsFromParameter(prev) and
+      DataFlow::localFlowStep(prev, n)
+    )
+  )
+}
+
+predicate isSink(DataFlow::Node n, Expr e) {
+  useExpr0(n, e)
+  or
+  exists(FunctionCall fc, int i |
+    n.asExpr() = e and
+    fc.getArgument(i) = e and
+    alwaysDerefs(fc, i, _)
+  )
+  or
+  // Always assume that functions without a body will dereference the pointer.
+  exists(FunctionCall fc, Function f |
+    fc.getTarget() = f and
+    fc.getAnArgument() = e and
+    not exists(f.getBlock())
+  )
+}
+
+predicate flowsToFree(DataFlow::Node n, Expr e) {
+  isSink(n, e)
+  or
+  exists(DataFlow::Node succ |
+    flowsToFree(succ, e) and
+    DataFlow::localFlowStep(n, succ)
+  )
+}
+
+predicate alwaysDerefs(FunctionCall fc, int i, Expr e) {
+  exists(DataFlow::ParameterNode p |
+    fc.getArgument(i) = e and
+    fc.getTarget().getParameter(i) = p.asParameter() and
+    flowsFromParameter(p)
+  )
 }
 
 query predicate edges = UseAfterFreeFlow::step/2;

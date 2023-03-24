@@ -213,3 +213,12 @@ void regression_test_for_static_var_handling()
 	data = (char *)malloc(100*sizeof(char));
 	use(data); // GOOD
 }
+
+void always_use(char* data) {
+	char c = *data; // BAD
+}
+
+void test16(char* data) {
+	free(data);
+	always_use(data);
+}

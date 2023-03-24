@@ -1,52 +1,13 @@
 #select
-| test.cpp:36:6:36:9 | data | test.cpp:35:7:35:10 | data | test.cpp:36:6:36:9 | data | Memory pointed to by 'data' may have $@. | test.cpp:35:7:35:10 | data | been previously freed |
-| test.cpp:36:6:36:9 | data | test.cpp:35:7:35:10 | data | test.cpp:36:6:36:9 | data | Memory pointed to by 'data' may have $@. | test.cpp:35:7:35:10 | data | been previously freed |
-| test.cpp:70:7:70:10 | data | test.cpp:67:7:67:10 | data | test.cpp:70:7:70:10 | data | Memory pointed to by 'data' may have $@. | test.cpp:67:7:67:10 | data | been previously freed |
-| test.cpp:70:7:70:10 | data | test.cpp:67:7:67:10 | data | test.cpp:70:7:70:10 | data | Memory pointed to by 'data' may have $@. | test.cpp:67:7:67:10 | data | been previously freed |
 | test.cpp:82:9:82:12 | data | test.cpp:80:8:80:11 | data | test.cpp:82:9:82:12 | data | Memory pointed to by 'data' may have $@. | test.cpp:80:8:80:11 | data | been previously freed |
 | test.cpp:82:9:82:12 | data | test.cpp:80:8:80:11 | data | test.cpp:82:9:82:12 | data | Memory pointed to by 'data' may have $@. | test.cpp:80:8:80:11 | data | been previously freed |
-| test.cpp:107:6:107:9 | data | test.cpp:105:7:105:10 | data | test.cpp:107:6:107:9 | data | Memory pointed to by 'data' may have $@. | test.cpp:105:7:105:10 | data | been previously freed |
-| test.cpp:107:6:107:9 | data | test.cpp:105:7:105:10 | data | test.cpp:107:6:107:9 | data | Memory pointed to by 'data' may have $@. | test.cpp:105:7:105:10 | data | been previously freed |
-| test.cpp:117:6:117:9 | data | test.cpp:115:7:115:10 | data | test.cpp:117:6:117:9 | data | Memory pointed to by 'data' may have $@. | test.cpp:115:7:115:10 | data | been previously freed |
-| test.cpp:117:6:117:9 | data | test.cpp:115:7:115:10 | data | test.cpp:117:6:117:9 | data | Memory pointed to by 'data' may have $@. | test.cpp:115:7:115:10 | data | been previously freed |
-| test.cpp:170:6:170:9 | data | test.cpp:165:7:165:10 | data | test.cpp:170:6:170:9 | data | Memory pointed to by 'data' may have $@. | test.cpp:165:7:165:10 | data | been previously freed |
-| test.cpp:170:6:170:9 | data | test.cpp:165:7:165:10 | data | test.cpp:170:6:170:9 | data | Memory pointed to by 'data' may have $@. | test.cpp:165:7:165:10 | data | been previously freed |
-| test.cpp:181:6:181:9 | data | test.cpp:176:7:176:10 | data | test.cpp:181:6:181:9 | data | Memory pointed to by 'data' may have $@. | test.cpp:176:7:176:10 | data | been previously freed |
-| test.cpp:181:6:181:9 | data | test.cpp:176:7:176:10 | data | test.cpp:181:6:181:9 | data | Memory pointed to by 'data' may have $@. | test.cpp:176:7:176:10 | data | been previously freed |
-| test.cpp:193:6:193:9 | data | test.cpp:187:7:187:10 | data | test.cpp:193:6:193:9 | data | Memory pointed to by 'data' may have $@. | test.cpp:187:7:187:10 | data | been previously freed |
-| test.cpp:193:6:193:9 | data | test.cpp:187:7:187:10 | data | test.cpp:193:6:193:9 | data | Memory pointed to by 'data' may have $@. | test.cpp:187:7:187:10 | data | been previously freed |
-| test.cpp:193:6:193:9 | data | test.cpp:191:8:191:11 | data | test.cpp:193:6:193:9 | data | Memory pointed to by 'data' may have $@. | test.cpp:191:8:191:11 | data | been previously freed |
-| test.cpp:193:6:193:9 | data | test.cpp:191:8:191:11 | data | test.cpp:193:6:193:9 | data | Memory pointed to by 'data' may have $@. | test.cpp:191:8:191:11 | data | been previously freed |
+| test.cpp:223:13:223:16 | data | test.cpp:222:7:222:10 | data | test.cpp:223:13:223:16 | data | Memory pointed to by 'data' may have $@. | test.cpp:222:7:222:10 | data | been previously freed |
+| test.cpp:223:13:223:16 | data | test.cpp:222:7:222:10 | data | test.cpp:223:13:223:16 | data | Memory pointed to by 'data' may have $@. | test.cpp:222:7:222:10 | data | been previously freed |
 edges
-| test.cpp:35:7:35:10 | data | test.cpp:35:7:35:10 | data |
-| test.cpp:35:7:35:10 | data | test.cpp:36:6:36:9 | data |
-| test.cpp:36:6:36:9 | data | test.cpp:36:6:36:9 | data |
-| test.cpp:67:7:67:10 | data | test.cpp:67:7:67:10 | data |
-| test.cpp:67:7:67:10 | data | test.cpp:68:6:68:9 | data |
-| test.cpp:68:6:68:9 | data | test.cpp:68:6:68:9 | data |
-| test.cpp:68:6:68:9 | data | test.cpp:70:7:70:10 | data |
-| test.cpp:70:7:70:10 | data | test.cpp:70:7:70:10 | data |
 | test.cpp:80:8:80:11 | data | test.cpp:80:8:80:11 | data |
 | test.cpp:80:8:80:11 | data | test.cpp:82:2:82:13 | Phi |
 | test.cpp:82:2:82:13 | Phi | test.cpp:82:9:82:12 | data |
 | test.cpp:82:9:82:12 | data | test.cpp:82:9:82:12 | data |
-| test.cpp:105:7:105:10 | data | test.cpp:105:7:105:10 | data |
-| test.cpp:105:7:105:10 | data | test.cpp:107:6:107:9 | data |
-| test.cpp:107:6:107:9 | data | test.cpp:107:6:107:9 | data |
-| test.cpp:115:7:115:10 | data | test.cpp:115:7:115:10 | data |
-| test.cpp:115:7:115:10 | data | test.cpp:117:6:117:9 | data |
-| test.cpp:117:6:117:9 | data | test.cpp:117:6:117:9 | data |
-| test.cpp:165:7:165:10 | data | test.cpp:165:7:165:10 | data |
-| test.cpp:165:7:165:10 | data | test.cpp:166:18:166:18 | Phi |
-| test.cpp:166:18:166:18 | Phi | test.cpp:170:6:170:9 | data |
-| test.cpp:170:6:170:9 | data | test.cpp:170:6:170:9 | data |
-| test.cpp:176:7:176:10 | data | test.cpp:176:7:176:10 | data |
-| test.cpp:176:7:176:10 | data | test.cpp:177:18:177:18 | Phi |
-| test.cpp:177:18:177:18 | Phi | test.cpp:181:6:181:9 | data |
-| test.cpp:181:6:181:9 | data | test.cpp:181:6:181:9 | data |
-| test.cpp:187:7:187:10 | data | test.cpp:187:7:187:10 | data |
-| test.cpp:187:7:187:10 | data | test.cpp:188:18:188:18 | Phi |
-| test.cpp:188:18:188:18 | Phi | test.cpp:193:6:193:9 | data |
-| test.cpp:191:8:191:11 | data | test.cpp:188:18:188:18 | Phi |
-| test.cpp:191:8:191:11 | data | test.cpp:191:8:191:11 | data |
-| test.cpp:193:6:193:9 | data | test.cpp:193:6:193:9 | data |
+| test.cpp:222:7:222:10 | data | test.cpp:222:7:222:10 | data |
+| test.cpp:222:7:222:10 | data | test.cpp:223:13:223:16 | data |
+| test.cpp:223:13:223:16 | data | test.cpp:223:13:223:16 | data |
