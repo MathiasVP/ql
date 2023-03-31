@@ -158,8 +158,10 @@ private newtype TDefOrUseImpl =
     exists(VariableAddressInstruction vai, int defIndex |
       vai.getEnclosingIRFunction() = f and
       vai.getAstVariable() = v and
-      isDef(_, _, _, vai, _, defIndex) and
       indirectionIndex = [0 .. defIndex] + 1
+    |
+      isDef(_, _, _, vai, indirectionIndex, defIndex) or
+      isUse(_, _, vai, indirectionIndex, defIndex)
     )
   } or
   TGlobalDefImpl(Cpp::GlobalOrNamespaceVariable v, IRFunction f, int indirectionIndex) {
