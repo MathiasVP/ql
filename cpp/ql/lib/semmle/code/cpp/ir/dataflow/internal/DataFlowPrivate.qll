@@ -814,13 +814,40 @@ predicate nodeIsHidden(Node n) {
 class LambdaCallKind = Unit;
 
 /** Holds if `creation` is an expression that creates a lambda of kind `kind` for `c`. */
-predicate lambdaCreation(Node creation, LambdaCallKind kind, DataFlowCallable c) { none() }
+predicate lambdaCreation(Node creation, LambdaCallKind kind, DataFlowCallable c) {
+  exists(kind) and
+  exists(FunctionInstruction fi |
+    // If we can resolve the call statically there's no need to use
+    // the dataflow's lambda flow mechanism.
+    not any(CallInstruction ci).getCallTarget() = fi and
+    fi = creation.asInstruction() and
+    c = fi.getFunctionSymbol()
+  )
+}
 
 /** Holds if `call` is a lambda call of kind `kind` where `receiver` is the lambda expression. */
-predicate lambdaCall(DataFlowCall call, LambdaCallKind kind, Node receiver) { none() }
+predicate lambdaCall(DataFlowCall call, LambdaCallKind kind, Node receiver) {
+  exists(kind) and
+  call.getCallTargetOperand() = receiver.asOperand()
+}
 
 /** Extra data-flow steps needed for lambda flow analysis. */
-predicate additionalLambdaFlowStep(Node nodeFrom, Node nodeTo, boolean preservesValue) { none() }
+predicate additionalLambdaFlowStep(Node nodeFrom, Node nodeTo, boolean preservesValue) {
+  (
+    // We're a little bit more permissive with union-member/object conflation when
+    // resolving function pointers.
+    // a write to a union field
+    storeStep(nodeFrom, any(UnionContent uc), nodeTo)
+    or
+    // a read of a union field
+    readStep(nodeFrom, any(UnionContent uc), nodeTo)
+    or
+    // reverse-read of a union field
+    readStep(nodeTo.(PostUpdateNode).getPreUpdateNode(), any(UnionContent uc),
+      nodeFrom.(PostUpdateNode).getPreUpdateNode())
+  ) and
+  preservesValue = true
+}
 
 /**
  * Holds if flow is allowed to pass from parameter `p` and back to itself as a

@@ -139,26 +139,6 @@ private module VirtualDispatch {
     node.getEnclosingCallable() = callable
   }
 
-  /** Call through a function pointer. */
-  private class DataSensitiveExprCall extends DataSensitiveCall {
-    DataSensitiveExprCall() { not exists(this.getStaticCallTarget()) }
-
-    override DataFlow::Node getDispatchValue() { result.asOperand() = this.getCallTargetOperand() }
-
-    override Function resolve() {
-      exists(FunctionInstruction fi |
-        this.flowsFrom(DataFlow::instructionNode(fi), _) and
-        result = fi.getFunctionSymbol()
-      ) and
-      (
-        this.getNumberOfArguments() <= result.getEffectiveNumberOfParameters() and
-        this.getNumberOfArguments() >= result.getEffectiveNumberOfParameters()
-        or
-        result.isVarargs()
-      )
-    }
-  }
-
   /** Call to a virtual function. */
   private class DataSensitiveOverriddenFunctionCall extends DataSensitiveCall {
     DataSensitiveOverriddenFunctionCall() {
