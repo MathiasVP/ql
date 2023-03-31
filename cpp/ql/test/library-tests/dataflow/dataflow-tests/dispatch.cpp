@@ -93,7 +93,7 @@ void callIdentityFunctions(Top *top, Bottom *bottom) { // $ ast-def=bottom ast-d
 using SinkFunctionType = void (*)(int);
 
 void callSink(int x) {
-  sink(x); // $ ir=107:17 ir=140:8 ir=144:8 MISSING: ast=107:17 ast=140:8 ast=144:8
+  sink(x); // $ ir=107:17 ir=140:8 ir=144:8 ir=160:8 ir=164:8 MISSING: ast=107:17 ast=140:8 ast=144:8
 }
 
 SinkFunctionType returnCallSink() {
@@ -170,6 +170,6 @@ void set_global_union_field_u_f() {
 
 void test_call_sink_through_union_2() {
   set_global_union_field_u_f();
-  call_sink_through_union_field_u_f(u2.u.f); // $ MISSING: ast,ir
-  call_sink_through_union_field_u_g(u2.u.g); // $ MISSING: ast,ir
+  call_sink_through_union_field_u_f(u2.u.f);
+  call_sink_through_union_field_u_g(u2.u.g);
 }

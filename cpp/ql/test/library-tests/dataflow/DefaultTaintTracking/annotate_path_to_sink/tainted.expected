@@ -1,8 +1,2 @@
 WARNING: Module TaintedWithPath has been deprecated and may be removed in future (tainted.ql:9,8-47)
 WARNING: Predicate tainted has been deprecated and may be removed in future (tainted.ql:20,49-74)
-| dispatch.cpp:7:20:7:28 | sinkParam | Unexpected result: ir-path= |
-| dispatch.cpp:7:33:7:78 | // $ ir-path=31:23 ir-path=32:26 ir-path=34:17 | Missing result:ir-path=31:23 |
-| dispatch.cpp:7:33:7:78 | // $ ir-path=31:23 ir-path=32:26 ir-path=34:17 | Missing result:ir-path=32:26 |
-| dispatch.cpp:7:33:7:78 | // $ ir-path=31:23 ir-path=32:26 ir-path=34:17 | Missing result:ir-path=34:17 |
-| dispatch.cpp:31:49:31:64 | // $ ast ir-path | Missing result:ir-path= |
-| dispatch.cpp:32:52:32:67 | // $ ast ir-path | Missing result:ir-path= |
