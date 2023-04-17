@@ -6,7 +6,13 @@ private import IRFunctionBaseInternal
 
 private newtype TIRFunction =
   TFunctionIRFunction(Language::Function func) { IRConstruction::Raw::functionHasIR(func) } or
-  TVarInitIRFunction(Language::GlobalVariable var) { IRConstruction::Raw::varHasIRFunc(var) }
+  TVarInitIRFunction(Language::Variable var) {
+    (
+      var instanceof Language::GlobalVariable or
+      var instanceof Language::StaticVariable
+    ) and
+    IRConstruction::Raw::varHasIRFunc(var)
+  }
 
 /**
  * The IR for a function. This base class contains only the predicates that are the same between all

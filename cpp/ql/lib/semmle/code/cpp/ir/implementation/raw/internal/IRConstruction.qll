@@ -37,7 +37,8 @@ module Raw {
   predicate functionHasIR(Function func) { exists(getTranslatedFunction(func)) }
 
   cached
-  predicate varHasIRFunc(GlobalOrNamespaceVariable var) {
+  predicate varHasIRFunc(Variable var) {
+    (var instanceof GlobalOrNamespaceVariable or var instanceof StaticLocalVariable) and
     var.hasInitializer() and
     (
       not var.getType().isDeeplyConst()

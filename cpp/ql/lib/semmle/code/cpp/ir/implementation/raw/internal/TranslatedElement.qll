@@ -68,7 +68,7 @@ private predicate ignoreExprAndDescendants(Expr expr) {
     init = var.getInitializer() and
     not var.hasDynamicInitialization() and
     expr = init.getExpr().getFullyConverted() and
-    not var instanceof GlobalOrNamespaceVariable
+    not var instanceof GlobalOrNamespaceVariable // TODO: Mathias
   )
   or
   // Ignore descendants of `__assume` expressions, since we translated these to `NoOp`.
@@ -755,7 +755,7 @@ newtype TTranslatedElement =
   } or
   // The side effect that initializes newly-allocated memory.
   TTranslatedAllocationSideEffect(AllocationExpr expr) { not ignoreSideEffects(expr) } or
-  TTranslatedGlobalOrNamespaceVarInit(GlobalOrNamespaceVariable var) { Raw::varHasIRFunc(var) }
+  TTranslatedGlobalOrNamespaceVarInit(Variable var) { Raw::varHasIRFunc(var) }
 
 /**
  * Gets the index of the first explicitly initialized element in `initList`
