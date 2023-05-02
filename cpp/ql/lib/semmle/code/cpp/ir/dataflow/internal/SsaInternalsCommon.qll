@@ -202,7 +202,9 @@ private class PointerOrArrayOrReferenceTypeIndirection extends Indirection insta
   }
 
   override int getNumberOfIndirections() {
-    result = 1 + countIndirections(this.getBaseType().getUnspecifiedType())
+    if this instanceof Cpp::ArrayType
+    then result = countIndirections(this.getBaseType().getUnspecifiedType())
+    else result = 1 + countIndirections(this.getBaseType().getUnspecifiedType())
   }
 }
 

@@ -122,7 +122,7 @@ void a() {
   
  gv1[1] = v1;
   
- // BAD: nonConstFuncToArray() always returns a value from gv1, which is started as constant but was changed to a value that came from the user
+ // BAD [NOT DETECTED]: nonConstFuncToArray() always returns a value from gv1, which is started as constant but was changed to a value that came from the user
  printf(nonConstFuncToArray(0));
   
  // BAD: v9 value is copied from v1, which came from the user

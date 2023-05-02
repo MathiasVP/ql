@@ -155,11 +155,13 @@ private newtype TDefOrUseImpl =
   TGlobalUse(GlobalLikeVariable v, IRFunction f, int indirectionIndex) {
     // Represents a final "use" of a global variable to ensure that
     // the assignment to a global variable isn't ruled out as dead.
-    exists(VariableAddressInstruction vai, int defIndex |
+    exists(VariableAddressInstruction vai, int defIndex, int d |
       vai.getEnclosingIRFunction() = f and
       vai.getAstVariable() = v and
       isDef(_, _, _, vai, _, defIndex) and
-      indirectionIndex = [0 .. defIndex] + 1
+      indirectionIndex = [0 .. defIndex] + d
+    |
+      if v.getUnspecifiedType() instanceof Cpp::ArrayType then d = 0 else d = 1
     )
   } or
   TGlobalDefImpl(GlobalLikeVariable v, IRFunction f, int indirectionIndex) {
@@ -465,7 +467,9 @@ class GlobalUse extends UseImpl, TGlobalUse {
 
   override FinalGlobalValue getNode() { result.getGlobalUse() = this }
 
-  override int getIndirection() { result = ind + 1 }
+  override int getIndirection() {
+    if global.getUnspecifiedType() instanceof Cpp::ArrayType then result = ind else result = ind + 1
+  }
 
   /** Gets the global variable associated with this use. */
   GlobalLikeVariable getVariable() { result = global }
