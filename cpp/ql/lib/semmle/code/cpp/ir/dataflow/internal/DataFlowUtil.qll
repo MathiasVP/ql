@@ -1531,6 +1531,56 @@ private module Cached {
     )
   }
 
+  // private predicate foo(Node n, int k) { simpleLocalFlowStep2(n, n, k) }
+
+  // private predicate simpleLocalFlowStep2(Node nodeFrom, Node nodeTo, int k) {
+  //   // Post update node -> Node flow
+  //   Ssa::ssaFlow(nodeFrom.(PostUpdateNode).getPreUpdateNode(), nodeTo) and k = 1
+  //   or
+  //   // Def-use/Use-use flow
+  //   Ssa::ssaFlow(nodeFrom, nodeTo) and k = 2
+  //   or
+  //   // Operand -> Instruction flow
+  //   simpleInstructionLocalFlowStep(nodeFrom.asOperand(), nodeTo.asInstruction()) and k = 3
+  //   or
+  //   // Instruction -> Operand flow
+  //   exists(Instruction iFrom, Operand opTo |
+  //     iFrom = nodeFrom.asInstruction() and opTo = nodeTo.asOperand()
+  //   |
+  //     simpleOperandLocalFlowStep(iFrom, opTo) and
+  //     // Omit when the instruction node also represents the operand.
+  //     not iFrom = Ssa::getIRRepresentationOfOperand(opTo)
+  //   ) and
+  //   k = 4
+  //   or
+  //   // Phi node -> Node flow
+  //   Ssa::fromPhiNode(nodeFrom, nodeTo) and k = 5
+  //   or
+  //   // Indirect operand -> (indirect) instruction flow
+  //   indirectionOperandFlow(nodeFrom, nodeTo) and k = 6
+  //   or
+  //   // Indirect instruction -> indirect operand flow
+  //   indirectionInstructionFlow(nodeFrom, nodeTo) and k = 7
+  //   or
+  //   // Flow through modeled functions
+  //   modelFlow(nodeFrom, nodeTo) and k = 8
+  //   or
+  //   // Reverse flow: data that flows from the definition node back into the indirection returned
+  //   // by a function. This allows data to flow 'in' through references returned by a modeled
+  //   // function such as `operator[]`.
+  //   exists(Operand address, int indirectionIndex |
+  //     nodeHasOperand(nodeTo.(IndirectReturnOutNode), address, indirectionIndex)
+  //   |
+  //     exists(StoreInstruction store |
+  //       nodeHasInstruction(nodeFrom, store, indirectionIndex - 1) and
+  //       store.getDestinationAddressOperand() = address
+  //     )
+  //     or
+  //     Ssa::outNodeHasAddressAndIndex(nodeFrom, address, indirectionIndex)
+  //   ) and
+  //   k = 9
+  // }
+
   /**
    * INTERNAL: do not use.
    *
