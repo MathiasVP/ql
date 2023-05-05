@@ -668,41 +668,6 @@ private predicate adjustForPointerArith(
   )
 }
 
-// private predicate foo(Node n, boolean uncertain, SsaDefOrUse defOrUse, UseOrPhi use, string s1, string s2) {
-//   not n = any(PostUpdateNode pun).getPreUpdateNode() and
-//   nodeToDefOrUse(n, defOrUse, uncertain) and
-//   s1 = defOrUse.asDefOrUse().(DirectUse).getOperand().getDumpString() and
-//   s2 = use.asDefOrUse().(DirectUse).getOperand().getDumpString() and
-//   // s1 = concat(defOrUse.asDefOrUse().(DirectUse).getAQlClass(), ", ") and
-//   // s2 = concat(use.asDefOrUse().(DirectUse).getAQlClass(), ", ") and
-//   adjacentDefRead(defOrUse, use) and
-//   useToNode(use, n)
-// }
-// private predicate ssaFlowImpl2(
-//   SsaDefOrUse defOrUse, Node nodeFrom, Node nodeTo, boolean uncertain, int k
-// ) {
-//   // `nodeFrom = any(PostUpdateNode pun).getPreUpdateNode()` is implied by adjustedForPointerArith.
-//   exists(UseOrPhi use |
-//     adjustForPointerArith(defOrUse, nodeFrom, use, uncertain) and
-//     useToNode(use, nodeTo) and
-//     k = 10
-//     or
-//     not nodeFrom = any(PostUpdateNode pun).getPreUpdateNode() and
-//     nodeToDefOrUse(nodeFrom, defOrUse, uncertain) and
-//     defOrUse != use and
-//     adjacentDefRead(defOrUse, use) and
-//     useToNode(use, nodeTo) and
-//     k = 11 and
-//     nodeFrom != nodeTo
-//     or
-//     // Initial global variable value to a first use
-//     nodeFrom.(InitialGlobalValue).getGlobalDef() = defOrUse and
-//     globalDefToUse(defOrUse, use) and
-//     useToNode(use, nodeTo) and
-//     uncertain = false and
-//     k = 12
-//   )
-// }
 private predicate ssaFlowImpl(SsaDefOrUse defOrUse, Node nodeFrom, Node nodeTo, boolean uncertain) {
   // `nodeFrom = any(PostUpdateNode pun).getPreUpdateNode()` is implied by adjustedForPointerArith.
   exists(UseOrPhi use |
@@ -748,17 +713,22 @@ private Node getAPriorDefinition(SsaDefOrUse defOrUse) {
 /** Holds if there is def-use or use-use flow from `nodeFrom` to `nodeTo`. */
 predicate ssaFlow(Node nodeFrom, Node nodeTo) {
   exists(Node nFrom, boolean uncertain, SsaDefOrUse defOrUse |
-    ssaFlowImpl(defOrUse, nFrom, nodeTo, uncertain) and
+    ssaFlowImpl(defOrUse, nFrom, nodeTo, uncertain) and nodeFrom != nodeTo
+  |
     if uncertain = true then nodeFrom = [nFrom, getAPriorDefinition(defOrUse)] else nodeFrom = nFrom
   )
 }
 
-// predicate ssaFlow2(Node nodeFrom, Node nodeTo, int k) {
-//   exists(Node nFrom, boolean uncertain, SsaDefOrUse defOrUse |
-//     ssaFlowImpl2(defOrUse, nFrom, nodeTo, uncertain, k) and
-//     if uncertain = true then nodeFrom = [nFrom, getAPriorDefinition(defOrUse)] else nodeFrom = nFrom
-//   )
-// }
+predicate postUpdateFlow(PostUpdateNode pun, Node nodeTo) {
+  exists(Node preUpdate, Node nFrom, boolean uncertain, SsaDefOrUse defOrUse |
+    preUpdate = pun.getPreUpdateNode() and
+    ssaFlowImpl(defOrUse, nFrom, nodeTo, uncertain)
+  |
+    if uncertain = true
+    then preUpdate = [nFrom, getAPriorDefinition(defOrUse)]
+    else preUpdate = nFrom
+  )
+}
 
 /**
  * Holds if `use` is a use of `sv` and is a next adjacent use of `phi` in
