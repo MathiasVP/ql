@@ -45,20 +45,20 @@ private string getNodeProperty(Node node, string key) {
  * Property provider for local IR dataflow.
  */
 class LocalFlowPropertyProvider extends IRPropertyProvider {
-  override string getOperandProperty(Operand operand, string key) {
-    exists(Node node |
-      operand = [node.asOperand(), node.(RawIndirectOperand).getOperand()] and
-      result = getNodeProperty(node, key)
-    )
-  }
+  // override string getOperandProperty(Operand operand, string key) {
+  //   exists(Node node |
+  //     operand = [node.asOperand(), node.(RawIndirectOperand).getOperand()] and
+  //     result = getNodeProperty(node, key)
+  //   )
+  // }
 
-  override string getInstructionProperty(Instruction instruction, string key) {
-    exists(Node node |
-      instruction = [node.asInstruction(), node.(RawIndirectInstruction).getInstruction()]
-    |
-      result = getNodeProperty(node, key)
-    )
-  }
+  // override string getInstructionProperty(Instruction instruction, string key) {
+  //   exists(Node node |
+  //     instruction = [node.asInstruction(), node.(RawIndirectInstruction).getInstruction()]
+  //   |
+  //     result = getNodeProperty(node, key)
+  //   )
+  // }
 
   override predicate shouldPrintOperand(Operand operand) { not Ssa::ignoreOperand(operand) }
 

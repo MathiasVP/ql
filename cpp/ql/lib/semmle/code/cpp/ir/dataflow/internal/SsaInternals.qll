@@ -74,7 +74,7 @@ private module SourceVariables {
       result = this.getIRVariable().toString()
       or
       ind > 0 and
-      result = this.getIRVariable().toString() + " indirection"
+      result = "********".prefix(ind) + this.getIRVariable().toString()
     }
 
     override predicate isGLValue() { ind = 0 }
@@ -375,6 +375,12 @@ abstract private class OperandBasedUse extends UseImpl {
 private class DirectUse extends OperandBasedUse, TUseImpl {
   DirectUse() { this = TUseImpl(operand, ind) }
 
+  override string toString() {
+    result =
+      "Use of " + "*******".prefix(ind) + "(" + operand.getDumpString() + " @ " +
+        operand.getUse().getResultId() + ")"
+  }
+
   override int getIndirection() { isUse(_, operand, _, result, ind) }
 
   override BaseSourceVariableInstruction getBase() { isUse(_, operand, result, _, ind) }
@@ -382,6 +388,11 @@ private class DirectUse extends OperandBasedUse, TUseImpl {
   override predicate isCertain() { isUse(true, operand, _, _, ind) }
 
   override Node getNode() { nodeHasOperand(result, operand, ind) }
+}
+
+predicate test(DirectUse use, IndirectOperand n, string s) {
+  n = use.getNode() and
+  s = concat(n.getAQlClass(), ", ")
 }
 
 private class IteratorUse extends OperandBasedUse, TIteratorUse {
@@ -666,12 +677,14 @@ private predicate adjustForPointerArith(PostUpdateNode pun, UseOrPhi use) {
 }
 
 private predicate ssaFlowImpl(SsaDefOrUse defOrUse, Node nodeFrom, Node nodeTo, boolean uncertain) {
-  exists(UseOrPhi use |
+  exists(UseOrPhi use, string s |
     nodeToDefOrUse(nodeFrom, defOrUse, uncertain) and
     adjacentDefRead(defOrUse, use) and
     useToNode(use, nodeTo) and
+    s = concat(use.asDefOrUse().getAQlClass(), ", ") and
     nodeFrom != nodeTo
     or
+    s = "" and
     // Initial global variable value to a first use
     nodeFrom.(InitialGlobalValue).getGlobalDef() = defOrUse and
     globalDefToUse(defOrUse, use) and
@@ -705,8 +718,8 @@ private Node getAPriorDefinition(SsaDefOrUse defOrUse) {
 /** Holds if there is def-use or use-use flow from `nodeFrom` to `nodeTo`. */
 predicate ssaFlow(Node nodeFrom, Node nodeTo) {
   exists(Node nFrom, boolean uncertain, SsaDefOrUse defOrUse |
-    ssaFlowImpl(defOrUse, nFrom, nodeTo, uncertain) and nodeFrom != nodeTo
-  |
+    ssaFlowImpl(defOrUse, nFrom, nodeTo, uncertain) and
+    nodeFrom != nodeTo and
     if uncertain = true then nodeFrom = [nFrom, getAPriorDefinition(defOrUse)] else nodeFrom = nFrom
   )
 }

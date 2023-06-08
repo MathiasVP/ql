@@ -380,9 +380,9 @@ class Node extends TIRDataFlowNode {
   /** Gets a textual representation of this element. */
   cached
   final string toString() {
-    result = toExprString(this)
-    or
-    not exists(toExprString(this)) and
+    // result = toExprString(this)
+    // or
+    // not exists(toExprString(this)) and
     result = this.toStringImpl()
   }
 
@@ -434,9 +434,10 @@ class InstructionNode extends Node0 {
   }
 
   override string toStringImpl() {
-    if instr.(InitializeParameterInstruction).getIRVariable() instanceof IRThisVariable
-    then result = "this"
-    else result = instr.getAst().toString()
+    result = instr.getResultId()
+    // if instr.(InitializeParameterInstruction).getIRVariable() instanceof IRThisVariable
+    // then result = "this"
+    // else result = instr.getAst().toString()
   }
 }
 
@@ -459,9 +460,10 @@ class OperandNode extends Node, Node0 {
   }
 
   override string toStringImpl() {
-    if op.getDef().(InitializeParameterInstruction).getIRVariable() instanceof IRThisVariable
-    then result = "this"
-    else result = op.getDef().getAst().toString()
+    result = op.getDumpString() + " @ " + op.getUse().getResultId()
+    // if op.getDef().(InitializeParameterInstruction).getIRVariable() instanceof IRThisVariable
+    // then result = "this"
+    // else result = op.getDef().getAst().toString()
   }
 }
 
@@ -680,13 +682,12 @@ class IndirectParameterNode extends Node, IndirectInstruction {
   override Declaration getFunction() { result = this.getInstruction().getEnclosingFunction() }
 
   override Location getLocationImpl() { result = this.getParameter().getLocation() }
-
-  override string toStringImpl() {
-    result = this.getParameter().toString() + " indirection"
-    or
-    not exists(this.getParameter()) and
-    result = "this indirection"
-  }
+  // override string toStringImpl() {
+  //   result = this.getParameter().toString() + " indirection"
+  //   or
+  //   not exists(this.getParameter()) and
+  //   result = "this indirection"
+  // }
 }
 
 /**
@@ -759,7 +760,7 @@ class IndirectArgumentOutNode extends Node, TIndirectArgumentOutNode, PartialDef
   override string toStringImpl() {
     // This string should be unique enough to be helpful but common enough to
     // avoid storing too many different strings.
-    result = this.getStaticCallTarget().getName() + " output argument"
+    result = this.getStaticCallTarget().getName() + " output argument " + this.getIndirectionIndex()
     or
     not exists(this.getStaticCallTarget()) and
     result = "output argument"
@@ -935,7 +936,9 @@ class RawIndirectOperand extends Node, TRawIndirectOperand {
   }
 
   override string toStringImpl() {
-    result = instructionNode(this.getOperand().getDef()).toStringImpl() + " indirection"
+    result =
+      "**********".prefix(this.getIndirectionIndex()) + "(" + this.getOperand().getDumpString() +
+        " @ " + this.getOperand().getUse().getResultId() + ")"
   }
 }
 
@@ -976,7 +979,8 @@ class FinalParameterNode extends Node, TFinalParameterNode {
   }
 
   override string toStringImpl() {
-    if indirectionIndex > 1 then result = p.toString() + " indirection" else result = p.toString()
+    // if indirectionIndex > 1 then result = p.toString() + " indirection" else result = p.toString()
+    result = "**********".prefix(this.getIndirectionIndex()) + p.toString()
   }
 }
 
@@ -1038,7 +1042,8 @@ class RawIndirectInstruction extends Node, TRawIndirectInstruction {
   }
 
   override string toStringImpl() {
-    result = instructionNode(this.getInstruction()).toStringImpl() + " indirection"
+    // result = instructionNode(this.getInstruction()).toStringImpl() + " indirection"
+    result = "**********".prefix(this.getIndirectionIndex()) + this.getInstruction().getResultId()
   }
 }
 
@@ -1132,8 +1137,7 @@ private class InstructionExprNode extends ExprNodeBase, InstructionNode {
   final override Expr getConvertedExpr() { exprNodeShouldBeInstruction(this, result) }
 
   final override Expr getExpr() { result = this.getConvertedExpr().getUnconverted() }
-
-  final override string toStringImpl() { result = this.getConvertedExpr().toString() }
+  // final override string toStringImpl() { result = this.getConvertedExpr().toString() }
 }
 
 private class OperandExprNode extends ExprNodeBase, OperandNode {
@@ -1142,8 +1146,7 @@ private class OperandExprNode extends ExprNodeBase, OperandNode {
   final override Expr getConvertedExpr() { exprNodeShouldBeOperand(this, result) }
 
   final override Expr getExpr() { result = this.getConvertedExpr().getUnconverted() }
-
-  final override string toStringImpl() { result = this.getConvertedExpr().toString() }
+  // final override string toStringImpl() { result = this.getConvertedExpr().toString() }
 }
 
 abstract private class IndirectExprNodeBase extends Node {
@@ -1280,8 +1283,7 @@ private class ExplicitParameterNode extends ParameterNode, DirectParameterNode {
 
   /** Gets the `Parameter` associated with this node. */
   Parameter getParameter() { result = instr.getParameter() }
-
-  override string toStringImpl() { result = instr.getParameter().toString() }
+  // override string toStringImpl() { result = instr.getParameter().toString() }
 }
 
 /** An implicit `this` parameter. */
@@ -1291,8 +1293,7 @@ class ThisParameterNode extends ParameterNode, DirectParameterNode {
   override predicate isParameterOf(Function f, ParameterPosition pos) {
     pos.(DirectPosition).getIndex() = -1 and instr.getEnclosingFunction() = f
   }
-
-  override string toStringImpl() { result = "this" }
+  // override string toStringImpl() { result = "this" }
 }
 
 pragma[noinline]

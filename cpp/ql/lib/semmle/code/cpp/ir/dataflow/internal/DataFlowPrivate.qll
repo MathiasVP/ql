@@ -210,8 +210,10 @@ class IndirectOperand extends Node {
     this.(RawIndirectOperand).getOperand() = operand and
     this.(RawIndirectOperand).getIndirectionIndex() = indirectionIndex
     or
-    nodeHasOperand(this, Ssa::getIRRepresentationOfIndirectOperand(operand, indirectionIndex),
-      indirectionIndex - 1)
+    exists(Operand repr |
+      repr = Ssa::getIRRepresentationOfIndirectOperand(operand, indirectionIndex) and
+      nodeHasOperand(this, repr, indirectionIndex - 1)
+    )
   }
 
   /** Gets the underlying operand. */
@@ -707,6 +709,22 @@ predicate nodeHasOperand(Node node, Operand operand, int indirectionIndex) {
   hasOperandAndIndex(node, operand, indirectionIndex)
 }
 
+IndirectOperand foo(Operand operand, int indirectionIndex) {
+  indirectionIndex = 1 and
+  operand.toString() = "&:r5_3 @ r5_4" and
+  (
+    result.(RawIndirectOperand).getOperand() = operand and
+    result.(RawIndirectOperand).getIndirectionIndex() = indirectionIndex
+    or
+    exists(Operand repr |
+      repr = Ssa::getIRRepresentationOfIndirectOperand(operand, indirectionIndex) and
+      nodeHasOperand(result, repr, indirectionIndex - 1)
+    )
+  )
+  // result.getOperand() = operand and
+  // result.getIndirectionIndex() = indirectionIndex
+}
+
 // Needed to join on both an instruction and an index at the same time.
 pragma[noinline]
 predicate nodeHasInstruction(Node node, Instruction instr, int indirectionIndex) {
@@ -997,4 +1015,158 @@ private int countNumberOfBranchesUsingParameter(SwitchInstruction switch, Parame
         strictcount(phi.getAnInput())
       )
   )
+}
+
+module TestStep {
+  import DataFlowImplCommon as DataFlowImplCommon
+  import DataFlowDispatch
+
+  DataFlowCallable viableCallableExt(DataFlowCall call) {
+    result = viableCallable(call)
+    or
+    exists(Node creation, Node receiver, LambdaCallKind kind |
+      lambdaCreation(creation, kind, result) and
+      simpleLocalFlowStep*(creation, receiver) and
+      lambdaCall(call, kind, receiver)
+    )
+  }
+
+  private predicate into(ArgumentNode node1, ParameterNode node2) {
+    exists(
+      DataFlowCall call, ArgumentPosition argPos, ParameterPosition paramPos, DataFlowCallable c
+    |
+      node1.argumentOf(call, argPos) and
+      parameterMatch(paramPos, argPos) and
+      node2.isParameterOf(c, paramPos) and
+      c = viableCallableExt(call)
+    )
+  }
+
+  private predicate outOf(
+    DataFlowImplCommon::ReturnNodeExt node1, DataFlowImplCommon::OutNodeExt node2, string msg
+  ) {
+    exists(DataFlowImplCommon::ReturnKindExt kind |
+      node1.getKind() = kind and
+      kind.getAnOutNode(any(DataFlowCall call |
+          viableCallableExt(call) = node1.(Node).getEnclosingCallable()
+        )) = node2 and
+      msg = kind.toString()
+    )
+  }
+
+  private predicate argumentValueFlowsThrough(ArgumentNode n2, ContentSet c, OutNode n1) {
+    exists(Node mid1, ParameterNode p, ReturnNode r, Node mid2 |
+      into(n2, p) and
+      simpleLocalFlowStep*(p, mid2) and
+      readStep(mid2, c, mid1) and
+      simpleLocalFlowStep*(mid1, r) and
+      outOf(r, n1, _)
+    )
+  }
+
+  private predicate argumentValueFlowsThrough(ArgumentNode n2, OutNode n1) {
+    exists(ParameterNode p, ReturnNode r |
+      into(n2, p) and
+      simpleLocalFlowStep*(p, r) and
+      outOf(r, n1, _)
+    )
+  }
+
+  private predicate reverseStepThroughInputOutputAlias(
+    PostUpdateNode fromNode, PostUpdateNode toNode
+  ) {
+    exists(Node fromPre, Node toPre |
+      fromPre = fromNode.getPreUpdateNode() and
+      toPre = toNode.getPreUpdateNode()
+    |
+      exists(DataFlowCall c |
+        fromPre = getAnOutNode(c, _) and
+        toPre.(ArgumentNode).argumentOf(c, _) and
+        simpleLocalFlowStep(toPre.(ArgumentNode), fromPre)
+      )
+      or
+      argumentValueFlowsThrough(toPre, fromPre)
+    )
+  }
+
+  predicate step(Node node1, Node node2, string msg) {
+    stepFwd(_, node1) and
+    not isBarrier(node1) and
+    not isBarrier(node2) and
+    (
+      localFlowStep(node1, node2) and msg = "."
+      or
+      reverseStepThroughInputOutputAlias(node1, node2) and msg = "reverse step through alias"
+      or
+      exists(ContentSet c, string after | after = c.toString() |
+        readStep(node1, c, node2) and msg = "Read " + after
+        or
+        storeStep(node1, c, node2) and msg = "Store " + after
+        or
+        exists(Node n1, Node n2 |
+          n1 = node1.(PostUpdateNode).getPreUpdateNode() and
+          n2 = node2.(PostUpdateNode).getPreUpdateNode() and
+          readStep(n2, c, n1) and
+          msg = "Reverse read " + c
+        )
+        or
+        exists(OutNode n1, ArgumentNode n2 |
+          n2 = node2.(PostUpdateNode).getPreUpdateNode() and
+          n1 = node1.(PostUpdateNode).getPreUpdateNode() and
+          argumentValueFlowsThrough(n2, c, n1) and
+          msg = "Through " + after
+        )
+      )
+      or
+      into(node1, node2) and msg = "into"
+      or
+      outOf(node1, node2, msg)
+    )
+  }
+
+  private predicate isBarrier(Node node) { none() }
+
+  predicate isSource(Node source) {
+    source.asOperand().(ArgumentOperand).getLocation().getStartLine() = 18
+    // exists(CallInstruction call |
+    //   call.getStaticCallTarget().hasName("source") and
+    //   source.asInstruction() = call
+    // )
+  }
+
+  predicate isSink(Node source) {
+    exists(CallInstruction call |
+      call.getStaticCallTarget().hasName("sink") and
+      source.asOperand() = call.getAnArgumentOperand()
+    )
+  }
+
+  private predicate stepFwd(Node node1, Node node2) {
+    node1 = node2 and
+    isSource(node1)
+    or
+    exists(Node mid |
+      stepFwd(node1, mid) and
+      step(mid, node2, _)
+    )
+  }
+
+  predicate step2(Node node1, Node node2, string msg) {
+    stepRev(node2, _) and
+    step(node1, node2, msg)
+  }
+
+  private predicate stepRev(Node node1, Node node2) {
+    stepFwd(_, node1) and
+    stepFwd(_, node2) and
+    (
+      node1 = node2 and
+      isSink(node1)
+      or
+      exists(Node mid |
+        stepRev(mid, node2) and
+        step2(node1, mid, _)
+      )
+    )
+  }
 }
