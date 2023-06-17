@@ -800,6 +800,21 @@ private module Cached {
     )
   }
 
+  bindingset[base, ind, use1, use2]
+  pragma[inline_late] // TODO: Optimize
+  private predicate killedByDef(
+    BaseSourceVariableInstruction base, int ind, Operand use1, Instruction use2
+  ) {
+    exists(Operand address, IRBlock b, int iDef, int iUse1, int iUse2 |
+      isDef(_, _, address, base, ind, 0) and
+      b.getInstruction(iDef) = address.getUse() and
+      b.getInstruction(iUse1) = use1.getDef() and
+      b.getInstruction(iUse2) = use2 and
+      iUse1 < iDef and
+      iDef < iUse2
+    )
+  }
+
   /**
    * Holds if `operand` is a use of an SSA variable rooted at `base`, and the
    * path from `base` to `operand` passes through `ind` load-like instructions.
@@ -812,13 +827,15 @@ private module Cached {
     exists(Operand mid, Instruction instr |
       isUseImpl(mid, base, ind) and
       instr = operand.getDef() and
-      conversionFlow(mid, instr, false, _)
+      conversionFlow(mid, instr, false, _) and
+      not killedByDef(base, ind, mid, instr)
     )
     or
     exists(int ind0 |
       exists(Operand address |
         isDereference(operand.getDef(), address) and
-        isUseImpl(address, base, ind0)
+        isUseImpl(address, base, ind0) and
+        not killedByDef(base, ind, address, operand.getUse())
       )
       or
       isUseImpl(operand.getDef().(InitializeParameterInstruction).getAnOperand(), base, ind0)
