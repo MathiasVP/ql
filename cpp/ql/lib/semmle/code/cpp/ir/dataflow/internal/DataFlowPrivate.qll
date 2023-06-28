@@ -854,7 +854,52 @@ class DataFlowCall extends CallInstruction {
   Function getEnclosingCallable() { result = this.getEnclosingFunction() }
 }
 
-predicate isUnreachableInCall(Node n, DataFlowCall call) { none() } // stub implementation
+module IsUnreachableInCall {
+  private import semmle.code.cpp.ir.ValueNumbering
+  private import semmle.code.cpp.controlflow.IRGuards as G
+
+  private class ConstantIntegralTypeArgumentNode extends PrimaryArgumentNode {
+    int value;
+
+    ConstantIntegralTypeArgumentNode() {
+      value = op.getDef().(IntegerConstantInstruction).getValue().toInt()
+    }
+
+    int getValue() { result = value }
+  }
+
+  predicate isUnreachableInCall(Node n, DataFlowCall call) {
+    exists(
+      DirectParameterNode paramNode, ConstantIntegralTypeArgumentNode arg,
+      G::IRGuardCondition guard, IntegerConstantInstruction constant, int k
+    |
+      // arg flows into `paramNode`
+      DataFlowImplCommon::viableParamArg(call, pragma[only_bind_into](paramNode),
+        pragma[only_bind_into](arg))
+    |
+      // and there's a guard condition which ensures that `constant == parameter + k`
+      guard
+          .ensuresEq(constant.getAUse(), valueNumber(paramNode.getInstruction()).getAUse(), k,
+            n.getBasicBlock(), true) and
+      // and `constant != argument + k`
+      constant.getValue().toInt() != arg.getValue() + k
+      or
+      exists(boolean isLessThan |
+        guard
+            .ensuresLt(constant.getAUse(), valueNumber(paramNode.getInstruction()).getAUse(), k,
+              n.getBasicBlock(), isLessThan)
+      |
+        isLessThan = true and
+        constant.getValue() >= arg.getValue() + k
+        or
+        isLessThan = false and
+        constant.getValue() < arg.getValue() + k
+      )
+    )
+  }
+}
+
+import IsUnreachableInCall
 
 int accessPathLimit() { result = 5 }
 
