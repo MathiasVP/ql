@@ -383,13 +383,70 @@ class Node extends TIRDataFlowNode {
     result = toExprString(this)
     or
     not exists(toExprString(this)) and
-    result = this.toStringImpl()
+    result = toStringImpl(this)
   }
+}
 
-  /** INTERNAL: Do not use. */
-  string toStringImpl() {
-    none() // overridden by subclasses
-  }
+cached
+private string toStringImpl(Node node) {
+  exists(InstructionNode instrNode | instrNode = node |
+    if
+      instrNode.getInstruction().(InitializeParameterInstruction).getIRVariable() instanceof
+        IRThisVariable
+    then result = "this"
+    else result = instrNode.getInstruction().getAst().toString()
+  )
+  or
+  exists(OperandNode opNode | opNode = node |
+    if
+      opNode.getOperand().getDef().(InitializeParameterInstruction).getIRVariable() instanceof
+        IRThisVariable
+    then result = "this"
+    else result = opNode.getOperand().getDef().getAst().toString()
+  )
+  or
+  result = node.(PostUpdateNode).getPreUpdateNode() + " [post update]"
+  or
+  node instanceof SsaPhiNode and
+  result = "Phi"
+  or
+  result = node.(FinalGlobalValue).getGlobalUse().toString()
+  or
+  result = node.(InitialGlobalValue).getGlobalDef().toString()
+  or
+  exists(IndirectParameterNode indirectParam | indirectParam = node |
+    result = indirectParam.getParameter().toString() + " indirection"
+    or
+    not exists(indirectParam.getParameter()) and
+    result = "this indirection"
+  )
+  or
+  exists(IndirectArgumentOutNode indirectArgOut | indirectArgOut = node |
+    // This string should be unique enough to be helpful but common enough to
+    // avoid storing too many different strings.
+    result = indirectArgOut.getStaticCallTarget().getName() + " output argument"
+    or
+    not exists(indirectArgOut.getStaticCallTarget()) and
+    result = "output argument"
+  )
+  or
+  result =
+    toStringImpl(instructionNode(node.(RawIndirectOperand).getOperand().getDef())) + " indirection"
+  or
+  exists(FinalParameterNode finalParam | finalParam = node |
+    if finalParam.getIndirectionIndex() > 1
+    then result = finalParam.getParameter().toString() + " indirection"
+    else result = finalParam.getParameter().toString()
+  )
+  or
+  result =
+    toStringImpl(instructionNode(node.(RawIndirectInstruction).getInstruction())) + " indirection"
+  or
+  exists(VariableNode varNode | varNode = node |
+    if varNode.getIndirectionIndex() = 1
+    then result = varNode.getVariable().toString()
+    else result = varNode.getVariable().toString() + " indirection"
+  )
 }
 
 private string toExprString(Node n) {
@@ -432,12 +489,6 @@ class InstructionNode extends Node0 {
     then result = instr.getAst().getLocation()
     else result instanceof UnknownDefaultLocation
   }
-
-  override string toStringImpl() {
-    if instr.(InitializeParameterInstruction).getIRVariable() instanceof IRThisVariable
-    then result = "this"
-    else result = instr.getAst().toString()
-  }
 }
 
 /**
@@ -456,12 +507,6 @@ class OperandNode extends Node, Node0 {
     if exists(op.getDef().getAst().getLocation())
     then result = op.getDef().getAst().getLocation()
     else result instanceof UnknownDefaultLocation
-  }
-
-  override string toStringImpl() {
-    if op.getDef().(InitializeParameterInstruction).getIRVariable() instanceof IRThisVariable
-    then result = "this"
-    else result = op.getDef().getAst().toString()
   }
 }
 
@@ -511,8 +556,6 @@ class PostFieldUpdateNode extends TPostFieldUpdateNode, PartialDefinitionNode {
   }
 
   override Location getLocationImpl() { result = fieldAddress.getLocation() }
-
-  override string toStringImpl() { result = this.getPreUpdateNode() + " [post update]" }
 }
 
 /**
@@ -542,8 +585,6 @@ class SsaPhiNode extends Node, TSsaPhiNode {
   override predicate isGLValue() { phi.getSourceVariable().isGLValue() }
 
   final override Location getLocationImpl() { result = phi.getBasicBlock().getLocation() }
-
-  override string toStringImpl() { result = "Phi" }
 
   /**
    * Gets a node that is used as input to this phi node.
@@ -627,8 +668,6 @@ class FinalGlobalValue extends Node, TFinalGlobalValue {
   }
 
   final override Location getLocationImpl() { result = globalUse.getLocation() }
-
-  override string toStringImpl() { result = globalUse.toString() }
 }
 
 /**
@@ -661,8 +700,6 @@ class InitialGlobalValue extends Node, TInitialGlobalValue {
   }
 
   final override Location getLocationImpl() { result = globalDef.getLocation() }
-
-  override string toStringImpl() { result = globalDef.toString() }
 }
 
 /**
@@ -690,13 +727,6 @@ class IndirectParameterNode extends Node instanceof IndirectInstruction {
   }
 
   override Location getLocationImpl() { result = this.getParameter().getLocation() }
-
-  override string toStringImpl() {
-    result = this.getParameter().toString() + " indirection"
-    or
-    not exists(this.getParameter()) and
-    result = "this indirection"
-  }
 }
 
 /**
@@ -766,15 +796,6 @@ class IndirectArgumentOutNode extends Node, TIndirectArgumentOutNode, PartialDef
   override Declaration getFunction() { result = this.getCallInstruction().getEnclosingFunction() }
 
   override Node getPreUpdateNode() { hasOperandAndIndex(result, operand, indirectionIndex) }
-
-  override string toStringImpl() {
-    // This string should be unique enough to be helpful but common enough to
-    // avoid storing too many different strings.
-    result = this.getStaticCallTarget().getName() + " output argument"
-    or
-    not exists(this.getStaticCallTarget()) and
-    result = "output argument"
-  }
 
   override Location getLocationImpl() { result = operand.getLocation() }
 
@@ -930,10 +951,6 @@ class RawIndirectOperand extends Node, TRawIndirectOperand {
     then result = this.getOperand().getLocation()
     else result instanceof UnknownDefaultLocation
   }
-
-  override string toStringImpl() {
-    result = instructionNode(this.getOperand().getDef()).toStringImpl() + " indirection"
-  }
 }
 
 /**
@@ -970,10 +987,6 @@ class FinalParameterNode extends Node, TFinalParameterNode {
     or
     not exists(unique( | | p.getLocation())) and
     result instanceof UnknownDefaultLocation
-  }
-
-  override string toStringImpl() {
-    if indirectionIndex > 1 then result = p.toString() + " indirection" else result = p.toString()
   }
 }
 
@@ -1032,10 +1045,6 @@ class RawIndirectInstruction extends Node, TRawIndirectInstruction {
     if exists(this.getInstruction().getLocation())
     then result = this.getInstruction().getLocation()
     else result instanceof UnknownDefaultLocation
-  }
-
-  override string toStringImpl() {
-    result = instructionNode(this.getInstruction()).toStringImpl() + " indirection"
   }
 }
 
@@ -1130,8 +1139,6 @@ private class InstructionExprNode extends ExprNodeBase, InstructionNode {
   final override Expr getConvertedExpr() { exprNodeShouldBeInstruction(this, result) }
 
   final override Expr getExpr() { result = this.getConvertedExpr().getUnconverted() }
-
-  final override string toStringImpl() { result = this.getConvertedExpr().toString() }
 }
 
 private class OperandExprNode extends ExprNodeBase, OperandNode {
@@ -1140,8 +1147,6 @@ private class OperandExprNode extends ExprNodeBase, OperandNode {
   final override Expr getConvertedExpr() { exprNodeShouldBeOperand(this, result) }
 
   final override Expr getExpr() { result = this.getConvertedExpr().getUnconverted() }
-
-  final override string toStringImpl() { result = this.getConvertedExpr().toString() }
 }
 
 abstract private class IndirectExprNodeBase extends Node {
@@ -1278,8 +1283,6 @@ private class ExplicitParameterNode extends ParameterNode, DirectParameterNode {
 
   /** Gets the `Parameter` associated with this node. */
   Parameter getParameter() { result = instr.getParameter() }
-
-  override string toStringImpl() { result = instr.getParameter().toString() }
 }
 
 /** An implicit `this` parameter. */
@@ -1289,8 +1292,6 @@ class ThisParameterNode extends ParameterNode, DirectParameterNode {
   override predicate isParameterOf(Function f, ParameterPosition pos) {
     pos.(DirectPosition).getIndex() = -1 and instr.getEnclosingFunction() = f
   }
-
-  override string toStringImpl() { result = "this" }
 }
 
 pragma[noinline]
@@ -1418,10 +1419,6 @@ class VariableNode extends Node, TVariableNode {
     or
     not exists(unique( | | v.getLocation())) and
     result instanceof UnknownDefaultLocation
-  }
-
-  override string toStringImpl() {
-    if indirectionIndex = 1 then result = v.toString() else result = v.toString() + " indirection"
   }
 }
 
