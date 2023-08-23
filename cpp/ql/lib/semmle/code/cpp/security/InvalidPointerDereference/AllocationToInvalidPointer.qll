@@ -193,35 +193,31 @@ private module SizeBarrier {
   }
 }
 
-private module InterestingPointerAddInstruction {
-  private module PointerAddInstructionConfig implements DataFlow::ConfigSig {
-    predicate isSource(DataFlow::Node source) {
-      // The sources is the same as in the sources for the second
-      // projection in the `AllocToInvalidPointerConfig` module.
-      hasSize(source.asConvertedExpr(), _, _)
-    }
-
-    predicate isSink(DataFlow::Node sink) {
-      sink.asInstruction() = any(PointerAddInstruction pai).getLeft()
-    }
-  }
-
-  private import DataFlow::Global<PointerAddInstructionConfig>
-
-  /**
-   * Holds if `pai` is a pointer-arithmetic instruction such that the
-   * result of an allocation flows to the left-hand side of `pai`.
-   *
-   * This predicate is used to reduce the set of tuples in `isSinkPair`.
-   */
-  predicate isInteresting(PointerAddInstruction pai) {
-    exists(DataFlow::Node n |
-      n.asInstruction() = pai.getLeft() and
-      flowTo(n)
-    )
-  }
-}
-
+// private module InterestingPointerAddInstruction {
+//   private module PointerAddInstructionConfig implements DataFlow::ConfigSig {
+//     predicate isSource(DataFlow::Node source) {
+//       // The sources is the same as in the sources for the second
+//       // projection in the `AllocToInvalidPointerConfig` module.
+//       hasSize(source.asConvertedExpr(), _, _)
+//     }
+//     predicate isSink(DataFlow::Node sink) {
+//       sink.asInstruction() = any(PointerAddInstruction pai).getLeft()
+//     }
+//   }
+//   private import DataFlow::Global<PointerAddInstructionConfig>
+//   /**
+//    * Holds if `pai` is a pointer-arithmetic instruction such that the
+//    * result of an allocation flows to the left-hand side of `pai`.
+//    *
+//    * This predicate is used to reduce the set of tuples in `isSinkPair`.
+//    */
+//   predicate isInteresting(PointerAddInstruction pai) {
+//     exists(DataFlow::Node n |
+//       n.asInstruction() = pai.getLeft() and
+//       flowTo(n)
+//     )
+//   }
+// }
 /**
  * A product-flow configuration for flow from an `(allocation, size)` pair to a
  * pointer-arithmetic operation `pai` such that `pai <= allocation + size`.
@@ -284,7 +280,7 @@ pragma[nomagic]
 private predicate pointerAddInstructionHasBounds0(
   PointerAddInstruction pai, DataFlow::Node allocSink, DataFlow::Node sizeSink, int delta
 ) {
-  InterestingPointerAddInstruction::isInteresting(pragma[only_bind_into](pai)) and
+  // InterestingPointerAddInstruction::isInteresting(pragma[only_bind_into](pai)) and
   exists(Instruction right, Instruction sizeInstr |
     pai.getRight() = right and
     pai.getLeft() = allocSink.asInstruction() and
