@@ -104,6 +104,8 @@ private module SizeBarrier {
       hasSize(_, source, _)
     }
 
+    int fieldFlowBranchLimit() { result = 0 }
+
     predicate isBarrierOut(DataFlow::Node node) {
       node = any(DataFlow::SsaPhiNode phi).getAnInput(true)
     }
@@ -210,6 +212,8 @@ private module InterestingPointerAddInstruction {
     predicate isSink(DataFlow::Node sink) {
       sink.asInstruction() = any(PointerAddInstruction pai).getLeft()
     }
+
+    int fieldFlowBranchLimit() { result = 0 }
   }
 
   private import DataFlow::Global<PointerAddInstructionConfig>
