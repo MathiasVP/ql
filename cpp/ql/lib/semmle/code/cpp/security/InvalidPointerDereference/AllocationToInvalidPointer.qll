@@ -104,6 +104,10 @@ private module SizeBarrier {
       hasSize(_, source, _)
     }
 
+    predicate isBarrierOut(DataFlow::Node node) {
+      node = any(DataFlow::SsaPhiNode phi).getAnInput(true)
+    }
+
     /**
      * Holds if `small <= large + k` holds if `g` evaluates to `testIsTrue`.
      */
@@ -200,6 +204,8 @@ private module InterestingPointerAddInstruction {
       // projection in the `AllocToInvalidPointerConfig` module.
       hasSize(source.asConvertedExpr(), _, _)
     }
+
+    predicate isBarrierIn(DataFlow::Node node) { isSource(node) }
 
     predicate isSink(DataFlow::Node sink) {
       sink.asInstruction() = any(PointerAddInstruction pai).getLeft()
