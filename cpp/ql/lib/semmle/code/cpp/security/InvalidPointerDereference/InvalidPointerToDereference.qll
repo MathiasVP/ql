@@ -91,6 +91,8 @@ private module InvalidPointerToDerefBarrier {
       bounded2(source.asInstruction(), pai, any(int d | d <= 0))
     }
 
+    int fieldFlowBranchLimit() { result = 1 }
+
     predicate isSource(DataFlow::Node source) { isSource(source, _) }
 
     additional predicate isSink(
@@ -163,6 +165,8 @@ private module InvalidPointerToDerefConfig implements DataFlow::StateConfigSig {
   predicate isSource(DataFlow::Node source, FlowState pai) {
     invalidPointerToDerefSource(_, pai, source, _)
   }
+
+  int fieldFlowBranchLimit() { result = 1 }
 
   pragma[inline]
   predicate isSink(DataFlow::Node sink) { isInvalidPointerDerefSink(sink, _, _, _, _) }

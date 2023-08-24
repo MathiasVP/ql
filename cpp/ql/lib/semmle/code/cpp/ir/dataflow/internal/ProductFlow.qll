@@ -324,6 +324,8 @@ module ProductFlow {
         Config::isSinkPair(sink, state, _, _)
       }
 
+      int fieldFlowBranchLimit() { result = 1 }
+
       predicate isBarrier(DataFlow::Node node, FlowState state) { Config::isBarrier1(node, state) }
 
       predicate isBarrierOut(DataFlow::Node node) { Config::isBarrierOut1(node) }
@@ -341,6 +343,8 @@ module ProductFlow {
 
     private module Config2 implements DataFlow::StateConfigSig {
       class FlowState = FlowState2;
+
+      int fieldFlowBranchLimit() { result = 1 }
 
       predicate isSource(DataFlow::Node source, FlowState state) {
         exists(Flow1::PathNode source1 |
