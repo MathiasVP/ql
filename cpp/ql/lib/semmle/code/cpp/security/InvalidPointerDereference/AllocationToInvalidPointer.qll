@@ -105,7 +105,7 @@ private module SizeBarrier {
       InterestingPointerAddInstruction::isInterestingSize(source)
     }
 
-    int fieldFlowBranchLimit() { result = 0 }
+    int fieldFlowBranchLimit() { result = 1 }
 
     /**
      * Holds if `small <= large + k` holds if `g` evaluates to `testIsTrue`.
@@ -208,7 +208,7 @@ private module InterestingPointerAddInstruction {
       sink.asInstruction() = any(PointerAddInstruction pai).getLeft()
     }
 
-    int fieldFlowBranchLimit() { result = 0 }
+    int fieldFlowBranchLimit() { result = 1 }
   }
 
   private import DataFlow::Global<PointerAddInstructionConfig>

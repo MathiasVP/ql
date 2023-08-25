@@ -82,7 +82,7 @@ module FinalConfig implements DataFlow::StateConfigSig {
       operationIsOffBy(_, pai, _, _, _, _, _)
     }
 
-  int fieldFlowBranchLimit() { result = 0 }
+  int fieldFlowBranchLimit() { result = 1 }
 
   predicate isSource(DataFlow::Node source, FlowState state) {
     state = TInitial() and
