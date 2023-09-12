@@ -81,13 +81,27 @@ module FlowFromFree<isSinkSig/2 isASink, isExcludedSig/2 isExcluded> {
       or
       n.asIndirectExpr() = any(Call call).getAnArgument()
       or
-      exists(Expr e |
-        n.asIndirectExpr() = e.(PointerDereferenceExpr).getOperand() or
-        n.asIndirectExpr() = e.(ArrayExpr).getArrayBase()
-      |
-        e = any(StoreInstruction store).getDestinationAddress().getUnconvertedResultExpression()
-      )
+      isWriteToReferenceIndirection(n)
+      or
+      isWriteToPointerIndirection(n)
     }
+  }
+
+  private predicate isWriteToReferenceIndirection(DataFlow::Node n) {
+    exists(Expr e, CopyValueInstruction copy |
+      n.asInstruction() = copy.getUnary() and
+      copy.getConvertedResultExpression() = e.(ReferenceDereferenceExpr) and
+      e = any(StoreInstruction store).getDestinationAddress().getConvertedResultExpression()
+    )
+  }
+
+  private predicate isWriteToPointerIndirection(DataFlow::Node n) {
+    exists(Expr e |
+      n.asIndirectExpr() = e.(PointerDereferenceExpr).getOperand() or
+      n.asIndirectExpr() = e.(ArrayExpr).getArrayBase()
+    |
+      e = any(StoreInstruction store).getDestinationAddress().getUnconvertedResultExpression()
+    )
   }
 
   import DataFlow::GlobalWithState<FlowFromFreeConfig>
