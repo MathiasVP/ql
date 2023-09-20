@@ -138,7 +138,7 @@ module FinalFlow = DataFlow::GlobalWithState<FinalConfig>;
  */
 predicate hasFlowPath(
   FinalFlow::PathNode source, FinalFlow::PathNode sink, PointerArithmeticInstruction pai,
-  string operation, int delta
+  string operation, float delta
 ) {
   FinalFlow::flowPath(source, sink) and
   operationIsOffBy(source.getNode(), pai, _, _, operation, sink.getNode(), delta) and
@@ -146,10 +146,10 @@ predicate hasFlowPath(
 }
 
 from
-  FinalFlow::PathNode source, FinalFlow::PathNode sink, int k, string kstr,
+  FinalFlow::PathNode source, FinalFlow::PathNode sink, float k, string kstr,
   PointerArithmeticInstruction pai, string operation, Expr offset, DataFlow::Node n
 where
-  k = min(int cand | hasFlowPath(source, sink, pai, operation, cand)) and
+  k = min(float cand | hasFlowPath(source, sink, pai, operation, cand)) and
   offset = pai.getRight().getUnconvertedResultExpression() and
   n = source.getNode() and
   if k = 0 then kstr = "" else kstr = " + " + k

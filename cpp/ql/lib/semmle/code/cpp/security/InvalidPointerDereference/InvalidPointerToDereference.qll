@@ -98,7 +98,7 @@ private module InvalidPointerToDerefBarrier {
     additional predicate isSource(DataFlow::Node source, PointerArithmeticInstruction pai) {
       invalidPointerToDerefSource(_, pai, _, _) and
       // source <= pai
-      bounded2(source.asInstruction(), pai, any(int d | d <= 0))
+      bounded2(source.asInstruction(), pai, any(float d | d <= 0))
     }
 
     predicate isSource(DataFlow::Node source) { isSource(source, _) }
@@ -138,7 +138,7 @@ private module InvalidPointerToDerefBarrier {
    * Gets an instruction `instr` such that `instr < pai`.
    */
   Instruction getABarrierInstruction(PointerArithmeticInstruction pai) {
-    exists(IRGuardCondition g, ValueNumber value, Operand use, boolean edge, int delta, int k |
+    exists(IRGuardCondition g, ValueNumber value, Operand use, boolean edge, float delta, int k |
       use = value.getAUse() and
       // value < pai + k
       operandGuardChecks(pai, pragma[only_bind_into](g), pragma[only_bind_into](use),
@@ -146,7 +146,7 @@ private module InvalidPointerToDerefBarrier {
       // result <= value + delta
       bounded(result, value.getAnInstruction(), delta) and
       g.controls(result.getBlock(), edge) and
-      delta + k <= 0
+      le(delta + k, 0)
       // combining the above we have: result < pai + k + delta <= pai
     )
   }
@@ -206,7 +206,7 @@ private import DataFlow::GlobalWithState<InvalidPointerToDerefConfig>
  */
 private predicate invalidPointerToDerefSource(
   DataFlow::Node allocSource, PointerArithmeticInstruction pai, DataFlow::Node derefSource,
-  int deltaDerefSourceAndPai
+  float deltaDerefSourceAndPai
 ) {
   // Note that `deltaDerefSourceAndPai` is not necessarily equal to `rhsSizeDelta`:
   // `rhsSizeDelta` is the constant offset added to the size of the allocation, and
@@ -215,7 +215,7 @@ private predicate invalidPointerToDerefSource(
   AllocToInvalidPointer::pointerAddInstructionHasBounds(allocSource, pai, _, _) and
   // derefSource <= pai + deltaDerefSourceAndPai
   bounded2(derefSource.asInstruction(), pai, deltaDerefSourceAndPai) and
-  deltaDerefSourceAndPai >= 0
+  ge(deltaDerefSourceAndPai, 0)
 }
 
 /**
@@ -226,12 +226,12 @@ private predicate invalidPointerToDerefSource(
 pragma[inline]
 private predicate isInvalidPointerDerefSink(
   DataFlow::Node sink, AddressOperand addr, Instruction i, string operation,
-  int deltaDerefSinkAndDerefAddress
+  float deltaDerefSinkAndDerefAddress
 ) {
   exists(Instruction s |
     s = sink.asInstruction() and
     bounded(addr.getDef(), s, deltaDerefSinkAndDerefAddress) and
-    deltaDerefSinkAndDerefAddress >= 0 and
+    ge(deltaDerefSinkAndDerefAddress, 0) and
     i.getAnOperand() = addr
   |
     i instanceof StoreInstruction and
@@ -259,7 +259,7 @@ private Instruction getASuccessor(Instruction instr) {
 }
 
 private predicate paiForDereferenceSink(
-  PointerArithmeticInstruction pai, DataFlow::Node derefSink, int deltaDerefSourceAndPai
+  PointerArithmeticInstruction pai, DataFlow::Node derefSink, float deltaDerefSourceAndPai
 ) {
   exists(DataFlow::Node derefSource |
     invalidPointerToDerefSource(_, pai, derefSource, deltaDerefSourceAndPai) and
@@ -274,7 +274,7 @@ private predicate paiForDereferenceSink(
  */
 private predicate derefSinkToOperation(
   DataFlow::Node derefSink, PointerArithmeticInstruction pai, DataFlow::Node operation,
-  string description, int deltaDerefSourceAndPai, int deltaDerefSinkAndDerefAddress
+  string description, float deltaDerefSourceAndPai, float deltaDerefSinkAndDerefAddress
 ) {
   exists(Instruction operationInstr, AddressOperand addr |
     paiForDereferenceSink(pai, pragma[only_bind_into](derefSink), deltaDerefSourceAndPai) and
@@ -296,13 +296,13 @@ private predicate derefSinkToOperation(
  */
 predicate operationIsOffBy(
   DataFlow::Node allocation, PointerArithmeticInstruction pai, DataFlow::Node derefSource,
-  DataFlow::Node derefSink, string description, DataFlow::Node operation, int delta
+  DataFlow::Node derefSink, string description, DataFlow::Node operation, float delta
 ) {
-  exists(int deltaDerefSourceAndPai, int deltaDerefSinkAndDerefAddress |
+  exists(float deltaDerefSourceAndPai, float deltaDerefSinkAndDerefAddress |
     invalidPointerToDerefSource(allocation, pai, derefSource, deltaDerefSourceAndPai) and
     flow(derefSource, derefSink) and
     derefSinkToOperation(derefSink, pai, operation, description, deltaDerefSourceAndPai,
       deltaDerefSinkAndDerefAddress) and
-    delta = deltaDerefSourceAndPai + deltaDerefSinkAndDerefAddress
+    delta = normalizeFloatUp(deltaDerefSourceAndPai + deltaDerefSinkAndDerefAddress)
   )
 }

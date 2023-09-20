@@ -64,8 +64,8 @@ private VariableAccess getAVariableAccess(Expr e) { e.getAChild*() = result }
  * Holds if the `(n, state)` pair represents the source of flow for the size
  * expression associated with `alloc`.
  */
-predicate hasSize(HeuristicAllocationExpr alloc, DataFlow::Node n, int state) {
-  exists(VariableAccess va, Expr size, int delta |
+predicate hasSize(HeuristicAllocationExpr alloc, DataFlow::Node n, float state) {
+  exists(VariableAccess va, Expr size, float delta |
     size = alloc.getSizeExpr() and
     // Get the unique variable in a size expression like `x` in `malloc(x + 1)`.
     va = unique( | | getAVariableAccess(size)) and
@@ -73,7 +73,7 @@ predicate hasSize(HeuristicAllocationExpr alloc, DataFlow::Node n, int state) {
     bounded1(any(Instruction instr | instr.getUnconvertedResultExpression() = size),
       any(LoadInstruction load | load.getUnconvertedResultExpression() = va), delta) and
     n.asExpr() = va and
-    state = delta
+    state = normalizeFloatUp(delta)
   )
 }
 
@@ -132,7 +132,7 @@ private module SizeBarrier {
 
   module SizeBarrierFlow = DataFlow::Global<SizeBarrierConfig>;
 
-  private int getASizeAddend(DataFlow::Node node) {
+  private float getASizeAddend(DataFlow::Node node) {
     exists(DataFlow::Node source |
       SizeBarrierFlow::flow(source, node) and
       hasSize(_, source, result)
@@ -154,7 +154,7 @@ private module SizeBarrier {
    * `small <= _ + k` and `small` is the "small side" of of a relational comparison that checks
    * whether `small <= size` where `size` is the size of an allocation.
    */
-  Instruction getABarrierInstruction0(int delta, int k) {
+  Instruction getABarrierInstruction0(float delta, int k) {
     exists(
       IRGuardCondition g, ValueNumber value, Operand small, boolean edge, DataFlow::Node large
     |
@@ -169,7 +169,7 @@ private module SizeBarrier {
         pragma[only_bind_into](k), pragma[only_bind_into](edge)) and
       bounded(result, value.getAnInstruction(), delta) and
       g.controls(result.getBlock(), edge) and
-      k < getASizeAddend(large)
+      lt(k, getASizeAddend(large))
     )
   }
 
@@ -179,9 +179,9 @@ private module SizeBarrier {
    */
   bindingset[state]
   pragma[inline_late]
-  Instruction getABarrierInstruction(int state) {
-    exists(int delta, int k |
-      state > k + delta and
+  Instruction getABarrierInstruction(float state) {
+    exists(float delta, int k |
+      gt(state, k + delta) and
       // result <= "size of allocation" + delta + k
       //        < "size of allocation" + state
       result = getABarrierInstruction0(delta, k)
@@ -192,12 +192,12 @@ private module SizeBarrier {
    * Gets a `DataFlow::Node` that is guarded by a guard condition which ensures that
    * the value of the node is upper-bounded by size of some allocation.
    */
-  DataFlow::Node getABarrierNode(int state) {
+  DataFlow::Node getABarrierNode(float state) {
     exists(DataFlow::Node source, int delta, int k |
       SizeBarrierFlow::flow(source, result) and
       hasSize(_, source, state) and
       result.asInstruction() = SizeBarrier::getABarrierInstruction0(delta, k) and
-      state > k + delta
+      gt(state, k + delta)
       // so now we have:
       // result <= "size of allocation" + delta + k
       //        < "size of allocation" + state
@@ -256,7 +256,7 @@ private module InterestingPointerAddInstruction {
 private module Config implements ProductFlow::StateConfigSig {
   class FlowState1 = Unit;
 
-  class FlowState2 = int;
+  class FlowState2 = float;
 
   predicate isSourcePair(
     DataFlow::Node allocSource, FlowState1 unit, DataFlow::Node sizeSource, FlowState2 sizeAddend
@@ -313,7 +313,7 @@ private module AllocToInvalidPointerFlow = ProductFlow::GlobalWithState<Config>;
  */
 pragma[nomagic]
 private predicate pointerAddInstructionHasBounds0(
-  PointerAddInstruction pai, DataFlow::Node allocSink, DataFlow::Node sizeSink, int delta
+  PointerAddInstruction pai, DataFlow::Node allocSink, DataFlow::Node sizeSink, float delta
 ) {
   InterestingPointerAddInstruction::isInteresting(pragma[only_bind_into](pai)) and
   exists(Instruction right, Instruction sizeInstr |
@@ -334,7 +334,7 @@ private predicate pointerAddInstructionHasBounds0(
  */
 pragma[nomagic]
 predicate pointerAddInstructionHasBounds(
-  DataFlow::Node allocation, PointerAddInstruction pai, DataFlow::Node allocSink, int delta
+  DataFlow::Node allocation, PointerAddInstruction pai, DataFlow::Node allocSink, float delta
 ) {
   exists(DataFlow::Node sizeSink |
     AllocToInvalidPointerFlow::flow(allocation, _, allocSink, sizeSink) and
