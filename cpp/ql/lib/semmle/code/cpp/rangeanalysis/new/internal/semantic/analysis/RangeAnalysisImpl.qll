@@ -20,6 +20,8 @@ module ConstantBounds implements BoundSig<FloatDelta> {
     SemLocation getLocation() { result = super.getLocation() }
 
     SemExpr getExpr(float delta) { result = super.getExpr(delta) }
+
+    SemExpr getExpr() { result = super.getExpr() }
   }
 
   class SemZeroBound extends SemBound instanceof SemanticBound::SemZeroBound { }
@@ -38,6 +40,8 @@ module RelativeBounds implements BoundSig<FloatDelta> {
     SemLocation getLocation() { result = super.getLocation() }
 
     SemExpr getExpr(float delta) { result = super.getExpr(delta) }
+
+    SemExpr getExpr() { result = super.getExpr() }
   }
 
   class SemZeroBound extends SemBound instanceof SemanticBound::SemZeroBound { }

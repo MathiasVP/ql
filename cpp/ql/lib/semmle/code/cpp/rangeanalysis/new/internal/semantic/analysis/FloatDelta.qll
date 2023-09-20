@@ -18,6 +18,9 @@ module FloatDelta implements DeltaSig {
 
   bindingset[f]
   Delta fromFloat(float f) { result = f }
+
+  bindingset[result]
+  Delta negate(float f) { result = -f }
 }
 
 module FloatOverflow implements OverflowSig<FloatDelta> {

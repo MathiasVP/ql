@@ -42,7 +42,7 @@ abstract class Bound extends TBound {
   abstract string toString();
 
   /** Gets an expression that equals this bound plus `delta`. */
-  abstract Instruction getInstruction(int delta);
+  abstract Instruction getInstruction(float delta);
 
   /** Gets an expression that equals this bound. */
   Instruction getInstruction() { result = this.getInstruction(0) }
@@ -57,8 +57,8 @@ abstract class Bound extends TBound {
 class ZeroBound extends Bound, TBoundZero {
   override string toString() { result = "0" }
 
-  override Instruction getInstruction(int delta) {
-    result.(ConstantValueInstruction).getValue().toInt() = delta
+  override Instruction getInstruction(float delta) {
+    result.(ConstantValueInstruction).getValue().toFloat() = delta
   }
 
   override Location getLocation() { result instanceof UnknownDefaultLocation }
@@ -73,8 +73,9 @@ class ValueNumberBound extends Bound, TBoundValueNumber {
   ValueNumberBound() { this = TBoundValueNumber(vn) }
 
   /** Gets an `Instruction` that equals this bound. */
-  override Instruction getInstruction(int delta) {
-    this = TBoundValueNumber(valueNumber(result)) and delta = 0
+  override Instruction getInstruction(float delta) {
+    result = vn.getAnInstruction() and
+    delta = 0
   }
 
   override string toString() { result = "ValueNumberBound" }

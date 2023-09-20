@@ -110,6 +110,9 @@ signature module DeltaSig {
 
   bindingset[f]
   Delta fromFloat(float f);
+
+  bindingset[result]
+  Delta negate(Delta d);
 }
 
 signature module LangSig<DeltaSig D> {
@@ -232,6 +235,8 @@ signature module BoundSig<DeltaSig D> {
     SemLocation getLocation();
 
     SemExpr getExpr(D::Delta delta);
+
+    SemExpr getExpr();
   }
 
   class SemZeroBound extends SemBound;
@@ -321,7 +326,7 @@ module RangeStage<
        */
       cached
       predicate semBounded(SemExpr e, SemBound b, D::Delta delta, boolean upper, SemReason reason) {
-        bounded(e, b, delta, upper, _, _, reason) and
+        bounded1(e, b, delta, upper, reason) and
         bestBound(e, b, delta, upper)
       }
     }
@@ -344,11 +349,22 @@ module RangeStage<
    * - `upper = false` : `e >= b + delta`
    */
   private predicate bestBound(SemExpr e, SemBound b, D::Delta delta, boolean upper) {
-    delta = min(D::Delta d | bounded(e, b, d, upper, _, _, _) | d order by D::toFloat(d)) and
+    delta = min(D::Delta d | bounded1(e, b, d, upper, _) | d order by D::toFloat(d)) and
     upper = true
     or
-    delta = max(D::Delta d | bounded(e, b, d, upper, _, _, _) | d order by D::toFloat(d)) and
+    delta = max(D::Delta d | bounded1(e, b, d, upper, _) | d order by D::toFloat(d)) and
     upper = false
+  }
+
+  private predicate bounded1(SemExpr e, SemBound b, D::Delta delta, boolean upper, SemReason reason) {
+    bounded(e, b, delta, upper, _, _, reason)
+    or
+    exists(SemBound eBound |
+      eBound.getExpr() = e and
+      forex(SemExpr bExpr | bExpr = b.getExpr() |
+        bounded(bExpr, eBound, D::negate(delta), upper.booleanNot(), _, _, reason)
+      )
+    )
   }
 
   /**

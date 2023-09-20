@@ -26,4 +26,7 @@ module IntDelta implements DeltaSig {
         res order by diff
       )
   }
+
+  bindingset[result]
+  Delta negate(int n) { result = -n }
 }

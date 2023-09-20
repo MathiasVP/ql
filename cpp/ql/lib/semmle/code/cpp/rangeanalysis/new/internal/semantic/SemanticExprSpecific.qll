@@ -404,6 +404,10 @@ module SemanticExprConfig {
     result = getSemanticExpr(bound.(IRBound::Bound).getInstruction(delta))
   }
 
+  Expr getBoundExpr(Bound bound) {
+    result = getSemanticExpr(bound.(IRBound::Bound).getInstruction())
+  }
+
   class Guard = IRGuards::IRGuardCondition;
 
   predicate guard(Guard guard, BasicBlock block) { block = guard.getBlock() }
