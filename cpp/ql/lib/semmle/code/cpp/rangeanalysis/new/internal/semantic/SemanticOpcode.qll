@@ -32,8 +32,6 @@ private newtype TOpcode =
   TConvert() or
   TConstant() or
   TStringConstant() or
-  TAddOne() or // TODO: Combine with `TAdd`
-  TSubOne() or // TODO: Combine with `TSub`
   TConditional() or // TODO: Represent as flow
   TCall() or
   TBox() or
@@ -151,14 +149,6 @@ module Opcode {
 
   class Convert extends Opcode, TConvert {
     override string toString() { result = "Convert" }
-  }
-
-  class AddOne extends Opcode, TAddOne {
-    override string toString() { result = "AddOne" }
-  }
-
-  class SubOne extends Opcode, TSubOne {
-    override string toString() { result = "SubOne" }
   }
 
   class Conditional extends Opcode, TConditional {

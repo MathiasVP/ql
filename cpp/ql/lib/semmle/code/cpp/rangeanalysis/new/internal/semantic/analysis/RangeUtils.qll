@@ -73,16 +73,18 @@ module RangeUtil<Range::DeltaSig D, Range::LangSig<D> Lang> implements Range::Ut
       or
       defExpr.(SemStoreExpr).getOperand() = e and delta = D::fromFloat(0)
       or
-      defExpr.(SemAddOneExpr).getOperand() = e and delta = D::fromFloat(1)
+      defExpr.(SemAddConstExpr).getOperand() = e and
+      delta = D::fromFloat(defExpr.(SemAddConstExpr).getConstValue())
       or
-      defExpr.(SemSubOneExpr).getOperand() = e and delta = D::fromFloat(-1)
+      defExpr.(SemSubConstExpr).getOperand() = e and
+      delta = D::fromFloat(-defExpr.(SemSubConstExpr).getConstValue())
       or
       e = defExpr and
       not (
         defExpr instanceof SemCopyValueExpr or
         defExpr instanceof SemStoreExpr or
-        defExpr instanceof SemAddOneExpr or
-        defExpr instanceof SemSubOneExpr
+        defExpr instanceof SemAddConstExpr or
+        defExpr instanceof SemSubConstExpr
       ) and
       delta = D::fromFloat(0)
     )
@@ -96,9 +98,29 @@ module RangeUtil<Range::DeltaSig D, Range::LangSig<D> Lang> implements Range::Ut
     or
     e2.(SemStoreExpr).getOperand() = e1 and delta = D::fromFloat(0)
     or
-    e2.(SemAddOneExpr).getOperand() = e1 and delta = D::fromFloat(1)
+    exists(SemAddConstExpr constAdd |
+      constAdd = e2 and
+      constAdd.getOperand() = e1 and
+      delta = D::fromFloat(constAdd.getConstValue())
+    )
     or
-    e2.(SemSubOneExpr).getOperand() = e1 and delta = D::fromFloat(-1)
+    // exists(SemAddConstExpr constAdd |
+    //   constAdd = e1 and
+    //   constAdd.getOperand() = e2 and
+    //   delta = D::fromFloat(-constAdd.getConstValue())
+    // )
+    // or
+    exists(SemSubConstExpr constSub |
+      constSub = e2 and
+      constSub.getOperand() = e1 and
+      delta = D::fromFloat(-constSub.getConstValue())
+    )
+    or
+    exists(SemSubConstExpr constSub |
+      constSub = e1 and
+      constSub.getOperand() = e2 and
+      delta = D::fromFloat(constSub.getConstValue())
+    )
     or
     Lang::additionalValueFlowStep(e2, e1, delta)
     or

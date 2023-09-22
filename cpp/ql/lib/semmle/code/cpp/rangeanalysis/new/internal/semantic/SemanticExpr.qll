@@ -185,6 +185,41 @@ class SemSubExpr extends SemBinaryExpr {
   SemSubExpr() { opcode instanceof Opcode::Sub or opcode instanceof Opcode::PointerSub }
 }
 
+class SemAddConstExpr extends SemAddExpr {
+  int value;
+  SemExpr operand;
+
+  SemAddConstExpr() {
+    exists(SemIntegerLiteralExpr const |
+      this instanceof SemAddExpr and
+      this.hasOperands(const, operand) and
+      value = const.getIntValue()
+    )
+  }
+
+  int getConstValue() { result = value }
+
+  SemExpr getOperand() { result = operand }
+}
+
+class SemSubConstExpr extends SemSubExpr {
+  int value;
+  SemExpr operand;
+
+  SemSubConstExpr() {
+    exists(SemIntegerLiteralExpr const |
+      this instanceof SemSubExpr and
+      this.getLeftOperand() = operand and
+      this.getRightOperand() = const and
+      value = const.getIntValue()
+    )
+  }
+
+  int getConstValue() { result = value }
+
+  SemExpr getOperand() { result = operand }
+}
+
 class SemMulExpr extends SemBinaryExpr {
   SemMulExpr() { opcode instanceof Opcode::Mul }
 }
@@ -255,14 +290,6 @@ class SemBitComplementExpr extends SemUnaryExpr {
 
 class SemLogicalNotExpr extends SemUnaryExpr {
   SemLogicalNotExpr() { opcode instanceof Opcode::LogicalNot }
-}
-
-class SemAddOneExpr extends SemUnaryExpr {
-  SemAddOneExpr() { opcode instanceof Opcode::AddOne }
-}
-
-class SemSubOneExpr extends SemUnaryExpr {
-  SemSubOneExpr() { opcode instanceof Opcode::SubOne }
 }
 
 private class SemNullaryExpr extends SemKnownExpr {

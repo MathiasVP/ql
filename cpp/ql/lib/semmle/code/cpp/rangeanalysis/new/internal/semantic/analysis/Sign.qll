@@ -231,10 +231,6 @@ class Sign extends TSign {
     or
     op instanceof Opcode::Store and result = this
     or
-    op instanceof Opcode::AddOne and result = this.inc()
-    or
-    op instanceof Opcode::SubOne and result = this.dec()
-    or
     op instanceof Opcode::Negate and result = this.neg()
     or
     op instanceof Opcode::BitComplement and result = this.bitnot()

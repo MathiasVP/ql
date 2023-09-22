@@ -1004,13 +1004,14 @@ module RangeStage<
     or
     positively = false and
     (
-      expr.getOpcode() instanceof Opcode::Negate or
-      expr.getOpcode() instanceof Opcode::SubOne or
+      expr.getOpcode() instanceof Opcode::Negate
+      or
+      expr instanceof SemSubConstExpr and
       expr.(SemDivExpr).getSemType() instanceof SemFloatingPointType
     )
     or
     positively = true and
-    expr.getOpcode() instanceof Opcode::AddOne
+    expr instanceof SemAddConstExpr
   }
 
   /**
