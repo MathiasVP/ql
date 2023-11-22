@@ -883,14 +883,14 @@ private module Cached {
     )
   }
 
+  private import TypeFlow as TypeFlow
+
   /**
    * Holds if the address computed by `operand` is guaranteed to write
    * to a specific address.
    */
   private predicate isCertainAddress(Operand operand) {
-    valueNumberOfOperand(operand).getAnInstruction() instanceof VariableAddressInstruction
-    or
-    operand.getType() instanceof Cpp::ReferenceType
+    TypeFlow::isObjectLike(operand.getDef(), _)
   }
 
   /**
