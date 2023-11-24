@@ -26,6 +26,7 @@ int main(int argc, char** argv) {
     strncat(fileName+len, fixed, FILENAME_MAX-len-1);
     fopen(fileName, "wb+");
   }
+<<<<<<< HEAD
 
   {
     char *fileName = argv[1];
@@ -56,8 +57,7 @@ int main(int argc, char** argv) {
     void read(const char *fileName);
     read(argv[1]); // BAD
   }
+=======
+>>>>>>> parent of 2c500142c7 (Merge pull request #11435 from jketema/rewrite-tainted-path)
 }
 
-void read(char *fileName) {
-  fopen(fileName, "wb+");
-}
