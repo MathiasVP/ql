@@ -9,6 +9,7 @@ private import TranslatedElement
 private import TranslatedExpr
 private import TranslatedFunction
 private import DefaultOptions as DefaultOptions
+private import Completion
 
 /**
  * Gets the `CallInstruction` from the `TranslatedCallExpr` for the specified expression.
@@ -76,7 +77,8 @@ abstract class TranslatedCall extends TranslatedExpr {
     else result = this.getParent().getChildSuccessor(this)
   }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) {
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    isNormalCompletion(c) and
     kind instanceof GotoEdge and
     tag = CallTag() and
     result = this.getSideEffects().getFirstInstruction()
@@ -223,7 +225,7 @@ abstract class TranslatedSideEffects extends TranslatedElement {
     not exists(this.getChild(0)) and result = this.getParent().getChildSuccessor(this)
   }
 
-  final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) { none() }
+  final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) { none() }
 
   /** Gets the primary instruction to be associated with each side effect instruction. */
   abstract Instruction getPrimaryInstruction();
@@ -249,9 +251,10 @@ abstract class TranslatedDirectCall extends TranslatedCall {
     resultType = getFunctionGLValueType()
   }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) {
-    result = TranslatedCall.super.getInstructionSuccessor(tag, kind)
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    result = TranslatedCall.super.getInstructionSuccessor(tag, kind, c)
     or
+    isNormalCompletion(c) and
     tag = CallTargetTag() and
     kind instanceof GotoEdge and
     result = this.getFirstArgumentOrCallInstruction()
@@ -387,7 +390,8 @@ abstract class TranslatedSideEffect extends TranslatedElement {
     this.sideEffectInstruction(opcode, type)
   }
 
-  final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) {
+  final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    isNormalCompletion(c) and
     result = this.getParent().getChildSuccessor(this) and
     tag = OnlyInstructionTag() and
     kind instanceof GotoEdge

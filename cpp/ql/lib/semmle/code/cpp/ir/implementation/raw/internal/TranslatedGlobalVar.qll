@@ -8,6 +8,7 @@ private import semmle.code.cpp.ir.internal.CppType
 private import TranslatedInitialization
 private import InstructionTag
 private import semmle.code.cpp.ir.internal.IRUtilities
+private import Completion
 
 class TranslatedStaticStorageDurationVarInit extends TranslatedRootElement,
   TTranslatedStaticStorageDurationVarInit, InitializationContext
@@ -55,7 +56,8 @@ class TranslatedStaticStorageDurationVarInit extends TranslatedRootElement,
     type = getVoidType()
   }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) {
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    isNormalCompletion(c) and
     kind instanceof GotoEdge and
     (
       tag = EnterFunctionTag() and

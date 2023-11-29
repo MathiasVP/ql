@@ -5,6 +5,7 @@ private import semmle.code.cpp.ir.internal.CppType
 private import InstructionTag
 private import TranslatedElement
 private import TranslatedExpr
+private import Completion
 
 abstract class ConditionContext extends TranslatedElement {
   abstract Instruction getChildTrueSuccessor(TranslatedCondition child);
@@ -52,7 +53,7 @@ abstract class TranslatedFlexibleCondition extends TranslatedCondition, Conditio
     none()
   }
 
-  final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) { none() }
+  final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) { none() }
 
   final override Instruction getChildSuccessor(TranslatedElement child) { none() }
 
@@ -100,7 +101,7 @@ abstract class TranslatedBinaryLogicalOperation extends TranslatedNativeConditio
     none()
   }
 
-  final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) { none() }
+  final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) { none() }
 
   final TranslatedCondition getLeftOperand() {
     result = getTranslatedCondition(expr.getLeftOperand().getFullyConverted())
@@ -163,7 +164,8 @@ class TranslatedValueCondition extends TranslatedCondition, TTranslatedValueCond
     result = this.getInstruction(ValueConditionConditionalBranchTag())
   }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) {
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    isNormalCompletion(c) and
     tag = ValueConditionConditionalBranchTag() and
     (
       kind instanceof TrueEdge and

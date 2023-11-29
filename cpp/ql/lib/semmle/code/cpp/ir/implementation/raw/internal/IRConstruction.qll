@@ -265,10 +265,15 @@ CppType getInstructionOperandType(Instruction instruction, TypedOperandTag tag) 
 
 Instruction getPhiInstructionBlockStart(PhiInstruction instr) { none() }
 
+// TODO: Delete?
 Instruction getInstructionSuccessor(Instruction instruction, EdgeKind kind) {
-  result =
-    getInstructionTranslatedElement(instruction)
-        .getInstructionSuccessor(getInstructionTag(instruction), kind)
+  result = getInstructionSuccessor(instruction, kind, _)
+}
+
+Instruction getInstructionSuccessor(Instruction instruction, EdgeKind kind, Completion c) {
+  exists(TranslatedElement te | te = getInstructionTranslatedElement(instruction) |
+    result = te.getInstructionSuccessor(getInstructionTag(instruction), kind, c)
+  )
 }
 
 /**
@@ -286,7 +291,7 @@ private predicate backEdgeCandidate(
   // edge(s) after the last instruction(s) in the body.
   exists(TranslatedWhileStmt s |
     targetInstruction = s.getFirstConditionInstruction() and
-    targetInstruction = sourceElement.getInstructionSuccessor(sourceTag, kind) and
+    targetInstruction = sourceElement.getInstructionSuccessor(sourceTag, kind, _) and // TODO
     requiredAncestor = s.getBody()
   )
   or
@@ -297,7 +302,7 @@ private predicate backEdgeCandidate(
   // do-while loop produce forward edges.
   exists(TranslatedDoStmt s |
     targetInstruction = s.getBody().getFirstInstruction() and
-    targetInstruction = sourceElement.getInstructionSuccessor(sourceTag, kind) and
+    targetInstruction = sourceElement.getInstructionSuccessor(sourceTag, kind, _) and // TODO
     requiredAncestor = s.getCondition()
   )
   or
@@ -309,7 +314,7 @@ private predicate backEdgeCandidate(
   // which case `getFirstConditionInstruction` returns the body instead.
   exists(TranslatedForStmt s |
     targetInstruction = s.getFirstConditionInstruction() and
-    targetInstruction = sourceElement.getInstructionSuccessor(sourceTag, kind) and
+    targetInstruction = sourceElement.getInstructionSuccessor(sourceTag, kind, _) and // TODO
     (
       requiredAncestor = s.getUpdate()
       or
@@ -323,7 +328,7 @@ private predicate backEdgeCandidate(
   // the loop is a back edge.
   exists(TranslatedRangeBasedForStmt s |
     targetInstruction = s.getCondition().getFirstInstruction() and
-    targetInstruction = sourceElement.getInstructionSuccessor(sourceTag, kind) and
+    targetInstruction = sourceElement.getInstructionSuccessor(sourceTag, kind, _) and // TODO
     requiredAncestor = s.getUpdate()
   )
 }
@@ -355,7 +360,7 @@ Instruction getInstructionBackEdgeSuccessor(Instruction instruction, EdgeKind ki
     not isStrictlyForwardGoto(goto) and
     goto = s.getAst() and
     exists(InstructionTag tag |
-      result = s.getInstructionSuccessor(tag, kind) and
+      result = s.getInstructionSuccessor(tag, kind, _) and // TODO
       instruction = s.getInstruction(tag)
     )
   )

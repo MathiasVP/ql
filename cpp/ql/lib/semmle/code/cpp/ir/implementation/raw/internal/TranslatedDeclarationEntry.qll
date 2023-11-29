@@ -8,6 +8,7 @@ private import TranslatedElement
 private import TranslatedExpr
 private import TranslatedFunction
 private import TranslatedInitialization
+private import Completion
 
 /**
  * Gets the `TranslatedDeclarationEntry` that represents the declaration
@@ -151,31 +152,34 @@ class TranslatedStaticLocalVariableDeclarationEntry extends TranslatedDeclaratio
     result = this.getInstruction(DynamicInitializationFlagAddressTag())
   }
 
-  final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) {
-    tag = DynamicInitializationFlagAddressTag() and
-    kind instanceof GotoEdge and
-    result = this.getInstruction(DynamicInitializationFlagLoadTag())
-    or
-    tag = DynamicInitializationFlagLoadTag() and
-    kind instanceof GotoEdge and
-    result = this.getInstruction(DynamicInitializationConditionalBranchTag())
-    or
-    tag = DynamicInitializationConditionalBranchTag() and
+  final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    isNormalCompletion(c) and
     (
-      kind instanceof TrueEdge and
-      result = this.getParent().getChildSuccessor(this)
+      tag = DynamicInitializationFlagAddressTag() and
+      kind instanceof GotoEdge and
+      result = this.getInstruction(DynamicInitializationFlagLoadTag())
       or
-      kind instanceof FalseEdge and
-      result = this.getInitialization().getFirstInstruction()
+      tag = DynamicInitializationFlagLoadTag() and
+      kind instanceof GotoEdge and
+      result = this.getInstruction(DynamicInitializationConditionalBranchTag())
+      or
+      tag = DynamicInitializationConditionalBranchTag() and
+      (
+        kind instanceof TrueEdge and
+        result = this.getParent().getChildSuccessor(this)
+        or
+        kind instanceof FalseEdge and
+        result = this.getInitialization().getFirstInstruction()
+      )
+      or
+      tag = DynamicInitializationFlagConstantTag() and
+      kind instanceof GotoEdge and
+      result = this.getInstruction(DynamicInitializationFlagStoreTag())
+      or
+      tag = DynamicInitializationFlagStoreTag() and
+      kind instanceof GotoEdge and
+      result = this.getParent().getChildSuccessor(this)
     )
-    or
-    tag = DynamicInitializationFlagConstantTag() and
-    kind instanceof GotoEdge and
-    result = this.getInstruction(DynamicInitializationFlagStoreTag())
-    or
-    tag = DynamicInitializationFlagStoreTag() and
-    kind instanceof GotoEdge and
-    result = this.getParent().getChildSuccessor(this)
   }
 
   final override Instruction getChildSuccessor(TranslatedElement child) {

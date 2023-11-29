@@ -10,6 +10,7 @@ private import TranslatedElement
 private import TranslatedExpr
 private import TranslatedFunction
 private import TranslatedInitialization
+private import Completion
 
 TranslatedStmt getTranslatedStmt(Stmt stmt) { result.getAst() = stmt }
 
@@ -136,71 +137,74 @@ class TranslatedMicrosoftTryExceptHandler extends TranslatedElement,
     result = "1"
   }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) {
-    // Generate -1 -> Compare condition
-    tag = TryExceptGenerateNegativeOne() and
-    kind instanceof GotoEdge and
-    result = this.getInstruction(TryExceptCompareNegativeOne())
-    or
-    // Compare condition -> Branch
-    tag = TryExceptCompareNegativeOne() and
-    kind instanceof GotoEdge and
-    result = this.getInstruction(TryExceptCompareNegativeOneBranch())
-    or
-    // Branch -> Unwind or Generate 0
-    tag = TryExceptCompareNegativeOneBranch() and
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    isNormalCompletion(c) and
     (
-      kind instanceof TrueEdge and
-      // TODO: This is not really correct. The semantics of `EXCEPTION_CONTINUE_EXECUTION` is that
-      // we should continue execution at the point where the exception occurred. But we don't have
-      // any instruction to model this behavior.
-      result = this.getInstruction(UnwindTag())
+      // Generate -1 -> Compare condition
+      tag = TryExceptGenerateNegativeOne() and
+      kind instanceof GotoEdge and
+      result = this.getInstruction(TryExceptCompareNegativeOne())
       or
-      kind instanceof FalseEdge and
-      result = this.getInstruction(TryExceptGenerateZero())
-    )
-    or
-    // Generate 0 -> Compare condition
-    tag = TryExceptGenerateZero() and
-    kind instanceof GotoEdge and
-    result = this.getInstruction(TryExceptCompareZero())
-    or
-    // Compare condition -> Branch
-    tag = TryExceptCompareZero() and
-    kind instanceof GotoEdge and
-    result = this.getInstruction(TryExceptCompareZeroBranch())
-    or
-    // Branch -> Unwind or Generate 1
-    tag = TryExceptCompareZeroBranch() and
-    (
-      kind instanceof TrueEdge and
-      result = this.getInstruction(UnwindTag())
+      // Compare condition -> Branch
+      tag = TryExceptCompareNegativeOne() and
+      kind instanceof GotoEdge and
+      result = this.getInstruction(TryExceptCompareNegativeOneBranch())
       or
-      kind instanceof FalseEdge and
-      result = this.getInstruction(TryExceptGenerateOne())
+      // Branch -> Unwind or Generate 0
+      tag = TryExceptCompareNegativeOneBranch() and
+      (
+        kind instanceof TrueEdge and
+        // TODO: This is not really correct. The semantics of `EXCEPTION_CONTINUE_EXECUTION` is that
+        // we should continue execution at the point where the exception occurred. But we don't have
+        // any instruction to model this behavior.
+        result = this.getInstruction(UnwindTag())
+        or
+        kind instanceof FalseEdge and
+        result = this.getInstruction(TryExceptGenerateZero())
+      )
+      or
+      // Generate 0 -> Compare condition
+      tag = TryExceptGenerateZero() and
+      kind instanceof GotoEdge and
+      result = this.getInstruction(TryExceptCompareZero())
+      or
+      // Compare condition -> Branch
+      tag = TryExceptCompareZero() and
+      kind instanceof GotoEdge and
+      result = this.getInstruction(TryExceptCompareZeroBranch())
+      or
+      // Branch -> Unwind or Generate 1
+      tag = TryExceptCompareZeroBranch() and
+      (
+        kind instanceof TrueEdge and
+        result = this.getInstruction(UnwindTag())
+        or
+        kind instanceof FalseEdge and
+        result = this.getInstruction(TryExceptGenerateOne())
+      )
+      or
+      // Generate 1 -> Compare condition
+      tag = TryExceptGenerateOne() and
+      kind instanceof GotoEdge and
+      result = this.getInstruction(TryExceptCompareOne())
+      or
+      // Compare condition -> Branch
+      tag = TryExceptCompareOne() and
+      kind instanceof GotoEdge and
+      result = this.getInstruction(TryExceptCompareOneBranch())
+      or
+      // Branch -> Handler (the condition value is always 0, -1 or 1, and we've checked for 0 or -1 already.)
+      tag = TryExceptCompareOneBranch() and
+      (
+        kind instanceof TrueEdge and
+        result = this.getTranslatedHandler().getFirstInstruction()
+      )
+      or
+      // Unwind -> Parent
+      tag = UnwindTag() and
+      kind instanceof GotoEdge and
+      result = this.getParent().getChildSuccessor(this)
     )
-    or
-    // Generate 1 -> Compare condition
-    tag = TryExceptGenerateOne() and
-    kind instanceof GotoEdge and
-    result = this.getInstruction(TryExceptCompareOne())
-    or
-    // Compare condition -> Branch
-    tag = TryExceptCompareOne() and
-    kind instanceof GotoEdge and
-    result = this.getInstruction(TryExceptCompareOneBranch())
-    or
-    // Branch -> Handler (the condition value is always 0, -1 or 1, and we've checked for 0 or -1 already.)
-    tag = TryExceptCompareOneBranch() and
-    (
-      kind instanceof TrueEdge and
-      result = this.getTranslatedHandler().getFirstInstruction()
-    )
-    or
-    // Unwind -> Parent
-    tag = UnwindTag() and
-    kind instanceof GotoEdge and
-    result = this.getParent().getChildSuccessor(this)
   }
 
   override Instruction getChildSuccessor(TranslatedElement child) {
@@ -262,7 +266,8 @@ class TranslatedEmptyStmt extends TranslatedStmt {
     resultType = getVoidType()
   }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) {
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    isNormalCompletion(c) and
     tag = OnlyInstructionTag() and
     result = this.getParent().getChildSuccessor(this) and
     kind instanceof GotoEdge
@@ -315,7 +320,9 @@ class TranslatedDeclStmt extends TranslatedStmt {
       )
   }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) { none() }
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    none()
+  }
 
   override Instruction getChildSuccessor(TranslatedElement child) {
     exists(int index |
@@ -340,7 +347,9 @@ class TranslatedExprStmt extends TranslatedStmt {
 
   override Instruction getFirstInstruction() { result = this.getExpr().getFirstInstruction() }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) { none() }
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    none()
+  }
 
   override Instruction getChildSuccessor(TranslatedElement child) {
     child = this.getExpr() and
@@ -398,7 +407,8 @@ class TranslatedReturnVoidExpressionStmt extends TranslatedReturnStmt {
     resultType = getVoidType()
   }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) {
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    isNormalCompletion(c) and
     tag = OnlyInstructionTag() and
     result = this.getEnclosingFunction().getReturnSuccessorInstruction() and
     kind instanceof GotoEdge
@@ -431,7 +441,8 @@ class TranslatedReturnVoidStmt extends TranslatedReturnStmt {
     resultType = getVoidType()
   }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) {
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    isNormalCompletion(c) and
     tag = OnlyInstructionTag() and
     result = this.getEnclosingFunction().getReturnSuccessorInstruction() and
     kind instanceof GotoEdge
@@ -522,7 +533,9 @@ class TranslatedTryStmt extends TranslatedStmt {
     none()
   }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) { none() }
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    none()
+  }
 
   override Instruction getFirstInstruction() { result = this.getBody().getFirstInstruction() }
 
@@ -591,7 +604,8 @@ class TranslatedBlock extends TranslatedStmt {
 
   private int getStmtCount() { result = stmt.getNumStmt() }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) {
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    isNormalCompletion(c) and
     tag = OnlyInstructionTag() and
     result = this.getParent().getChildSuccessor(this) and
     kind instanceof GotoEdge
@@ -655,12 +669,14 @@ class TranslatedCatchByTypeHandler extends TranslatedHandler {
     child = this.getParameter() and result = this.getBlock().getFirstInstruction()
   }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) {
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
     tag = CatchTag() and
     (
+      isNormalCompletion(c) and
       kind instanceof GotoEdge and
       result = this.getParameter().getFirstInstruction()
       or
+      isExceptionCompletion(c) and
       kind instanceof ExceptionEdge and
       result = this.getParent().(TranslatedTryStmt).getNextHandler(this)
     )
@@ -688,7 +704,8 @@ class TranslatedCatchAnyHandler extends TranslatedHandler {
     resultType = getVoidType()
   }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) {
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    isNormalCompletion(c) and
     tag = CatchTag() and
     kind instanceof GotoEdge and
     result = this.getBlock().getFirstInstruction()
@@ -734,7 +751,9 @@ class TranslatedIfStmt extends TranslatedStmt, ConditionContext {
 
   private predicate hasElse() { exists(stmt.getElse()) }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) { none() }
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    none()
+  }
 
   override Instruction getChildTrueSuccessor(TranslatedCondition child) {
     child = this.getCondition() and
@@ -788,7 +807,9 @@ abstract class TranslatedLoop extends TranslatedStmt, ConditionContext {
     none()
   }
 
-  final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) { none() }
+  final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    none()
+  }
 
   final override Instruction getChildTrueSuccessor(TranslatedCondition child) {
     child = this.getCondition() and result = this.getBody().getFirstInstruction()
@@ -913,7 +934,9 @@ class TranslatedRangeBasedForStmt extends TranslatedStmt, ConditionContext {
     none()
   }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) { none() }
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    none()
+  }
 
   override Instruction getChildTrueSuccessor(TranslatedCondition child) {
     child = this.getCondition() and result = this.getVariableDeclStmt().getFirstInstruction()
@@ -970,7 +993,8 @@ class TranslatedJumpStmt extends TranslatedStmt {
     resultType = getVoidType()
   }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) {
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    isNormalCompletion(c) and
     tag = OnlyInstructionTag() and
     kind instanceof GotoEdge and
     result = getTranslatedStmt(stmt.getTarget()).getFirstInstruction()
@@ -1031,7 +1055,8 @@ class TranslatedSwitchStmt extends TranslatedStmt {
     result = this.getExpr().getResult()
   }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) {
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    isNormalCompletion(c) and
     tag = SwitchBranchTag() and
     exists(SwitchCase switchCase |
       switchCase = stmt.getASwitchCase() and
@@ -1089,7 +1114,8 @@ class TranslatedAsmStmt extends TranslatedStmt {
     result = getUnknownType()
   }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) {
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    isNormalCompletion(c) and
     tag = AsmTag() and
     result = this.getParent().getChildSuccessor(this) and
     kind instanceof GotoEdge
@@ -1119,7 +1145,9 @@ class TranslatedVlaDimensionStmt extends TranslatedStmt {
     none()
   }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) { none() }
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    none()
+  }
 
   override Instruction getChildSuccessor(TranslatedElement child) {
     child = this.getChild(0) and
@@ -1142,7 +1170,8 @@ class TranslatedVlaDeclarationStmt extends TranslatedStmt {
     resultType = getVoidType()
   }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind) {
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    isNormalCompletion(c) and
     tag = OnlyInstructionTag() and
     result = this.getParent().getChildSuccessor(this) and
     kind instanceof GotoEdge

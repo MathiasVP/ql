@@ -25,6 +25,23 @@ abstract class EdgeKind extends TEdgeKind {
   abstract string toString();
 }
 
+/** Holds if `t` is an abnormal exit type out of a CFG scope. */
+predicate isAbnormalExitType(EdgeKind kind) { kind instanceof ExceptionEdge }
+
+/**
+ * Hold if `t` represents simple (normal) evaluation of a statement or an
+ * expression.
+ */
+predicate isSimple(EdgeKind kind) { kind instanceof GotoEdge }
+
+/** Hold if `t` represents a conditional successor type. */
+predicate isCondition(EdgeKind kind) {
+  kind instanceof TrueEdge or
+  kind instanceof FalseEdge or
+  kind instanceof DefaultEdge or
+  kind instanceof CaseEdge
+}
+
 /**
  * A "goto" edge, representing the unconditional successor of an `Instruction`
  * or `IRBlock`.
