@@ -75,6 +75,16 @@ abstract class TranslatedVariableInitialization extends TranslatedElement, Initi
     )
   }
 
+  override predicate last(InstructionTag tag, Completion c) {
+    // TODO: Why can't this be final? It's overriden by TranslatedThrowValueExpr
+    isNormalCompletion(c) and
+    (
+      if this.hasUninitializedInstruction()
+      then tag = InitializerStoreTag()
+      else tag = InitializerVariableAddressTag()
+    )
+  }
+
   final override Instruction getChildSuccessor(TranslatedElement child) {
     child = this.getInitialization() and result = this.getInitializationSuccessor()
   }
@@ -191,7 +201,11 @@ abstract class TranslatedListInitialization extends TranslatedInitialization, In
     none()
   }
 
-  final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) { none() }
+  final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    none()
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) { none() }
 
   override Instruction getTargetAddress() { result = this.getContext().getTargetAddress() }
 
@@ -272,6 +286,11 @@ class TranslatedSimpleDirectInitialization extends TranslatedDirectInitializatio
     tag = InitializerStoreTag() and
     result = this.getParent().getChildSuccessor(this) and
     kind instanceof GotoEdge
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = InitializerStoreTag() and
+    isNormalCompletion(c)
   }
 
   override Instruction getChildSuccessor(TranslatedElement child) {
@@ -368,6 +387,11 @@ class TranslatedStringLiteralInitialization extends TranslatedDirectInitializati
     )
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = InitializerStoreTag() and
+    isNormalCompletion(c)
+  }
+
   override Instruction getChildSuccessor(TranslatedElement child) {
     child = this.getInitializer() and result = this.getInstruction(InitializerLoadStringTag())
   }
@@ -460,7 +484,11 @@ class TranslatedConstructorInitialization extends TranslatedDirectInitialization
     none()
   }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) { none() }
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    none()
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) { none() }
 
   override Instruction getChildSuccessor(TranslatedElement child) {
     child = this.getInitializer() and result = this.getParent().getChildSuccessor(this)
@@ -569,6 +597,12 @@ class TranslatedExplicitFieldInitialization extends TranslatedFieldInitializatio
     kind instanceof GotoEdge
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    // TODO: Is this correct?
+    tag = this.getFieldAddressTag() and
+    isNormalCompletion(c)
+  }
+
   override Instruction getChildSuccessor(TranslatedElement child) {
     child = this.getInitialization() and result = this.getParent().getChildSuccessor(this)
   }
@@ -620,6 +654,11 @@ class TranslatedFieldValueInitialization extends TranslatedFieldInitialization,
       tag = this.getFieldDefaultValueStoreTag() and
       result = this.getParent().getChildSuccessor(this)
     )
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = this.getFieldDefaultValueStoreTag() and
+    isNormalCompletion(c)
   }
 
   override string getInstructionConstantValue(InstructionTag tag) {
@@ -759,6 +798,11 @@ class TranslatedExplicitElementInitialization extends TranslatedElementInitializ
     kind instanceof GotoEdge
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = this.getElementAddressTag() and
+    isNormalCompletion(c)
+  }
+
   override Instruction getChildSuccessor(TranslatedElement child) {
     child = this.getInitialization() and result = this.getParent().getChildSuccessor(this)
   }
@@ -818,6 +862,11 @@ class TranslatedElementValueInitialization extends TranslatedElementInitializati
       tag = this.getElementDefaultValueStoreTag() and
       result = this.getParent().getChildSuccessor(this)
     )
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = this.getElementDefaultValueStoreTag() and
+    isNormalCompletion(c)
   }
 
   override string getInstructionConstantValue(InstructionTag tag) {
@@ -910,6 +959,11 @@ abstract class TranslatedBaseStructorCall extends TranslatedStructorCallFromStru
     result = this.getStructorCall().getFirstInstruction()
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = OnlyInstructionTag() and
+    isNormalCompletion(c)
+  }
+
   final override Instruction getReceiver() { result = this.getInstruction(OnlyInstructionTag()) }
 
   final override Instruction getInstructionRegisterOperand(InstructionTag tag, OperandTag operandTag) {
@@ -956,7 +1010,11 @@ class TranslatedConstructorDelegationInit extends TranslatedConstructorCallFromC
     none()
   }
 
-  final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) { none() }
+  final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    none()
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) { none() }
 
   final override Instruction getReceiver() {
     result = getTranslatedFunction(this.getFunction()).getInitializeThisInstruction()
@@ -1020,7 +1078,11 @@ class TranslatedConstructorBareInit extends TranslatedElement, TTranslatedConstr
 
   override Declaration getFunction() { result = this.getParent().getFunction() }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) { none() }
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    none()
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) { none() }
 
   override Instruction getChildSuccessor(TranslatedElement child) { none() }
 }

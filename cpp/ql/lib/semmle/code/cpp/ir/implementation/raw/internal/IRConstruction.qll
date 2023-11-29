@@ -14,6 +14,7 @@ private import TranslatedExpr
 private import TranslatedStmt
 private import TranslatedFunction
 private import TranslatedGlobalVar
+private import Completion
 
 TranslatedElement getInstructionTranslatedElement(Instruction instruction) {
   instruction = TRawInstruction(result, _)

@@ -207,6 +207,15 @@ class TranslatedMicrosoftTryExceptHandler extends TranslatedElement,
     )
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    isNormalCompletion(c) and
+    (
+      tag = TryExceptCompareOneBranch()
+      or
+      tag = UnwindTag()
+    )
+  }
+
   override Instruction getChildSuccessor(TranslatedElement child) {
     child = this.getTranslatedCondition() and
     result = this.getInstruction(TryExceptGenerateNegativeOne())
@@ -273,6 +282,11 @@ class TranslatedEmptyStmt extends TranslatedStmt {
     kind instanceof GotoEdge
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = OnlyInstructionTag() and
+    isNormalCompletion(c)
+  }
+
   override Instruction getChildSuccessor(TranslatedElement child) { none() }
 }
 
@@ -324,6 +338,8 @@ class TranslatedDeclStmt extends TranslatedStmt {
     none()
   }
 
+  final override predicate last(InstructionTag tag, Completion c) { none() }
+
   override Instruction getChildSuccessor(TranslatedElement child) {
     exists(int index |
       child = this.getDeclarationEntry(index) and
@@ -350,6 +366,8 @@ class TranslatedExprStmt extends TranslatedStmt {
   override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
     none()
   }
+
+  final override predicate last(InstructionTag tag, Completion c) { none() }
 
   override Instruction getChildSuccessor(TranslatedElement child) {
     child = this.getExpr() and
@@ -414,6 +432,11 @@ class TranslatedReturnVoidExpressionStmt extends TranslatedReturnStmt {
     kind instanceof GotoEdge
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = OnlyInstructionTag() and
+    isNormalCompletion(c)
+  }
+
   override Instruction getChildSuccessor(TranslatedElement child) {
     child = this.getExpr() and
     result = this.getInstruction(OnlyInstructionTag())
@@ -446,6 +469,11 @@ class TranslatedReturnVoidStmt extends TranslatedReturnStmt {
     tag = OnlyInstructionTag() and
     result = this.getEnclosingFunction().getReturnSuccessorInstruction() and
     kind instanceof GotoEdge
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = OnlyInstructionTag() and
+    isNormalCompletion(c)
   }
 
   override Instruction getChildSuccessor(TranslatedElement child) { none() }
@@ -537,6 +565,8 @@ class TranslatedTryStmt extends TranslatedStmt {
     none()
   }
 
+  final override predicate last(InstructionTag tag, Completion c) { none() }
+
   override Instruction getFirstInstruction() { result = this.getBody().getFirstInstruction() }
 
   override Instruction getChildSuccessor(TranslatedElement child) {
@@ -611,6 +641,12 @@ class TranslatedBlock extends TranslatedStmt {
     kind instanceof GotoEdge
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    this.isEmpty() and
+    tag = OnlyInstructionTag() and
+    isNormalCompletion(c)
+  }
+
   override Instruction getChildSuccessor(TranslatedElement child) {
     exists(int index |
       child = this.getStmt(index) and
@@ -682,6 +718,11 @@ class TranslatedCatchByTypeHandler extends TranslatedHandler {
     )
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = CatchTag() and
+    (isNormalCompletion(c) or isExceptionCompletion(c))
+  }
+
   override CppType getInstructionExceptionType(InstructionTag tag) {
     tag = CatchTag() and
     result = getTypeForPRValue(stmt.getParameter().getType())
@@ -709,6 +750,11 @@ class TranslatedCatchAnyHandler extends TranslatedHandler {
     tag = CatchTag() and
     kind instanceof GotoEdge and
     result = this.getBlock().getFirstInstruction()
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = CatchTag() and
+    isNormalCompletion(c)
   }
 }
 
@@ -754,6 +800,8 @@ class TranslatedIfStmt extends TranslatedStmt, ConditionContext {
   override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
     none()
   }
+
+  final override predicate last(InstructionTag tag, Completion c) { none() }
 
   override Instruction getChildTrueSuccessor(TranslatedCondition child) {
     child = this.getCondition() and
@@ -810,6 +858,8 @@ abstract class TranslatedLoop extends TranslatedStmt, ConditionContext {
   final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
     none()
   }
+
+  final override predicate last(InstructionTag tag, Completion c) { none() }
 
   final override Instruction getChildTrueSuccessor(TranslatedCondition child) {
     child = this.getCondition() and result = this.getBody().getFirstInstruction()
@@ -938,6 +988,8 @@ class TranslatedRangeBasedForStmt extends TranslatedStmt, ConditionContext {
     none()
   }
 
+  final override predicate last(InstructionTag tag, Completion c) { none() }
+
   override Instruction getChildTrueSuccessor(TranslatedCondition child) {
     child = this.getCondition() and result = this.getVariableDeclStmt().getFirstInstruction()
   }
@@ -998,6 +1050,11 @@ class TranslatedJumpStmt extends TranslatedStmt {
     tag = OnlyInstructionTag() and
     kind instanceof GotoEdge and
     result = getTranslatedStmt(stmt.getTarget()).getFirstInstruction()
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = OnlyInstructionTag() and
+    isNormalCompletion(c)
   }
 
   override Instruction getChildSuccessor(TranslatedElement child) { none() }
@@ -1070,6 +1127,11 @@ class TranslatedSwitchStmt extends TranslatedStmt {
     result = this.getParent().getChildSuccessor(this)
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = SwitchBranchTag() and
+    isNormalCompletion(c)
+  }
+
   override Instruction getChildSuccessor(TranslatedElement child) {
     child = this.getInitialization() and result = this.getFirstExprInstruction()
     or
@@ -1121,6 +1183,11 @@ class TranslatedAsmStmt extends TranslatedStmt {
     kind instanceof GotoEdge
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = AsmTag() and
+    isNormalCompletion(c)
+  }
+
   override Instruction getChildSuccessor(TranslatedElement child) {
     exists(int index |
       child = this.getChild(index) and
@@ -1149,6 +1216,8 @@ class TranslatedVlaDimensionStmt extends TranslatedStmt {
     none()
   }
 
+  final override predicate last(InstructionTag tag, Completion c) { none() }
+
   override Instruction getChildSuccessor(TranslatedElement child) {
     child = this.getChild(0) and
     result = this.getParent().getChildSuccessor(this)
@@ -1175,6 +1244,11 @@ class TranslatedVlaDeclarationStmt extends TranslatedStmt {
     tag = OnlyInstructionTag() and
     result = this.getParent().getChildSuccessor(this) and
     kind instanceof GotoEdge
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = OnlyInstructionTag() and
+    isNormalCompletion(c)
   }
 
   override Instruction getChildSuccessor(TranslatedElement child) { none() }

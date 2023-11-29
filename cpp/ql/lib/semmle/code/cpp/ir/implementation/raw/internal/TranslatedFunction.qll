@@ -148,6 +148,11 @@ class TranslatedFunction extends TranslatedRootElement, TTranslatedFunction {
     )
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = ExitFunctionTag() and
+    isNormalCompletion(c)
+  }
+
   final override Instruction getChildSuccessor(TranslatedElement child) {
     exists(int paramIndex |
       child = this.getParameter(paramIndex) and
@@ -395,6 +400,15 @@ abstract class TranslatedParameter extends TranslatedElement {
     )
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    isNormalCompletion(c) and
+    (
+      if this.hasIndirection()
+      then tag = InitializerIndirectStoreTag()
+      else tag = InitializerStoreTag()
+    )
+  }
+
   final override Instruction getChildSuccessor(TranslatedElement child) { none() }
 
   final override predicate hasInstruction(Opcode opcode, InstructionTag tag, CppType resultType) {
@@ -615,7 +629,11 @@ class TranslatedConstructorInitList extends TranslatedElement, InitializationCon
 
   override Function getFunction() { result = func }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) { none() }
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    none()
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) { none() }
 
   override Instruction getChildSuccessor(TranslatedElement child) {
     exists(int id |
@@ -682,7 +700,11 @@ class TranslatedDestructorDestructionList extends TranslatedElement,
 
   override Function getFunction() { result = func }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) { none() }
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    none()
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) { none() }
 
   override Instruction getChildSuccessor(TranslatedElement child) {
     exists(int id |
@@ -744,7 +766,11 @@ class TranslatedReadEffects extends TranslatedElement, TTranslatedReadEffects {
     none()
   }
 
-  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) { none() }
+  final override predicate last(InstructionTag tag, Completion c) { none() }
+
+  override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    none()
+  }
 }
 
 private TranslatedThisReadEffect getTranslatedThisReadEffect(Function func) {
@@ -765,6 +791,11 @@ abstract class TranslatedReadEffect extends TranslatedElement {
     tag = OnlyInstructionTag() and
     kind = EdgeKind::gotoEdge() and
     result = this.getParent().getChildSuccessor(this)
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = OnlyInstructionTag() and
+    isNormalCompletion(c)
   }
 
   override Instruction getFirstInstruction() { result = this.getInstruction(OnlyInstructionTag()) }

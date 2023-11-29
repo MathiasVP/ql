@@ -77,6 +77,11 @@ class TranslatedStaticStorageDurationVarInit extends TranslatedRootElement,
     )
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = ExitFunctionTag() and
+    isNormalCompletion(c)
+  }
+
   override Instruction getChildSuccessor(TranslatedElement child) {
     child = this.getChild(1) and
     result = this.getInstruction(ReturnTag())

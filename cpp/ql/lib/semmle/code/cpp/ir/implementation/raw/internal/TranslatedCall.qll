@@ -84,6 +84,11 @@ abstract class TranslatedCall extends TranslatedExpr {
     result = this.getSideEffects().getFirstInstruction()
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = CallTag() and
+    isNormalCompletion(c)
+  }
+
   override Instruction getInstructionRegisterOperand(InstructionTag tag, OperandTag operandTag) {
     tag = CallTag() and
     (
@@ -225,7 +230,11 @@ abstract class TranslatedSideEffects extends TranslatedElement {
     not exists(this.getChild(0)) and result = this.getParent().getChildSuccessor(this)
   }
 
-  final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) { none() }
+  final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    none()
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) { none() }
 
   /** Gets the primary instruction to be associated with each side effect instruction. */
   abstract Instruction getPrimaryInstruction();
@@ -395,6 +404,11 @@ abstract class TranslatedSideEffect extends TranslatedElement {
     result = this.getParent().getChildSuccessor(this) and
     tag = OnlyInstructionTag() and
     kind instanceof GotoEdge
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = OnlyInstructionTag() and
+    isNormalCompletion(c)
   }
 
   final override Declaration getFunction() { result = this.getParent().getFunction() }

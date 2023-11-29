@@ -53,7 +53,11 @@ abstract class TranslatedFlexibleCondition extends TranslatedCondition, Conditio
     none()
   }
 
-  final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) { none() }
+  final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    none()
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) { none() }
 
   final override Instruction getChildSuccessor(TranslatedElement child) { none() }
 
@@ -101,7 +105,11 @@ abstract class TranslatedBinaryLogicalOperation extends TranslatedNativeConditio
     none()
   }
 
-  final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) { none() }
+  final override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
+    none()
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) { none() }
 
   final TranslatedCondition getLeftOperand() {
     result = getTranslatedCondition(expr.getLeftOperand().getFullyConverted())
@@ -165,15 +173,21 @@ class TranslatedValueCondition extends TranslatedCondition, TTranslatedValueCond
   }
 
   override Instruction getInstructionSuccessor(InstructionTag tag, EdgeKind kind, Completion c) {
-    isNormalCompletion(c) and
     tag = ValueConditionConditionalBranchTag() and
     (
       kind instanceof TrueEdge and
-      result = this.getConditionContext().getChildTrueSuccessor(this)
+      result = this.getConditionContext().getChildTrueSuccessor(this) and
+      isConditionCompletion(c, true)
       or
       kind instanceof FalseEdge and
-      result = this.getConditionContext().getChildFalseSuccessor(this)
+      result = this.getConditionContext().getChildFalseSuccessor(this) and
+      isConditionCompletion(c, false)
     )
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = ValueConditionConditionalBranchTag() and
+    isConditionCompletion(c, _)
   }
 
   override Instruction getInstructionRegisterOperand(InstructionTag tag, OperandTag operandTag) {

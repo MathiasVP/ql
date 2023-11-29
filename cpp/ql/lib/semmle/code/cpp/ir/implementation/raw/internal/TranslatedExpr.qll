@@ -241,6 +241,11 @@ class TranslatedConditionValue extends TranslatedCoreExpr, ConditionContext,
     )
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = ConditionValueResultLoadTag() and
+    isNormalCompletion(c)
+  }
+
   override Instruction getInstructionRegisterOperand(InstructionTag tag, OperandTag operandTag) {
     tag = ConditionValueTrueStoreTag() and
     (
@@ -363,6 +368,11 @@ class TranslatedLoad extends TranslatedValueCategoryAdjustment, TTranslatedLoad 
       result = this.getOperand().getResult()
     )
   }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = LoadTag() and
+    isNormalCompletion(c)
+  }
 }
 
 /**
@@ -430,6 +440,11 @@ class TranslatedSyntheticTemporaryObject extends TranslatedValueCategoryAdjustme
     tag = InitializerVariableAddressTag() and
     result = getIRTempVariable(expr, TempObjectTempVar())
   }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = InitializerStoreTag() and
+    isNormalCompletion(c)
+  }
 }
 
 /**
@@ -476,6 +491,11 @@ class TranslatedResultCopy extends TranslatedExpr, TTranslatedResultCopy {
   final override predicate producesExprResult() { any() }
 
   private TranslatedCoreExpr getOperand() { result.getExpr() = expr }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = ResultCopyTag() and
+    isNormalCompletion(c)
+  }
 }
 
 class TranslatedCommaExpr extends TranslatedNonConstantExpr {
@@ -519,6 +539,8 @@ class TranslatedCommaExpr extends TranslatedNonConstantExpr {
   private TranslatedExpr getRightOperand() {
     result = getTranslatedExpr(expr.getRightOperand().getFullyConverted())
   }
+
+  final override predicate last(InstructionTag tag, Completion c) { none() }
 }
 
 private int getElementSize(Type type) {
@@ -656,6 +678,10 @@ abstract class TranslatedCrementOperation extends TranslatedNonConstantExpr {
       )
     )
   }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = CrementStoreTag() and isNormalCompletion(c)
+  }
 }
 
 class TranslatedPrefixCrementOperation extends TranslatedCrementOperation {
@@ -707,6 +733,10 @@ class TranslatedArrayExpr extends TranslatedNonConstantExpr {
     tag = OnlyInstructionTag() and
     result = this.getParent().getChildSuccessor(this) and
     kind instanceof GotoEdge
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = OnlyInstructionTag() and isNormalCompletion(c)
   }
 
   override Instruction getChildSuccessor(TranslatedElement child) {
@@ -776,6 +806,8 @@ abstract class TranslatedTransparentExpr extends TranslatedNonConstantExpr {
   }
 
   abstract TranslatedExpr getOperand();
+
+  final override predicate last(InstructionTag tag, Completion c) { none() }
 }
 
 class TranslatedTransparentUnaryOperation extends TranslatedTransparentExpr {
@@ -845,6 +877,10 @@ class TranslatedThisExpr extends TranslatedNonConstantExpr {
     )
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = ThisLoadTag() and isNormalCompletion(c)
+  }
+
   final override Instruction getChildSuccessor(TranslatedElement child) { none() }
 
   final override Instruction getInstructionRegisterOperand(InstructionTag tag, OperandTag operandTag) {
@@ -877,6 +913,10 @@ abstract class TranslatedVariableAccess extends TranslatedNonConstantExpr {
     tag = OnlyInstructionTag() and
     result = this.getParent().getChildSuccessor(this) and
     kind instanceof GotoEdge
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = OnlyInstructionTag() and isNormalCompletion(c)
   }
 
   final override Instruction getChildSuccessor(TranslatedElement child) {
@@ -984,6 +1024,10 @@ class TranslatedStructuredBindingVariableAccess extends TranslatedNonConstantExp
     )
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = LoadTag() and isNormalCompletion(c)
+  }
+
   override Instruction getChildSuccessor(TranslatedElement child) { none() }
 
   override predicate hasInstruction(Opcode opcode, InstructionTag tag, CppType resultType) {
@@ -1037,6 +1081,10 @@ class TranslatedFunctionAccess extends TranslatedNonConstantExpr {
     tag = OnlyInstructionTag() and
     result = this.getParent().getChildSuccessor(this) and
     kind instanceof GotoEdge
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = OnlyInstructionTag() and isNormalCompletion(c)
   }
 
   override predicate hasInstruction(Opcode opcode, InstructionTag tag, CppType resultType) {
@@ -1099,6 +1147,10 @@ abstract class TranslatedConstantExpr extends TranslatedCoreExpr, TTranslatedVal
     tag = OnlyInstructionTag() and
     result = this.getParent().getChildSuccessor(this) and
     kind instanceof GotoEdge
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = OnlyInstructionTag() and isNormalCompletion(c)
   }
 
   final override Instruction getChildSuccessor(TranslatedElement child) { none() }
@@ -1168,6 +1220,10 @@ class TranslatedUnaryExpr extends TranslatedSingleInstructionExpr {
     kind instanceof GotoEdge
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = OnlyInstructionTag() and isNormalCompletion(c)
+  }
+
   final override Instruction getChildSuccessor(TranslatedElement child) {
     child = this.getOperand() and result = this.getInstruction(OnlyInstructionTag())
   }
@@ -1213,6 +1269,10 @@ abstract class TranslatedSingleInstructionConversion extends TranslatedConversio
     tag = OnlyInstructionTag() and
     result = this.getParent().getChildSuccessor(this) and
     kind instanceof GotoEdge
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = OnlyInstructionTag() and isNormalCompletion(c)
   }
 
   override Instruction getChildSuccessor(TranslatedElement child) {
@@ -1320,6 +1380,10 @@ class TranslatedBoolConversion extends TranslatedConversion {
       tag = BoolConversionCompareTag() and
       result = this.getParent().getChildSuccessor(this)
     )
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = BoolConversionCompareTag() and isNormalCompletion(c)
   }
 
   override Instruction getChildSuccessor(TranslatedElement child) {
@@ -1467,6 +1531,10 @@ class TranslatedBinaryOperation extends TranslatedSingleInstructionExpr {
     kind instanceof GotoEdge
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = OnlyInstructionTag() and isNormalCompletion(c)
+  }
+
   override Instruction getChildSuccessor(TranslatedElement child) {
     child = this.getLeftOperand() and
     result = this.getRightOperand().getFirstInstruction()
@@ -1565,6 +1633,10 @@ class TranslatedAssignExpr extends TranslatedNonConstantExpr {
     kind instanceof GotoEdge
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = AssignmentStoreTag() and isNormalCompletion(c)
+  }
+
   override Instruction getChildSuccessor(TranslatedElement child) {
     // Operands are evaluated right-to-left.
     child = this.getRightOperand() and
@@ -1627,6 +1699,10 @@ class TranslatedBlockAssignExpr extends TranslatedNonConstantExpr {
       result = this.getParent().getChildSuccessor(this) and
       kind instanceof GotoEdge
     )
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = AssignmentStoreTag() and isNormalCompletion(c)
   }
 
   override Instruction getChildSuccessor(TranslatedElement child) {
@@ -1734,6 +1810,10 @@ class TranslatedAssignOperation extends TranslatedNonConstantExpr {
       tag = AssignmentStoreTag() and
       result = this.getParent().getChildSuccessor(this)
     )
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = AssignmentStoreTag() and isNormalCompletion(c)
   }
 
   override Instruction getChildSuccessor(TranslatedElement child) {
@@ -1918,6 +1998,10 @@ class TranslatedConstantAllocationSize extends TranslatedAllocationSize {
     result = this.getParent().getChildSuccessor(this)
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = AllocationSizeTag() and isNormalCompletion(c)
+  }
+
   final override TranslatedElement getChild(int id) { none() }
 
   final override Instruction getChildSuccessor(TranslatedElement child) { none() }
@@ -1972,6 +2056,10 @@ class TranslatedNonConstantAllocationSize extends TranslatedAllocationSize {
       tag = AllocationSizeTag() and
       result = this.getParent().getChildSuccessor(this)
     )
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = AllocationSizeTag() and isNormalCompletion(c)
   }
 
   final override TranslatedElement getChild(int id) { id = 0 and result = this.getExtent() }
@@ -2108,6 +2196,9 @@ class TranslatedDeleteOrDeleteArrayExpr extends TranslatedNonConstantExpr, Trans
     result = this.getFirstArgumentOrCallInstruction()
   }
 
+  // final override predicate last(InstructionTag tag, Completion c) {
+  //   tag = CallTargetTag() and isNormalCompletion(c)
+  // }
   override Function getInstructionFunction(InstructionTag tag) {
     tag = CallTargetTag() and result = expr.getDeallocator()
   }
@@ -2170,6 +2261,10 @@ class TranslatedDestructorFieldDestruction extends TranslatedNonConstantExpr, St
     tag = OnlyInstructionTag() and
     kind instanceof GotoEdge and
     result = this.getDestructorCall().getFirstInstruction()
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = OnlyInstructionTag() and isNormalCompletion(c)
   }
 
   final override Instruction getChildSuccessor(TranslatedElement child) {
@@ -2287,6 +2382,17 @@ abstract class TranslatedConditionalExpr extends TranslatedNonConstantExpr {
       (not expr.hasLValueToRValueConversion() or not isExtractorFrontendVersion65OrHigher()) and
       tag = ConditionValueResultLoadTag() and
       result = this.getParent().getChildSuccessor(this)
+    )
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    isNormalCompletion(c) and
+    (
+      not expr.hasLValueToRValueConversion() and
+      tag = ConditionValueResultLoadTag()
+      or
+      expr.hasLValueToRValueConversion() and
+      tag = ConditionValueResultTempAddressTag()
     )
   }
 
@@ -2566,6 +2672,12 @@ abstract class TranslatedThrowExpr extends TranslatedNonConstantExpr {
     result = this.getParent().getExceptionSuccessorInstruction()
   }
 
+  override predicate last(InstructionTag tag, Completion c) {
+    // Why can't this be final? Because it's overriden in TranslatedThrowValueExpr
+    tag = ThrowTag() and
+    isExceptionCompletion(c)
+  }
+
   override Instruction getResult() { none() }
 
   abstract Opcode getThrowOpcode();
@@ -2588,6 +2700,10 @@ class TranslatedThrowValueExpr extends TranslatedThrowExpr, TranslatedVariableIn
     result = TranslatedThrowExpr.super.getInstructionSuccessor(tag, kind, c)
     or
     result = TranslatedVariableInitialization.super.getInstructionSuccessor(tag, kind, c)
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    TranslatedThrowExpr.super.last(tag, c)
   }
 
   final override Instruction getInitializationSuccessor() {
@@ -2678,6 +2794,11 @@ class TranslatedBuiltInOperation extends TranslatedNonConstantExpr {
     tag = OnlyInstructionTag() and
     kind instanceof GotoEdge and
     result = this.getParent().getChildSuccessor(this)
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = OnlyInstructionTag() and
+    isNormalCompletion(c)
   }
 
   final override Instruction getChildSuccessor(TranslatedElement child) {
@@ -2810,6 +2931,11 @@ class TranslatedVarArgsStart extends TranslatedNonConstantExpr {
     )
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = VarArgsVAListStoreTag() and
+    isNormalCompletion(c)
+  }
+
   final override Instruction getChildSuccessor(TranslatedElement child) {
     child = this.getVAList() and
     result = this.getInstruction(VarArgsVAListStoreTag())
@@ -2891,6 +3017,11 @@ class TranslatedVarArg extends TranslatedNonConstantExpr {
     )
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = VarArgsVAListStoreTag() and
+    isNormalCompletion(c)
+  }
+
   final override Instruction getChildSuccessor(TranslatedElement child) {
     child = this.getVAList() and
     result = this.getInstruction(VarArgsVAListLoadTag())
@@ -2950,6 +3081,11 @@ class TranslatedVarArgsEnd extends TranslatedNonConstantExpr {
     tag = OnlyInstructionTag() and
     kind instanceof GotoEdge and
     result = this.getParent().getChildSuccessor(this)
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = OnlyInstructionTag() and
+    isNormalCompletion(c)
   }
 
   final override Instruction getChildSuccessor(TranslatedElement child) {
@@ -3013,6 +3149,11 @@ class TranslatedVarArgCopy extends TranslatedNonConstantExpr {
     )
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = VarArgsVAListStoreTag() and
+    isNormalCompletion(c)
+  }
+
   final override Instruction getChildSuccessor(TranslatedElement child) {
     child = this.getSourceVAList() and
     result = this.getInstruction(VarArgsVAListLoadTag())
@@ -3069,6 +3210,11 @@ abstract class TranslatedNewOrNewArrayExpr extends TranslatedNonConstantExpr, In
     if exists(this.getInitialization())
     then result = this.getInitialization().getFirstInstruction()
     else result = this.getParent().getChildSuccessor(this)
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = OnlyInstructionTag() and
+    isNormalCompletion(c)
   }
 
   final override Instruction getChildSuccessor(TranslatedElement child) {
@@ -3144,6 +3290,8 @@ class TranslatedConditionDeclExpr extends TranslatedNonConstantExpr {
     none()
   }
 
+  final override predicate last(InstructionTag tag, Completion c) { none() }
+
   override Instruction getChildSuccessor(TranslatedElement child) {
     child = this.getDecl() and
     result = this.getConditionExpr().getFirstInstruction()
@@ -3196,6 +3344,11 @@ class TranslatedLambdaExpr extends TranslatedNonConstantExpr, InitializationCont
       kind instanceof GotoEdge and
       result = this.getParent().getChildSuccessor(this)
     )
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = LoadTag() and
+    isNormalCompletion(c)
   }
 
   override Instruction getChildSuccessor(TranslatedElement child) {
@@ -3273,6 +3426,11 @@ class TranslatedStmtExpr extends TranslatedNonConstantExpr {
     result = this.getParent().getChildSuccessor(this)
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = OnlyInstructionTag() and
+    isNormalCompletion(c)
+  }
+
   override Instruction getChildSuccessor(TranslatedElement child) {
     child = this.getStmt() and
     result = this.getInstruction(OnlyInstructionTag())
@@ -3309,6 +3467,11 @@ class TranslatedErrorExpr extends TranslatedSingleInstructionExpr {
     tag = OnlyInstructionTag() and
     result = this.getParent().getChildSuccessor(this) and
     kind instanceof GotoEdge
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = OnlyInstructionTag() and
+    isNormalCompletion(c)
   }
 
   final override Instruction getChildSuccessor(TranslatedElement child) { none() }
@@ -3404,6 +3567,11 @@ class TranslatedAssumeExpr extends TranslatedSingleInstructionExpr {
     tag = OnlyInstructionTag() and
     result = this.getParent().getChildSuccessor(this) and
     kind instanceof GotoEdge
+  }
+
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = OnlyInstructionTag() and
+    isNormalCompletion(c)
   }
 
   final override Instruction getChildSuccessor(TranslatedElement child) { none() }

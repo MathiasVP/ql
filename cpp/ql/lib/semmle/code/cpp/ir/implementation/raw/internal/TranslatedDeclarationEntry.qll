@@ -182,6 +182,11 @@ class TranslatedStaticLocalVariableDeclarationEntry extends TranslatedDeclaratio
     )
   }
 
+  final override predicate last(InstructionTag tag, Completion c) {
+    tag = DynamicInitializationFlagStoreTag() and
+    isNormalCompletion(c)
+  }
+
   final override Instruction getChildSuccessor(TranslatedElement child) {
     child = this.getInitialization() and
     result = this.getInstruction(DynamicInitializationFlagConstantTag())
