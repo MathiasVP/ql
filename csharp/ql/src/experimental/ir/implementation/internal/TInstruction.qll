@@ -14,14 +14,15 @@ private import Imports::Opcode
  */
 cached
 newtype TInstruction =
-  TRawInstruction(
+  TRawInstruction0(
     IRConstruction::Raw::InstructionTag1 tag1, IRConstruction::Raw::InstructionTag2 tag2
   ) {
     IRConstruction::Raw::hasInstruction(tag1, tag2)
   } or
-  TRawUnreachedInstruction(IRFunctionBase irFunc) {
+  TRawUnreachedInstruction0(IRFunctionBase irFunc) {
     IRConstruction::hasUnreachedInstruction(irFunc)
   } or
+  TRawInstruction(IRConstruction::Node n) or
   TUnaliasedSsaPhiInstruction(
     TRawInstruction blockStartInstr, UnaliasedSsa::Ssa::MemoryLocation memoryLocation
   ) {

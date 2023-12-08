@@ -182,8 +182,8 @@ class Instruction extends Construction::TStageInstruction {
    * Gets two sort keys for this instruction - used to order instructions for printing
    * in test outputs.
    */
-  final predicate hasSortKeys(int key1, int key2) {
-    Construction::instructionHasSortKeys(this, key1, key2)
+  final predicate hasSortKeys(int key1, int key2, string key3) {
+    Construction::instructionHasSortKeys(this, key1, key2, key3)
   }
 
   /**
@@ -220,14 +220,14 @@ class Instruction extends Construction::TStageInstruction {
    * conversion.
    */
   final Language::Expr getConvertedResultExpression() {
-    result = Raw::getInstructionConvertedResultExpression(this)
+    result = Construction::getInstructionConvertedResultExpression(this)
   }
 
   /**
    * Gets the unconverted form of the `Expr` whose result is computed by this instruction, if any.
    */
   final Language::Expr getUnconvertedResultExpression() {
-    result = Raw::getInstructionUnconvertedResultExpression(this)
+    result = Construction::getInstructionUnconvertedResultExpression(this)
   }
 
   /**
@@ -389,48 +389,6 @@ class Instruction extends Construction::TStageInstruction {
    * function.
    */
   final predicate isResultConflated() { Construction::hasConflatedMemoryResult(this) }
-
-  /**
-   * Gets the successor of this instruction along the control flow edge
-   * specified by `kind`.
-   */
-  final Instruction getSuccessor(EdgeKind kind) {
-    result = Construction::getInstructionSuccessor(this, kind)
-  }
-
-  /**
-   * Gets the a _back-edge successor_ of this instruction along the control
-   * flow edge specified by `kind`. A back edge in the control-flow graph is
-   * intuitively the edge that goes back around a loop. If all back edges are
-   * removed from the control-flow graph, it becomes acyclic.
-   */
-  final Instruction getBackEdgeSuccessor(EdgeKind kind) {
-    // We don't take these edges from
-    // `Construction::getInstructionBackEdgeSuccessor` since that relation has
-    // not been treated to remove any loops that might be left over due to
-    // flaws in the IR construction or back-edge detection.
-    exists(IRBlock block |
-      block = this.getBlock() and
-      this = block.getLastInstruction() and
-      result = block.getBackEdgeSuccessor(kind).getFirstInstruction()
-    )
-  }
-
-  /**
-   * Gets all direct successors of this instruction.
-   */
-  final Instruction getASuccessor() { result = this.getSuccessor(_) }
-
-  /**
-   * Gets a predecessor of this instruction such that the predecessor reaches
-   * this instruction along the control flow edge specified by `kind`.
-   */
-  final Instruction getPredecessor(EdgeKind kind) { result.getSuccessor(kind) = this }
-
-  /**
-   * Gets all direct predecessors of this instruction.
-   */
-  final Instruction getAPredecessor() { result = this.getPredecessor(_) }
 }
 
 /**
@@ -447,7 +405,7 @@ class Instruction extends Construction::TStageInstruction {
 class VariableInstruction extends Instruction {
   IRVariable var;
 
-  VariableInstruction() { var = Raw::getInstructionVariable(this) }
+  VariableInstruction() { var = Construction::getInstructionVariable(this) }
 
   override string getImmediateString() { result = var.toString() }
 
@@ -475,7 +433,7 @@ class VariableInstruction extends Instruction {
 class FieldInstruction extends Instruction {
   Language::Field field;
 
-  FieldInstruction() { field = Raw::getInstructionField(this) }
+  FieldInstruction() { field = Construction::getInstructionField(this) }
 
   final override string getImmediateString() { result = field.toString() }
 
@@ -498,7 +456,7 @@ class FieldInstruction extends Instruction {
 class FunctionInstruction extends Instruction {
   Language::Function funcSymbol;
 
-  FunctionInstruction() { funcSymbol = Raw::getInstructionFunction(this) }
+  FunctionInstruction() { funcSymbol = Construction::getInstructionFunction(this) }
 
   final override string getImmediateString() { result = funcSymbol.toString() }
 
@@ -514,7 +472,7 @@ class FunctionInstruction extends Instruction {
 class ConstantValueInstruction extends Instruction {
   string value;
 
-  ConstantValueInstruction() { value = Raw::getInstructionConstantValue(this) }
+  ConstantValueInstruction() { value = Construction::getInstructionConstantValue(this) }
 
   final override string getImmediateString() { result = value }
 
@@ -533,7 +491,7 @@ class ConstantValueInstruction extends Instruction {
 class IndexedInstruction extends Instruction {
   int index;
 
-  IndexedInstruction() { index = Raw::getInstructionIndex(this) }
+  IndexedInstruction() { index = Construction::getInstructionIndex(this) }
 
   final override string getImmediateString() { result = index.toString() }
 
@@ -959,16 +917,6 @@ class ConditionalBranchInstruction extends Instruction {
    * Gets the instruction whose result provides the Boolean condition controlling the branch.
    */
   final Instruction getCondition() { result = this.getConditionOperand().getDef() }
-
-  /**
-   * Gets the instruction to which control will flow if the condition is true.
-   */
-  final Instruction getTrueSuccessor() { result = this.getSuccessor(EdgeKind::trueEdge()) }
-
-  /**
-   * Gets the instruction to which control will flow if the condition is false.
-   */
-  final Instruction getFalseSuccessor() { result = this.getSuccessor(EdgeKind::falseEdge()) }
 }
 
 /**
@@ -1234,7 +1182,7 @@ class PointerArithmeticInstruction extends BinaryInstruction {
 
   PointerArithmeticInstruction() {
     this.getOpcode() instanceof PointerArithmeticOpcode and
-    elementSize = Raw::getInstructionElementSize(this)
+    elementSize = Construction::getInstructionElementSize(this)
   }
 
   final override string getImmediateString() { result = elementSize.toString() }
@@ -1368,7 +1316,7 @@ class InheritanceConversionInstruction extends UnaryInstruction {
   Language::Class derivedClass;
 
   InheritanceConversionInstruction() {
-    Raw::getInstructionInheritance(this, baseClass, derivedClass)
+    Construction::getInstructionInheritance(this, baseClass, derivedClass)
   }
 
   final override string getImmediateString() {
@@ -1604,10 +1552,10 @@ class SwitchInstruction extends Instruction {
   final Instruction getExpression() { result = this.getExpressionOperand().getDef() }
 
   /** Gets the successor instructions along the case edges of the switch. */
-  final Instruction getACaseSuccessor() { exists(CaseEdge edge | result = this.getSuccessor(edge)) }
+  final Instruction getACaseSuccessor() { none() }
 
   /** Gets the successor instruction along the default edge of the switch, if any. */
-  final Instruction getDefaultSuccessor() { result = this.getSuccessor(EdgeKind::defaultEdge()) }
+  final Instruction getDefaultSuccessor() { none() }
 }
 
 /**
@@ -1990,7 +1938,7 @@ class CatchByTypeInstruction extends CatchInstruction {
 
   CatchByTypeInstruction() {
     this.getOpcode() instanceof Opcode::CatchByType and
-    exceptionType = Raw::getInstructionExceptionType(this)
+    exceptionType = Construction::getInstructionExceptionType(this)
   }
 
   final override string getImmediateString() { result = exceptionType.toString() }
@@ -2161,7 +2109,7 @@ class BuiltInOperationInstruction extends Instruction {
 
   BuiltInOperationInstruction() {
     this.getOpcode() instanceof BuiltInOperationOpcode and
-    operation = Raw::getInstructionBuiltInOperation(this)
+    operation = Construction::getInstructionBuiltInOperation(this)
   }
 
   /**

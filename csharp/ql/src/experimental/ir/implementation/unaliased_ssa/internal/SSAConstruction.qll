@@ -18,6 +18,43 @@ import Cached
 cached
 private module Cached {
   cached
+  Language::CppType getInstructionExceptionType(Instruction instruction) { none() }
+
+  cached
+  Language::Expr getInstructionConvertedResultExpression(Instruction instruction) { none() }
+
+  cached
+  Language::Expr getInstructionUnconvertedResultExpression(Instruction instruction) { none() }
+
+  cached
+  IRVariable getInstructionVariable(Instruction instruction) { none() }
+
+  cached
+  Language::Field getInstructionField(Instruction instruction) { none() }
+
+  cached
+  Language::Function getInstructionFunction(Instruction instruction) { none() }
+
+  cached
+  string getInstructionConstantValue(Instruction instruction) { none() }
+
+  cached
+  int getInstructionIndex(Instruction instruction) { none() }
+
+  cached
+  int getInstructionElementSize(Instruction instruction) { none() }
+
+  cached
+  predicate getInstructionInheritance(
+    Instruction instruction, Language::Class baseClass, Language::Class derivedClass
+  ) {
+    none()
+  }
+
+  cached
+  Language::BuiltInOperation getInstructionBuiltInOperation(Instruction instruction) { none() }
+
+  cached
   predicate hasPhiInstructionCached(
     OldInstruction blockStartInstr, Alias::MemoryLocation defLocation
   ) {

@@ -32,7 +32,7 @@ predicate isAbnormalExitType(EdgeKind kind) { kind instanceof ExceptionEdge }
  * Hold if `t` represents simple (normal) evaluation of a statement or an
  * expression.
  */
-predicate isSimple(EdgeKind kind) { kind instanceof GotoEdge }
+predicate isSimple(EdgeKind kind) { kind instanceof GotoEdge or isCondition(kind) }
 
 /** Hold if `t` represents a conditional successor type. */
 predicate isCondition(EdgeKind kind) {

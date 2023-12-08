@@ -15,14 +15,7 @@ private import TranslatedStmt
 private import TranslatedFunction
 private import TranslatedGlobalVar
 private import Completion
-
-TranslatedElement getInstructionTranslatedElement(Instruction instruction) {
-  instruction = TRawInstruction(result, _)
-}
-
-InstructionTag getInstructionTag(Instruction instruction) {
-  instruction = TRawInstruction(_, result)
-}
+import Splitting
 
 /**
  * Provides the portion of the parameterized IR interface that is used to construct the initial
@@ -179,7 +172,71 @@ module Raw {
   }
 }
 
-class TStageInstruction = TRawInstruction or TRawUnreachedInstruction;
+predicate getInstructionExceptionType = Raw::getInstructionExceptionType/1;
+
+predicate getInstructionConvertedResultExpression = Raw::getInstructionConvertedResultExpression/1;
+
+predicate getInstructionUnconvertedResultExpression =
+  Raw::getInstructionUnconvertedResultExpression/1;
+
+predicate getInstructionVariable = Raw::getInstructionVariable/1;
+
+predicate getInstructionField = Raw::getInstructionField/1;
+
+predicate getInstructionFunction = Raw::getInstructionFunction/1;
+
+predicate getInstructionConstantValue = Raw::getInstructionConstantValue/1;
+
+predicate getInstructionIndex = Raw::getInstructionIndex/1;
+
+predicate getInstructionElementSize = Raw::getInstructionElementSize/1;
+
+predicate getInstructionInheritance = Raw::getInstructionInheritance/3;
+
+predicate getInstructionBuiltInOperation = Raw::getInstructionBuiltInOperation/1;
+
+class TStageInstruction = TRawInstruction0 or TRawUnreachedInstruction0;
+
+class StageInstruction extends TStageInstruction {
+  string toString() {
+    exists(TranslatedElement te, InstructionTag tag, Opcode opcode |
+      this = TRawInstruction0(te, tag) and
+      te.hasInstruction(opcode, tag, _) and
+      result = opcode.toString() + ": " + te.getAst().toString()
+    )
+    or
+    exists(IRFunctionBase func |
+      this = TRawUnreachedInstruction0(func) and
+      result = "Unreached: " + func.toString()
+    )
+  }
+
+  Declaration getEnclosingFunction() {
+    exists(TranslatedElement te |
+      this = TRawInstruction0(te, _) and
+      result = te.getFunction()
+    )
+    or
+    exists(IRFunctionBase func |
+      this = TRawUnreachedInstruction0(func) and
+      result = func.getFunction()
+    )
+  }
+
+  Location getLocation() {
+    exists(TranslatedElement te |
+      this = TRawInstruction0(te, _) and
+      result = te.getLocation()
+    )
+    or
+    exists(IRFunctionBase func |
+      this = TRawUnreachedInstruction0(func) and
+      result = func.getLocation()
+    )
+  }
+
+  Opcode getOpcode() { getInstructionOpcode(result, this) }
+}
 
 predicate hasInstruction(TStageInstruction instr) { any() }
 
@@ -265,17 +322,6 @@ CppType getInstructionOperandType(Instruction instruction, TypedOperandTag tag) 
 }
 
 Instruction getPhiInstructionBlockStart(PhiInstruction instr) { none() }
-
-// TODO: Delete?
-Instruction getInstructionSuccessor(Instruction instruction, EdgeKind kind) {
-  result = getInstructionSuccessor(instruction, kind, _)
-}
-
-Instruction getInstructionSuccessor(Instruction instruction, EdgeKind kind, Completion c) {
-  exists(TranslatedElement te | te = getInstructionTranslatedElement(instruction) |
-    result = te.getInstructionSuccessor(getInstructionTag(instruction), kind, c)
-  )
-}
 
 /**
  * Holds if the CFG edge (`sourceElement`, `sourceTag`) ---`kind`-->
@@ -376,7 +422,7 @@ Locatable getInstructionAst(TStageInstruction instr) {
   result = getInstructionTranslatedElement(instr).getAst()
   or
   exists(IRFunction irFunc |
-    instr = TRawUnreachedInstruction(irFunc) and
+    instr = TRawUnreachedInstruction0(irFunc) and
     result = irFunc.getFunction()
   )
 }
@@ -384,21 +430,21 @@ Locatable getInstructionAst(TStageInstruction instr) {
 CppType getInstructionResultType(TStageInstruction instr) {
   getInstructionTranslatedElement(instr).hasInstruction(_, getInstructionTag(instr), result)
   or
-  instr instanceof TRawUnreachedInstruction and
+  instr instanceof TRawUnreachedInstruction0 and
   result = getVoidType()
 }
 
 predicate getInstructionOpcode(Opcode opcode, TStageInstruction instr) {
   getInstructionTranslatedElement(instr).hasInstruction(opcode, getInstructionTag(instr), _)
   or
-  instr instanceof TRawUnreachedInstruction and
+  instr instanceof TRawUnreachedInstruction0 and
   opcode instanceof Opcode::Unreached
 }
 
 IRFunctionBase getInstructionEnclosingIRFunction(TStageInstruction instr) {
   result.getFunction() = getInstructionTranslatedElement(instr).getFunction()
   or
-  instr = TRawUnreachedInstruction(result)
+  instr = TRawUnreachedInstruction0(result)
 }
 
 Instruction getPrimaryInstructionForSideEffect(SideEffectInstruction instruction) {
@@ -427,9 +473,10 @@ private module CachedForDebugging {
   }
 
   cached
-  predicate instructionHasSortKeys(Instruction instruction, int key1, int key2) {
+  predicate instructionHasSortKeys(Instruction instruction, int key1, int key2, string key3) {
     key1 = getInstructionTranslatedElement(instruction).getId() and
-    getInstructionTag(instruction) = tagByRank(key2)
+    getInstructionTag(instruction) = tagByRank(key2) and
+    key3 = ""
   }
 
   pragma[nomagic]

@@ -2,6 +2,7 @@ import semmle.code.cpp.ir.implementation.unaliased_ssa.IR as OldIR
 import semmle.code.cpp.ir.implementation.unaliased_ssa.internal.reachability.ReachableBlock as Reachability
 import semmle.code.cpp.ir.implementation.unaliased_ssa.internal.reachability.Dominance as Dominance
 import semmle.code.cpp.ir.implementation.aliased_ssa.IR as NewIR
+import semmle.code.cpp.ir.implementation.split_raw.internal.SplitConstruction as SplitStage
 import semmle.code.cpp.ir.implementation.internal.TInstruction::AliasedSsaInstructions as SsaInstructions
 
 /** DEPRECATED: Alias for SsaInstructions */

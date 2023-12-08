@@ -192,7 +192,7 @@ private class PrintableIRBlock extends PrintableIRNode, TPrintableIRBlock {
 
   override Language::Location getLocation() { result = block.getLocation() }
 
-  override string getLabel() { result = "Block " + block.getDisplayIndex().toString() }
+  override string getLabel() { result = "Block " + block.getDisplayIndex().toString() + " [" + block.getSplitString() + "]" }
 
   override int getOrder() { result = block.getDisplayIndex() }
 

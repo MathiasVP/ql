@@ -4,9 +4,25 @@ private import semmle.code.cpp.ir.implementation.raw.internal.IRConstruction as 
 private import semmle.code.cpp.ir.implementation.unaliased_ssa.internal.SSAConstruction as UnaliasedConstruction
 private import semmle.code.cpp.ir.implementation.aliased_ssa.internal.SSAConstruction as AliasedConstruction
 private import semmle.code.cpp.ir.implementation.raw.IR as Raw
+private import semmle.code.cpp.ir.implementation.split_raw.IR as SplitRaw
 private import semmle.code.cpp.ir.implementation.unaliased_ssa.IR as Unaliased
 private import semmle.code.cpp.ir.implementation.aliased_ssa.IR as Aliased
 private import semmle.code.cpp.ir.internal.Overlap
+private import semmle.code.cpp.ir.implementation.raw.internal.Splitting
+
+predicate isSplitOfInstruction(TRawInstruction split, RawConstruction::StageInstruction i) {
+  exists(RawConstruction::Node n |
+    split = TRawInstruction(n) and
+    n.getAstNode() = i
+  )
+}
+
+predicate hasSplits(TRawInstruction i, Splits s) {
+  exists(RawConstruction::Node n |
+    i = TRawInstruction(n) and
+    s = n.getSplits()
+  )
+}
 
 /**
  * Provides the newtype used to represent operands across all phases of the IR.
@@ -23,17 +39,28 @@ private module Internal {
   newtype TOperand =
     // RAW
     TRegisterOperand(TRawInstruction useInstr, RegisterOperandTag tag, TRawInstruction defInstr) {
-      defInstr = RawConstruction::getRegisterOperandDefinition(useInstr, tag) and
-      not RawConstruction::isInCycle(useInstr) and
-      strictcount(RawConstruction::getRegisterOperandDefinition(useInstr, tag)) = 1
+      exists(
+        RawConstruction::StageInstruction use, RawConstruction::StageInstruction def, Splits s
+      |
+        isSplitOfInstruction(useInstr, use) and
+        isSplitOfInstruction(defInstr, def) and
+        hasSplits(useInstr, s) and
+        hasSplits(defInstr, s) and
+        def = RawConstruction::getRegisterOperandDefinition(use, tag) and
+        not RawConstruction::isInCycle(use) and
+        strictcount(RawConstruction::getRegisterOperandDefinition(use, tag)) = 1
+      )
     } or
     // Placeholder for Phi and Chi operands in stages that don't have the corresponding instructions
     TNoOperand() { none() } or
     // Can be "removed" later when there's unreachable code
     // These operands can be reused across all three stages. They just get different defs.
-    TNonSsaMemoryOperand(Raw::Instruction useInstr, MemoryOperandTag tag) {
-      // Has no definition in raw but will get definitions later
-      useInstr.getOpcode().hasOperand(tag)
+    TNonSsaMemoryOperand(TRawInstruction useInstr, MemoryOperandTag tag) {
+      exists(RawConstruction::StageInstruction use |
+        isSplitOfInstruction(useInstr, use) and
+        // Has no definition in raw but will get definitions later
+        use.getOpcode().hasOperand(tag)
+      )
     } or
     TUnaliasedPhiOperand(
       Unaliased::PhiInstruction useInstr, Unaliased::IRBlock predecessorBlock, Overlap overlap
@@ -117,7 +144,45 @@ module RawOperands {
   /**
    * Returns the Chi operand with the specified parameters.
    */
-  TChiOperand chiOperand(Raw::Instruction useInstr, ChiOperandTag tag) { none() }
+  TChiOperand chiOperand(TRawInstruction useInstr, ChiOperandTag tag) { none() }
+}
+
+/**
+ * Provides wrappers for the constructors of each branch of `TOperand` that is used by the
+ * raw IR stage.
+ * These wrappers are not parameterized because it is not possible to invoke an IPA constructor via
+ * a class alias.
+ */
+module SplitRawOperands {
+  import Shared
+
+  class TPhiOperand = Internal::TNoOperand;
+
+  class TChiOperand = Internal::TNoOperand;
+
+  class TNonPhiMemoryOperand = TNonSsaMemoryOperand or TChiOperand;
+
+  /**
+   * Returns the Phi operand with the specified parameters.
+   */
+  TPhiOperand phiOperand(
+    SplitRaw::PhiInstruction useInstr, SplitRaw::Instruction defInstr,
+    SplitRaw::IRBlock predecessorBlock, Overlap overlap
+  ) {
+    none()
+  }
+
+  TPhiOperand reusedPhiOperand(
+    SplitRaw::PhiInstruction useInstr, SplitRaw::Instruction defInstr,
+    SplitRaw::IRBlock predecessorBlock, Overlap overlap
+  ) {
+    none()
+  }
+
+  /**
+   * Returns the Chi operand with the specified parameters.
+   */
+  TChiOperand chiOperand(TRawInstruction useInstr, ChiOperandTag tag) { none() }
 }
 
 /**

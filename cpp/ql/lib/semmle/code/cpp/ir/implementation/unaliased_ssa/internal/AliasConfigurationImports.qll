@@ -1,1 +1,1 @@
-import semmle.code.cpp.ir.implementation.raw.IR
+import semmle.code.cpp.ir.implementation.split_raw.IR

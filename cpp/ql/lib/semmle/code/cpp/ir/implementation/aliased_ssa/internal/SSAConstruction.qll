@@ -18,6 +18,63 @@ import Cached
 cached
 private module Cached {
   cached
+  Language::CppType getInstructionExceptionType(Instruction instruction) {
+    result = SplitStage::getInstructionExceptionType(instruction)
+  }
+
+  cached
+  Language::Expr getInstructionConvertedResultExpression(Instruction instruction) {
+    result = SplitStage::getInstructionConvertedResultExpression(instruction)
+  }
+
+  cached
+  Language::Expr getInstructionUnconvertedResultExpression(Instruction instruction) {
+    result = SplitStage::getInstructionUnconvertedResultExpression(instruction)
+  }
+
+  cached
+  IRVariable getInstructionVariable(Instruction instruction) {
+    result = SplitStage::getInstructionVariable(instruction)
+  }
+
+  cached
+  Language::Field getInstructionField(Instruction instruction) {
+    result = SplitStage::getInstructionField(instruction)
+  }
+
+  cached
+  Language::Function getInstructionFunction(Instruction instruction) {
+    result = SplitStage::getInstructionFunction(instruction)
+  }
+
+  cached
+  string getInstructionConstantValue(Instruction instruction) {
+    result = SplitStage::getInstructionConstantValue(instruction)
+  }
+
+  cached
+  int getInstructionIndex(Instruction instruction) {
+    result = SplitStage::getInstructionIndex(instruction)
+  }
+
+  cached
+  int getInstructionElementSize(Instruction instruction) {
+    result = SplitStage::getInstructionElementSize(instruction)
+  }
+
+  cached
+  predicate getInstructionInheritance(
+    Instruction instruction, Language::Class baseClass, Language::Class derivedClass
+  ) {
+    SplitStage::getInstructionInheritance(instruction, baseClass, derivedClass)
+  }
+
+  cached
+  Language::BuiltInOperation getInstructionBuiltInOperation(Instruction instruction) {
+    result = SplitStage::getInstructionBuiltInOperation(instruction)
+  }
+
+  cached
   predicate hasPhiInstructionCached(
     OldInstruction blockStartInstr, Alias::MemoryLocation defLocation
   ) {
@@ -1035,15 +1092,16 @@ private module CachedForDebugging {
   }
 
   cached
-  predicate instructionHasSortKeys(Instruction instr, int key1, int key2) {
+  predicate instructionHasSortKeys(Instruction instr, int key1, int key2, string key3) {
     exists(OldInstruction oldInstr |
       oldInstr = getOldInstruction(instr) and
-      oldInstr.hasSortKeys(key1, key2)
+      oldInstr.hasSortKeys(key1, key2, key3)
     )
     or
     instr instanceof TUnreachedInstruction and
     key1 = maxValue() and
-    key2 = maxValue()
+    key2 = maxValue() and
+    key3 = ""
   }
 
   /**

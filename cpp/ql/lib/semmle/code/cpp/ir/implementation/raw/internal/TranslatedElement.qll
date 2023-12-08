@@ -14,6 +14,7 @@ private import TranslatedExpr
 private import IRConstruction
 private import semmle.code.cpp.models.interfaces.SideEffect
 private import SideEffects
+private import Splitting
 private import Completion
 
 /**

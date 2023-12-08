@@ -11,6 +11,7 @@ private import Imports::IRType
 private import Imports::Overlap
 private import Imports::OperandTag
 private import Imports::TOperand
+private import Imports::TInstruction
 private import internal.OperandInternal
 
 /**
@@ -232,8 +233,10 @@ class NonPhiOperand extends Operand {
   OperandTag tag;
 
   NonPhiOperand() {
-    this = registerOperand(useInstr, tag, _) or
-    this = nonSsaMemoryOperand(useInstr, tag) or
+    this = registerOperand(useInstr, tag, _)
+    or
+    this = nonSsaMemoryOperand(useInstr, tag)
+    or
     this = chiOperand(useInstr, tag)
   }
 

@@ -33,7 +33,7 @@ private Instruction getAnInstructionAtLine(IRFunction irFunc, Language::File fil
 /**
  * A single instruction in the IR.
  */
-class Instruction extends Construction::TStageInstruction {
+class  Instruction extends Construction::TStageInstruction {
   Instruction() {
     // The base `TStageInstruction` type is a superset of the actual instructions appearing in this
     // stage. This call lets the stage filter out the ones that are not reused from raw IR.
@@ -182,8 +182,8 @@ class Instruction extends Construction::TStageInstruction {
    * Gets two sort keys for this instruction - used to order instructions for printing
    * in test outputs.
    */
-  final predicate hasSortKeys(int key1, int key2) {
-    Construction::instructionHasSortKeys(this, key1, key2)
+  final predicate hasSortKeys(int key1, int key2, string key3) {
+    Construction::instructionHasSortKeys(this, key1, key2, key3)
   }
 
   /**
@@ -220,14 +220,14 @@ class Instruction extends Construction::TStageInstruction {
    * conversion.
    */
   final Language::Expr getConvertedResultExpression() {
-    result = Raw::getInstructionConvertedResultExpression(this)
+    result = Construction::getInstructionConvertedResultExpression(this)
   }
 
   /**
    * Gets the unconverted form of the `Expr` whose result is computed by this instruction, if any.
    */
   final Language::Expr getUnconvertedResultExpression() {
-    result = Raw::getInstructionUnconvertedResultExpression(this)
+    result = Construction::getInstructionUnconvertedResultExpression(this)
   }
 
   /**
@@ -447,7 +447,7 @@ class Instruction extends Construction::TStageInstruction {
 class VariableInstruction extends Instruction {
   IRVariable var;
 
-  VariableInstruction() { var = Raw::getInstructionVariable(this) }
+  VariableInstruction() { var = Construction::getInstructionVariable(this) }
 
   override string getImmediateString() { result = var.toString() }
 
@@ -475,7 +475,7 @@ class VariableInstruction extends Instruction {
 class FieldInstruction extends Instruction {
   Language::Field field;
 
-  FieldInstruction() { field = Raw::getInstructionField(this) }
+  FieldInstruction() { field = Construction::getInstructionField(this) }
 
   final override string getImmediateString() { result = field.toString() }
 
@@ -498,7 +498,7 @@ class FieldInstruction extends Instruction {
 class FunctionInstruction extends Instruction {
   Language::Function funcSymbol;
 
-  FunctionInstruction() { funcSymbol = Raw::getInstructionFunction(this) }
+  FunctionInstruction() { funcSymbol = Construction::getInstructionFunction(this) }
 
   final override string getImmediateString() { result = funcSymbol.toString() }
 
@@ -514,7 +514,7 @@ class FunctionInstruction extends Instruction {
 class ConstantValueInstruction extends Instruction {
   string value;
 
-  ConstantValueInstruction() { value = Raw::getInstructionConstantValue(this) }
+  ConstantValueInstruction() { value = Construction::getInstructionConstantValue(this) }
 
   final override string getImmediateString() { result = value }
 
@@ -533,7 +533,7 @@ class ConstantValueInstruction extends Instruction {
 class IndexedInstruction extends Instruction {
   int index;
 
-  IndexedInstruction() { index = Raw::getInstructionIndex(this) }
+  IndexedInstruction() { index = Construction::getInstructionIndex(this) }
 
   final override string getImmediateString() { result = index.toString() }
 
@@ -1234,7 +1234,7 @@ class PointerArithmeticInstruction extends BinaryInstruction {
 
   PointerArithmeticInstruction() {
     this.getOpcode() instanceof PointerArithmeticOpcode and
-    elementSize = Raw::getInstructionElementSize(this)
+    elementSize = Construction::getInstructionElementSize(this)
   }
 
   final override string getImmediateString() { result = elementSize.toString() }
@@ -1368,7 +1368,7 @@ class InheritanceConversionInstruction extends UnaryInstruction {
   Language::Class derivedClass;
 
   InheritanceConversionInstruction() {
-    Raw::getInstructionInheritance(this, baseClass, derivedClass)
+    Construction::getInstructionInheritance(this, baseClass, derivedClass)
   }
 
   final override string getImmediateString() {
@@ -1990,7 +1990,7 @@ class CatchByTypeInstruction extends CatchInstruction {
 
   CatchByTypeInstruction() {
     this.getOpcode() instanceof Opcode::CatchByType and
-    exceptionType = Raw::getInstructionExceptionType(this)
+    exceptionType = Construction::getInstructionExceptionType(this)
   }
 
   final override string getImmediateString() { result = exceptionType.toString() }
@@ -2161,7 +2161,7 @@ class BuiltInOperationInstruction extends Instruction {
 
   BuiltInOperationInstruction() {
     this.getOpcode() instanceof BuiltInOperationOpcode and
-    operation = Raw::getInstructionBuiltInOperation(this)
+    operation = Construction::getInstructionBuiltInOperation(this)
   }
 
   /**

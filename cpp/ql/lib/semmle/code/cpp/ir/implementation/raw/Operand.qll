@@ -11,6 +11,7 @@ private import Imports::IRType
 private import Imports::Overlap
 private import Imports::OperandTag
 private import Imports::TOperand
+private import Imports::TInstruction
 private import internal.OperandInternal
 
 /**
@@ -36,9 +37,16 @@ class Operand extends TStageOperand {
   cached
   Operand() {
     // Ensure that the operand does not refer to instructions from earlier stages that are unreachable here
-    exists(Instruction use, Instruction def | this = registerOperand(use, _, def))
+    exists(Instruction use, Instruction def, TRawInstruction splitUse, TRawInstruction splitDef |
+      isSplitOfInstruction(splitUse, use) and
+      isSplitOfInstruction(splitDef, def) and
+      this = registerOperand(splitUse, _, splitDef)
+    )
     or
-    exists(Instruction use | this = nonSsaMemoryOperand(use, _))
+    exists(Instruction use, TRawInstruction splitUse |
+      isSplitOfInstruction(splitUse, use) and
+      this = nonSsaMemoryOperand(splitUse, _)
+    )
     or
     exists(Instruction use, Instruction def, IRBlock predecessorBlock |
       this = phiOperand(use, def, predecessorBlock, _) or
@@ -232,9 +240,13 @@ class NonPhiOperand extends Operand {
   OperandTag tag;
 
   NonPhiOperand() {
-    this = registerOperand(useInstr, tag, _) or
-    this = nonSsaMemoryOperand(useInstr, tag) or
-    this = chiOperand(useInstr, tag)
+    exists(TRawInstruction splitUse | isSplitOfInstruction(splitUse, useInstr) |
+      this = registerOperand(splitUse, tag, _)
+      or
+      this = nonSsaMemoryOperand(splitUse, tag)
+      or
+      this = chiOperand(splitUse, tag)
+    )
   }
 
   final override Instruction getUse() { result = useInstr }
@@ -259,7 +271,13 @@ class RegisterOperand extends NonPhiOperand, TRegisterOperand {
   Instruction defInstr;
 
   cached
-  RegisterOperand() { this = registerOperand(useInstr, tag, defInstr) }
+  RegisterOperand() {
+    exists(TRawInstruction splitUse, TRawInstruction splitDef |
+      isSplitOfInstruction(splitUse, useInstr) and
+      isSplitOfInstruction(splitDef, defInstr) and
+      this = registerOperand(splitUse, tag, splitDef)
+    )
+  }
 
   final override string toString() { result = tag.toString() }
 
@@ -283,9 +301,11 @@ class NonPhiMemoryOperand extends NonPhiOperand, MemoryOperand, TNonPhiMemoryOpe
 
   cached
   NonPhiMemoryOperand() {
-    this = nonSsaMemoryOperand(useInstr, tag)
-    or
-    this = chiOperand(useInstr, tag)
+    exists(TRawInstruction splitUse | isSplitOfInstruction(splitUse, useInstr) |
+      this = nonSsaMemoryOperand(splitUse, tag)
+      or
+      this = chiOperand(splitUse, tag)
+    )
   }
 
   final override string toString() { result = tag.toString() }

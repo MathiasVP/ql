@@ -88,7 +88,7 @@ newtype TInstructionTag =
   TryExceptCompareOneBranch()
 
 class InstructionTag extends TInstructionTag {
-  final string toString() { result = "Tag" }
+  final string toString() { result = getInstructionTagId(this) }
 }
 
 /**

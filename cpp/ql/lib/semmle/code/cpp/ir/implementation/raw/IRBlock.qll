@@ -14,10 +14,10 @@ private import Cached
  */
 pragma[nomagic]
 private predicate blockSortKeys(
-  IRFunction func, IRBlockBase block, int sortOverride, int sortKey1, int sortKey2
+  IRFunction func, IRBlockBase block, int sortOverride, int sortKey1, int sortKey2, string sortKey3
 ) {
   block.getEnclosingIRFunction() = func and
-  block.getFirstInstruction().hasSortKeys(sortKey1, sortKey2) and
+  block.getFirstInstruction().hasSortKeys(sortKey1, sortKey2, sortKey3) and
   // Ensure that the block containing `EnterFunction` always comes first.
   if block.getFirstInstruction() instanceof EnterFunctionInstruction
   then sortOverride = 0
@@ -55,10 +55,10 @@ class IRBlockBase extends TIRBlock {
     ) and
     exists(IRFunction func |
       this =
-        rank[result + 1](IRBlock funcBlock, int sortOverride, int sortKey1, int sortKey2 |
-          blockSortKeys(func, funcBlock, sortOverride, sortKey1, sortKey2)
+        rank[result + 1](IRBlock funcBlock, int sortOverride, int sortKey1, int sortKey2, string sortKey3 |
+          blockSortKeys(func, funcBlock, sortOverride, sortKey1, sortKey2, sortKey3)
         |
-          funcBlock order by sortOverride, sortKey1, sortKey2
+          funcBlock order by sortOverride, sortKey1, sortKey2, sortKey3
         )
     )
   }
@@ -243,21 +243,7 @@ private predicate startsBasicBlock(Instruction instr) {
 }
 
 /** Holds if `i2` follows `i1` in a `IRBlock`. */
-private predicate adjacentInBlock(Instruction i1, Instruction i2) {
-  // - i2 must be the only successor of i1
-  i2 = unique(Instruction i | i = i1.getASuccessor()) and
-  // - i1 must be the only predecessor of i2
-  i1 = unique(Instruction i | i.getASuccessor() = i2) and
-  // - The edge between the two must be a GotoEdge. We just check that one
-  //   exists since we've already checked that it's unique.
-  exists(GotoEdge edgeKind | exists(i1.getSuccessor(edgeKind))) and
-  // - The edge must not be a back edge. This means we get the same back edges
-  //   in the basic-block graph as we do in the raw CFG.
-  not exists(Construction::getInstructionBackEdgeSuccessor(i1, _))
-  // This predicate could be simplified to remove one of the `unique`s if we
-  // were willing to rely on the CFG being well-formed and thus never having
-  // more than one successor to an instruction that has a `GotoEdge` out of it.
-}
+private predicate adjacentInBlock(Instruction i1, Instruction i2) { none() }
 
 private predicate isEntryBlock(TIRBlock block) {
   block = MkIRBlock(any(EnterFunctionInstruction enter))
@@ -282,13 +268,7 @@ private module Cached {
   int getInstructionCount(TIRBlock block) { result = strictcount(getInstruction(block, _)) }
 
   cached
-  predicate blockSuccessor(TIRBlock pred, TIRBlock succ, EdgeKind kind) {
-    exists(Instruction predLast, Instruction succFirst |
-      predLast = getInstruction(pred, getInstructionCount(pred) - 1) and
-      succFirst = predLast.getSuccessor(kind) and
-      succ = MkIRBlock(succFirst)
-    )
-  }
+  predicate blockSuccessor(TIRBlock pred, TIRBlock succ, EdgeKind kind) { none() }
 
   pragma[noinline]
   private predicate blockIdentity(TIRBlock b1, TIRBlock b2) { b1 = b2 }

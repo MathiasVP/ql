@@ -14,10 +14,10 @@ private import Cached
  */
 pragma[nomagic]
 private predicate blockSortKeys(
-  IRFunction func, IRBlockBase block, int sortOverride, int sortKey1, int sortKey2
+  IRFunction func, IRBlockBase block, int sortOverride, int sortKey1, int sortKey2, string sortKey3
 ) {
   block.getEnclosingIRFunction() = func and
-  block.getFirstInstruction().hasSortKeys(sortKey1, sortKey2) and
+  block.getFirstInstruction().hasSortKeys(sortKey1, sortKey2, sortKey3) and
   // Ensure that the block containing `EnterFunction` always comes first.
   if block.getFirstInstruction() instanceof EnterFunctionInstruction
   then sortOverride = 0
@@ -55,10 +55,11 @@ class IRBlockBase extends TIRBlock {
     ) and
     exists(IRFunction func |
       this =
-        rank[result + 1](IRBlock funcBlock, int sortOverride, int sortKey1, int sortKey2 |
-          blockSortKeys(func, funcBlock, sortOverride, sortKey1, sortKey2)
+        rank[result + 1](IRBlock funcBlock, int sortOverride, int sortKey1, int sortKey2,
+          string sortKey3 |
+          blockSortKeys(func, funcBlock, sortOverride, sortKey1, sortKey2, sortKey3)
         |
-          funcBlock order by sortOverride, sortKey1, sortKey2
+          funcBlock order by sortOverride, sortKey1, sortKey2, sortKey3
         )
     )
   }
