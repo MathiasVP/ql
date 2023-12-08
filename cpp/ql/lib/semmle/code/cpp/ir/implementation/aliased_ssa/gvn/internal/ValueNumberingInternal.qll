@@ -1,5 +1,51 @@
 private import ValueNumberingImports
 
+pragma[nomagic]
+private predicate nonUnique(Instruction instr) {
+  variableAddressValueNumber(instr, _, _)
+  or
+  initializeParameterValueNumber(instr, _, _)
+  or
+  constantValueNumber(instr, _, _, _)
+  or
+  stringConstantValueNumber(instr, _, _, _)
+  or
+  exists(Instruction objectAddress |
+    fieldAddressValueNumber0(instr, objectAddress, _, _) and
+    nonUnique(objectAddress)
+  )
+  or
+  exists(Instruction left, Instruction right |
+    binaryValueNumber0(instr, left, right, _, _) and
+    nonUnique(left) and
+    nonUnique(right)
+  )
+  or
+  exists(Instruction left, Instruction right |
+    pointerArithmeticValueNumber0(instr, left, right, _, _, _) and
+    nonUnique(left) and
+    nonUnique(right)
+  )
+  or
+  exists(Instruction unary |
+    unaryValueNumber0(instr, unary, _, _) and
+    nonUnique(unary)
+  )
+  or
+  exists(Instruction unary |
+    inheritanceConversionValueNumber0(instr, unary, _, _, _, _) and
+    nonUnique(unary)
+  )
+  or
+  exists(Instruction address, Instruction value |
+    loadTotalOverlapValueNumber0(instr, address, value, _, _) and
+    nonUnique(address) and
+    nonUnique(value)
+  )
+  or
+  nonUnique(instr.(CongruentCopyInstruction).getSourceValue())
+}
+
 newtype TValueNumber =
   TVariableAddressValueNumber(IRFunction irFunc, Language::AST ast) {
     variableAddressValueNumber(_, irFunc, ast)
@@ -14,32 +60,50 @@ newtype TValueNumber =
     stringConstantValueNumber(_, irFunc, type, value)
   } or
   TFieldAddressValueNumber(IRFunction irFunc, Language::Field field, TValueNumber objectAddress) {
-    fieldAddressValueNumber(_, irFunc, field, objectAddress)
+    exists(Instruction i |
+      nonUnique(i) and
+      fieldAddressValueNumber(i, irFunc, field, objectAddress)
+    )
   } or
   TBinaryValueNumber(
     IRFunction irFunc, Opcode opcode, TValueNumber leftOperand, TValueNumber rightOperand
   ) {
-    binaryValueNumber(_, irFunc, opcode, leftOperand, rightOperand)
+    exists(Instruction i |
+      nonUnique(i) and
+      binaryValueNumber(i, irFunc, opcode, leftOperand, rightOperand)
+    )
   } or
   TPointerArithmeticValueNumber(
     IRFunction irFunc, Opcode opcode, int elementSize, TValueNumber leftOperand,
     TValueNumber rightOperand
   ) {
-    pointerArithmeticValueNumber(_, irFunc, opcode, elementSize, leftOperand, rightOperand)
+    exists(Instruction i |
+      nonUnique(i) and
+      pointerArithmeticValueNumber(i, irFunc, opcode, elementSize, leftOperand, rightOperand)
+    )
   } or
   TUnaryValueNumber(IRFunction irFunc, Opcode opcode, TValueNumber operand) {
-    unaryValueNumber(_, irFunc, opcode, operand)
+    exists(Instruction i |
+      nonUnique(i) and
+      unaryValueNumber(i, irFunc, opcode, operand)
+    )
   } or
   TInheritanceConversionValueNumber(
     IRFunction irFunc, Opcode opcode, Language::Class baseClass, Language::Class derivedClass,
     TValueNumber operand
   ) {
-    inheritanceConversionValueNumber(_, irFunc, opcode, baseClass, derivedClass, operand)
+    exists(Instruction i |
+      nonUnique(i) and
+      inheritanceConversionValueNumber(i, irFunc, opcode, baseClass, derivedClass, operand)
+    )
   } or
   TLoadTotalOverlapValueNumber(
     IRFunction irFunc, IRType type, TValueNumber memOperand, TValueNumber operand
   ) {
-    loadTotalOverlapValueNumber(_, irFunc, type, memOperand, operand)
+    exists(Instruction i |
+      nonUnique(i) and
+      loadTotalOverlapValueNumber(i, irFunc, type, memOperand, operand)
+    )
   } or
   TUniqueValueNumber(IRFunction irFunc, Instruction instr) { uniqueValueNumber(instr, irFunc) }
 
@@ -73,27 +137,7 @@ class LoadTotalOverlapInstruction extends LoadInstruction {
  * Holds if this library knows how to assign a value number to the specified instruction, other than
  * a `unique` value number that is never shared by multiple instructions.
  */
-private predicate numberableInstruction(Instruction instr) {
-  instr instanceof VariableAddressInstruction
-  or
-  instr instanceof InitializeParameterInstruction
-  or
-  instr instanceof ConstantInstruction
-  or
-  instr instanceof StringConstantInstruction
-  or
-  instr instanceof FieldAddressInstruction
-  or
-  instr instanceof BinaryInstruction
-  or
-  instr instanceof UnaryInstruction and not instr instanceof CopyInstruction
-  or
-  instr instanceof PointerArithmeticInstruction
-  or
-  instr instanceof CongruentCopyInstruction
-  or
-  instr instanceof LoadTotalOverlapInstruction
-}
+private predicate numberableInstruction(Instruction instr) { nonUnique(instr) }
 
 private predicate filteredNumberableInstruction(Instruction instr) {
   // count rather than strictcount to handle missing AST elements
@@ -150,29 +194,52 @@ private predicate stringConstantValueNumber(
   instr.getValue().getValue() = value
 }
 
+private predicate fieldAddressValueNumber0(
+  FieldAddressInstruction instr, Instruction objectAddress, IRFunction irFunc, Language::Field field
+) {
+  instr.getEnclosingIRFunction() = irFunc and
+  unique( | | instr.getField()) = field and
+  objectAddress = instr.getObjectAddress()
+}
+
 private predicate fieldAddressValueNumber(
   FieldAddressInstruction instr, IRFunction irFunc, Language::Field field,
   TValueNumber objectAddress
 ) {
-  instr.getEnclosingIRFunction() = irFunc and
-  unique( | | instr.getField()) = field and
-  tvalueNumber(instr.getObjectAddress()) = objectAddress
+  exists(Instruction objectAddressInstr |
+    fieldAddressValueNumber0(instr, objectAddressInstr, irFunc, field) and
+    tvalueNumber(objectAddressInstr) = objectAddress
+  )
 }
 
 pragma[nomagic]
 private predicate binaryValueNumber0(
-  BinaryInstruction instr, IRFunction irFunc, Opcode opcode, boolean isLeft,
-  TValueNumber valueNumber
+  BinaryInstruction instr, Instruction left, Instruction right, IRFunction irFunc, Opcode opcode
 ) {
   not instr instanceof PointerArithmeticInstruction and
   instr.getEnclosingIRFunction() = irFunc and
   instr.getOpcode() = opcode and
-  (
-    isLeft = true and
-    tvalueNumber(instr.getLeft()) = valueNumber
-    or
-    isLeft = false and
-    tvalueNumber(instr.getRight()) = valueNumber
+  instr.getLeft() = left and
+  instr.getRight() = right
+}
+
+pragma[nomagic]
+private predicate binaryValueNumberLeft(
+  BinaryInstruction instr, IRFunction irFunc, Opcode opcode, TValueNumber valueNumber
+) {
+  exists(Instruction left |
+    binaryValueNumber0(instr, left, _, irFunc, opcode) and
+    tvalueNumber(left) = valueNumber
+  )
+}
+
+pragma[nomagic]
+private predicate binaryValueNumberRight(
+  BinaryInstruction instr, IRFunction irFunc, Opcode opcode, TValueNumber valueNumber
+) {
+  exists(Instruction right |
+    binaryValueNumber0(instr, _, right, irFunc, opcode) and
+    tvalueNumber(right) = valueNumber
   )
 }
 
@@ -180,24 +247,41 @@ private predicate binaryValueNumber(
   BinaryInstruction instr, IRFunction irFunc, Opcode opcode, TValueNumber leftOperand,
   TValueNumber rightOperand
 ) {
-  binaryValueNumber0(instr, irFunc, opcode, true, leftOperand) and
-  binaryValueNumber0(instr, irFunc, opcode, false, rightOperand)
+  binaryValueNumberLeft(instr, irFunc, opcode, leftOperand) and
+  binaryValueNumberRight(instr, irFunc, opcode, rightOperand)
 }
 
 pragma[nomagic]
 private predicate pointerArithmeticValueNumber0(
-  PointerArithmeticInstruction instr, IRFunction irFunc, Opcode opcode, int elementSize,
-  boolean isLeft, TValueNumber valueNumber
+  PointerArithmeticInstruction instr, Instruction left, Instruction right, IRFunction irFunc,
+  Opcode opcode, int elementSize
 ) {
   instr.getEnclosingIRFunction() = irFunc and
   instr.getOpcode() = opcode and
   instr.getElementSize() = elementSize and
-  (
-    isLeft = true and
-    tvalueNumber(instr.getLeft()) = valueNumber
-    or
-    isLeft = false and
-    tvalueNumber(instr.getRight()) = valueNumber
+  instr.getLeft() = left and
+  instr.getRight() = right
+}
+
+pragma[nomagic]
+private predicate pointerArithmeticValueNumberLeft(
+  PointerArithmeticInstruction instr, IRFunction irFunc, Opcode opcode, int elementSize,
+  TValueNumber valueNumber
+) {
+  exists(Instruction left |
+    pointerArithmeticValueNumber0(instr, left, _, irFunc, opcode, elementSize) and
+    tvalueNumber(left) = valueNumber
+  )
+}
+
+pragma[nomagic]
+private predicate pointerArithmeticValueNumberRight(
+  PointerArithmeticInstruction instr, IRFunction irFunc, Opcode opcode, int elementSize,
+  TValueNumber valueNumber
+) {
+  exists(Instruction right |
+    pointerArithmeticValueNumber0(instr, _, right, irFunc, opcode, elementSize) and
+    tvalueNumber(right) = valueNumber
   )
 }
 
@@ -205,45 +289,79 @@ private predicate pointerArithmeticValueNumber(
   PointerArithmeticInstruction instr, IRFunction irFunc, Opcode opcode, int elementSize,
   TValueNumber leftOperand, TValueNumber rightOperand
 ) {
-  pointerArithmeticValueNumber0(instr, irFunc, opcode, elementSize, true, leftOperand) and
-  pointerArithmeticValueNumber0(instr, irFunc, opcode, elementSize, false, rightOperand)
+  pointerArithmeticValueNumberLeft(instr, irFunc, opcode, elementSize, leftOperand) and
+  pointerArithmeticValueNumberRight(instr, irFunc, opcode, elementSize, rightOperand)
 }
 
-private predicate unaryValueNumber(
-  UnaryInstruction instr, IRFunction irFunc, Opcode opcode, TValueNumber operand
+private predicate unaryValueNumber0(
+  UnaryInstruction instr, Instruction unary, IRFunction irFunc, Opcode opcode
 ) {
   instr.getEnclosingIRFunction() = irFunc and
   not instr instanceof InheritanceConversionInstruction and
   not instr instanceof CopyInstruction and
   not instr instanceof FieldAddressInstruction and
   instr.getOpcode() = opcode and
-  tvalueNumber(instr.getUnary()) = operand
+  instr.getUnary() = unary
+}
+
+private predicate unaryValueNumber(
+  UnaryInstruction instr, IRFunction irFunc, Opcode opcode, TValueNumber operand
+) {
+  exists(Instruction unary |
+    unaryValueNumber0(instr, unary, irFunc, opcode) and
+    tvalueNumber(unary) = operand
+  )
+}
+
+private predicate inheritanceConversionValueNumber0(
+  InheritanceConversionInstruction instr, Instruction unary, IRFunction irFunc, Opcode opcode,
+  Language::Class baseClass, Language::Class derivedClass
+) {
+  instr.getEnclosingIRFunction() = irFunc and
+  instr.getOpcode() = opcode and
+  instr.getUnary() = unary and
+  unique( | | instr.getBaseClass()) = baseClass and
+  unique( | | instr.getDerivedClass()) = derivedClass
 }
 
 private predicate inheritanceConversionValueNumber(
   InheritanceConversionInstruction instr, IRFunction irFunc, Opcode opcode,
   Language::Class baseClass, Language::Class derivedClass, TValueNumber operand
 ) {
-  instr.getEnclosingIRFunction() = irFunc and
-  instr.getOpcode() = opcode and
-  tvalueNumber(instr.getUnary()) = operand and
-  unique( | | instr.getBaseClass()) = baseClass and
-  unique( | | instr.getDerivedClass()) = derivedClass
+  exists(Instruction unary |
+    inheritanceConversionValueNumber0(instr, unary, irFunc, opcode, baseClass, derivedClass) and
+    tvalueNumber(unary) = operand
+  )
 }
 
 pragma[nomagic]
 private predicate loadTotalOverlapValueNumber0(
-  LoadTotalOverlapInstruction instr, IRFunction irFunc, IRType type, TValueNumber valueNumber,
-  boolean isAddress
+  LoadTotalOverlapInstruction instr, Instruction address, Instruction value, IRFunction irFunc,
+  IRType type
 ) {
   instr.getEnclosingIRFunction() = irFunc and
   instr.getResultIRType() = type and
-  (
-    isAddress = true and
-    tvalueNumberOfOperand(instr.getSourceAddressOperand()) = valueNumber
-    or
-    isAddress = false and
-    tvalueNumber(instr.getSourceValueOperand().getAnyDef()) = valueNumber
+  instr.getSourceAddress() = address and
+  instr.getSourceValueOperand().getAnyDef() = value
+}
+
+pragma[nomagic]
+private predicate loadTotalOverlapValueNumberAddress(
+  LoadTotalOverlapInstruction instr, IRFunction irFunc, IRType type, TValueNumber valueNumber
+) {
+  exists(Instruction address |
+    loadTotalOverlapValueNumber0(instr, address, _, irFunc, type) and
+    tvalueNumber(address) = valueNumber
+  )
+}
+
+pragma[nomagic]
+private predicate loadTotalOverlapValueNumberValue(
+  LoadTotalOverlapInstruction instr, IRFunction irFunc, IRType type, TValueNumber valueNumber
+) {
+  exists(Instruction value |
+    loadTotalOverlapValueNumber0(instr, _, value, irFunc, type) and
+    tvalueNumber(value) = valueNumber
   )
 }
 
@@ -251,8 +369,8 @@ private predicate loadTotalOverlapValueNumber(
   LoadTotalOverlapInstruction instr, IRFunction irFunc, IRType type, TValueNumber memOperand,
   TValueNumber operand
 ) {
-  loadTotalOverlapValueNumber0(instr, irFunc, type, operand, true) and
-  loadTotalOverlapValueNumber0(instr, irFunc, type, memOperand, false)
+  loadTotalOverlapValueNumberAddress(instr, irFunc, type, operand) and
+  loadTotalOverlapValueNumberValue(instr, irFunc, type, memOperand)
 }
 
 /**
