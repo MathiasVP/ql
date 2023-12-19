@@ -395,6 +395,225 @@ private int lengthInBase16(float f) {
 }
 
 /**
+ * Gets the size of pointers in the target this formatting function is
+ * compiled for.
+ */
+private int targetBitSize() { result = unique( | | any(PointerType pt).getSize()) }
+
+private LongType getLongType() {
+  targetBitSize() = 4 and result.getSize() = min(LongType l | | l.getSize())
+  or
+  targetBitSize() = 8 and result.getSize() = max(LongType l | | l.getSize())
+  or
+  targetBitSize() != 4 and
+  targetBitSize() != 8
+}
+
+private Intmax_t getIntmax_t() {
+  targetBitSize() = 4 and result.getSize() = min(Intmax_t l | | l.getSize())
+  or
+  targetBitSize() = 8 and result.getSize() = max(Intmax_t l | | l.getSize())
+  or
+  targetBitSize() != 4 and
+  targetBitSize() != 8
+}
+
+private Size_t getSize_t() {
+  targetBitSize() = 4 and result.getSize() = min(Size_t l | | l.getSize())
+  or
+  targetBitSize() = 8 and result.getSize() = max(Size_t l | | l.getSize())
+  or
+  targetBitSize() != 4 and
+  targetBitSize() != 8
+}
+
+private Ssize_t getSsize_t() {
+  targetBitSize() = 4 and result.getSize() = min(Ssize_t l | | l.getSize())
+  or
+  targetBitSize() = 8 and result.getSize() = max(Ssize_t l | | l.getSize())
+  or
+  targetBitSize() != 4 and
+  targetBitSize() != 8
+}
+
+private Ptrdiff_t getPtrdiff_t() {
+  targetBitSize() = 4 and result.getSize() = min(Ptrdiff_t l | | l.getSize())
+  or
+  targetBitSize() = 8 and result.getSize() = max(Ptrdiff_t l | | l.getSize())
+  or
+  targetBitSize() != 4 and
+  targetBitSize() != 8
+}
+
+bindingset[ffc]
+Type getTypeForCanonicalConversionAndLength(FormattingFunctionCall ffc, string cnv, string len) {
+  result = getTypeForCanonicalConversionAndLength1(cnv, len) or
+  result = getTypeForCanonicalConversionAndLength1b(ffc, cnv, len) or
+  result = getTypeForCanonicalConversionAndLength2(cnv, len) or
+  result = getTypeForCanonicalConversionAndLength3(cnv, len) or
+  result = getTypeForCanonicalConversionAndLength4(ffc, cnv, len) or
+  result = getTypeForCanonicalConversionAndLength6(cnv, len) or
+  result = getTypeForCanonicalConversionAndLength7(cnv, len) or
+  result = getTypeForCanonicalConversionAndLength8(cnv, len) or
+  result = getTypeForCanonicalConversionAndLength9(cnv, len) or
+  result = getTypeForCanonicalConversionAndLength10(cnv, len)
+}
+
+Type getIntegralTypeForCanoncicalLength(string len) {
+  len = "h" and
+  result instanceof IntType
+  or
+  len = "l" and result = getLongType()
+  or
+  len = "ll" and
+  result instanceof LongLongType
+  or
+  len = "j" and result = getIntmax_t()
+  or
+  len = "z" and
+  (result = getSize_t() or result = getSsize_t())
+  or
+  len = "t" and result = getPtrdiff_t()
+  or
+  len = "I" and
+  (result = getSize_t() or result = getPtrdiff_t())
+  or
+  len = "I32" and
+  exists(MicrosoftInt32Type t | t.getUnsigned() = result.(IntegralType).getUnsigned())
+  or
+  len = "I64" and
+  exists(MicrosoftInt64Type t | t.getUnsigned() = result.(IntegralType).getUnsigned())
+  or
+  len = "" and
+  result instanceof IntType
+}
+
+FloatingPointType getFloatingPointTypeForCanonicalLength(string len) {
+  len = "ll" and result instanceof LongDoubleType
+  or
+  len = "" and result instanceof DoubleType
+}
+
+/**
+ * Gets the family of pointer types required by the nth conversion
+ * specifier's length flag.
+ */
+PointerType getStorePointerTyprForCanonicalLength(string len) {
+  exists(IntegralType base |
+    len = "hh" and base instanceof CharType
+    or
+    len = "h" and base instanceof ShortType
+    or
+    len = "l" and base = getLongType()
+    or
+    len = "ll" and
+    base instanceof LongLongType
+    or
+    len = "q" and base instanceof LongLongType
+  |
+    base.isSigned() and
+    base = result.getBaseType()
+  )
+}
+
+private Type getTypeForCanonicalConversionAndLength1(string cnv, string len) {
+  cnv = "d" and
+  result = getIntegralTypeForCanoncicalLength(len) and
+  not result.getUnderlyingType().(IntegralType).isExplicitlySigned() and
+  not result.getUnderlyingType().(IntegralType).isExplicitlyUnsigned()
+}
+
+bindingset[ffc]
+private Type getTypeForCanonicalConversionAndLength1b(
+  FormattingFunctionCall ffc, string conv, string len
+) {
+  conv = "c" and
+  len = "h" and
+  result instanceof PlainCharType
+  or
+  conv = "c" and
+  len = "l" and
+  result = ffc.getTarget().getWideCharType()
+  or
+  conv = "c" and
+  len = "" and
+  result = ffc.getTarget().getDefaultCharType()
+  or
+  conv = "C" and
+  len = "" and
+  result = ffc.getTarget().getNonDefaultCharType()
+}
+
+private Type getTypeForCanonicalConversionAndLength2(string cnv, string len) {
+  cnv = "u" and
+  result = getIntegralTypeForCanoncicalLength(len) and
+  result.getUnderlyingType().(IntegralType).isUnsigned()
+}
+
+private Type getTypeForCanonicalConversionAndLength3(string cnv, string len) {
+  cnv = "f" and
+  result = getFloatingPointTypeForCanonicalLength(len)
+}
+
+bindingset[ffc]
+private Type getTypeForCanonicalConversionAndLength4(
+  FormattingFunctionCall ffc, string conv, string len
+) {
+  conv = "s" and
+  len = "h" and
+  isPointerTypeWithBase(any(PlainCharType plainCharType), result)
+  or
+  conv = "s" and
+  len = "l" and
+  isPointerTypeWithBase(ffc.getTarget().getWideCharType(), result)
+  or
+  conv = "s" and
+  len = "" and
+  isPointerTypeWithBase(ffc.getTarget().getDefaultCharType(), result)
+  or
+  conv = "S" and
+  len = "" and
+  isPointerTypeWithBase(ffc.getTarget().getNonDefaultCharType(), result)
+}
+
+private Type getTypeForCanonicalConversionAndLength6(string cnv, string len) {
+  len = "" and
+  cnv = "p" and
+  result instanceof VoidPointerType
+}
+
+private Type getTypeForCanonicalConversionAndLength7(string cnv, string len) {
+  cnv = "n" and
+  result = getStorePointerTyprForCanonicalLength(len)
+}
+
+private IntPointerType getTypeForCanonicalConversionAndLength8(string cnv, string len) {
+  cnv = "n" and
+  len = "" and
+  not exists(getStorePointerTyprForCanonicalLength(_)) and
+  result.getBaseType().(IntType).isSigned() and
+  not result.getBaseType().(IntType).isExplicitlySigned()
+}
+
+private Type getTypeForCanonicalConversionAndLength9(string cnv, string len) {
+  cnv = "Z" and
+  len = "l" and
+  exists(Type t |
+    t.getName() = "UNICODE_STRING" and
+    result.(PointerType).getBaseType() = t
+  )
+}
+
+private Type getTypeForCanonicalConversionAndLength10(string cnv, string len) {
+  cnv = "Z" and
+  len = "" and
+  exists(Type t |
+    t.getName() = "ANSI_STRING" and
+    result.(PointerType).getBaseType() = t
+  )
+}
+
+/**
  * A class to represent format strings that occur as arguments to invocations of formatting functions.
  */
 class FormatLiteral extends Literal instanceof StringLiteral {
@@ -691,57 +910,6 @@ class FormatLiteral extends Literal instanceof StringLiteral {
   string getConversionChar(int n) { this.parseConvSpec(n, _, _, _, _, _, _, result) }
 
   /**
-   * Gets the size of pointers in the target this formatting function is
-   * compiled for.
-   */
-  private int targetBitSize() { result = this.getFullyConverted().getType().getSize() }
-
-  private LongType getLongType() {
-    this.targetBitSize() = 4 and result.getSize() = min(LongType l | | l.getSize())
-    or
-    this.targetBitSize() = 8 and result.getSize() = max(LongType l | | l.getSize())
-    or
-    this.targetBitSize() != 4 and
-    this.targetBitSize() != 8
-  }
-
-  private Intmax_t getIntmax_t() {
-    this.targetBitSize() = 4 and result.getSize() = min(Intmax_t l | | l.getSize())
-    or
-    this.targetBitSize() = 8 and result.getSize() = max(Intmax_t l | | l.getSize())
-    or
-    this.targetBitSize() != 4 and
-    this.targetBitSize() != 8
-  }
-
-  private Size_t getSize_t() {
-    this.targetBitSize() = 4 and result.getSize() = min(Size_t l | | l.getSize())
-    or
-    this.targetBitSize() = 8 and result.getSize() = max(Size_t l | | l.getSize())
-    or
-    this.targetBitSize() != 4 and
-    this.targetBitSize() != 8
-  }
-
-  private Ssize_t getSsize_t() {
-    this.targetBitSize() = 4 and result.getSize() = min(Ssize_t l | | l.getSize())
-    or
-    this.targetBitSize() = 8 and result.getSize() = max(Ssize_t l | | l.getSize())
-    or
-    this.targetBitSize() != 4 and
-    this.targetBitSize() != 8
-  }
-
-  private Ptrdiff_t getPtrdiff_t() {
-    this.targetBitSize() = 4 and result.getSize() = min(Ptrdiff_t l | | l.getSize())
-    or
-    this.targetBitSize() = 8 and result.getSize() = max(Ptrdiff_t l | | l.getSize())
-    or
-    this.targetBitSize() != 4 and
-    this.targetBitSize() != 8
-  }
-
-  /**
    * Gets the family of integral types required by the nth conversion
    * specifier's length flag.
    */
@@ -753,20 +921,20 @@ class FormatLiteral extends Literal instanceof StringLiteral {
         or
         len = "h" and result instanceof IntType
         or
-        len = "l" and result = this.getLongType()
+        len = "l" and result = getLongType()
         or
         len = ["ll", "L", "q"] and
         result instanceof LongLongType
         or
-        len = "j" and result = this.getIntmax_t()
+        len = "j" and result = getIntmax_t()
         or
         len = ["z", "Z"] and
-        (result = this.getSize_t() or result = this.getSsize_t())
+        (result = getSize_t() or result = getSsize_t())
         or
-        len = "t" and result = this.getPtrdiff_t()
+        len = "t" and result = getPtrdiff_t()
         or
         len = "I" and
-        (result = this.getSize_t() or result = this.getPtrdiff_t())
+        (result = getSize_t() or result = getPtrdiff_t())
         or
         len = "I32" and
         exists(MicrosoftInt32Type t | t.getUnsigned() = result.(IntegralType).getUnsigned())
@@ -791,20 +959,20 @@ class FormatLiteral extends Literal instanceof StringLiteral {
         or
         len = "h" and result instanceof ShortType
         or
-        len = "l" and result = this.getLongType()
+        len = "l" and result = getLongType()
         or
         len = ["ll", "L", "q"] and
         result instanceof LongLongType
         or
-        len = "j" and result = this.getIntmax_t()
+        len = "j" and result = getIntmax_t()
         or
         len = ["z", "Z"] and
-        (result = this.getSize_t() or result = this.getSsize_t())
+        (result = getSize_t() or result = getSsize_t())
         or
-        len = "t" and result = this.getPtrdiff_t()
+        len = "t" and result = getPtrdiff_t()
         or
         len = "I" and
-        (result = this.getSize_t() or result = this.getPtrdiff_t())
+        (result = getSize_t() or result = getPtrdiff_t())
         or
         len = "I32" and
         exists(MicrosoftInt32Type t | t.getUnsigned() = result.(IntegralType).getUnsigned())
@@ -839,7 +1007,7 @@ class FormatLiteral extends Literal instanceof StringLiteral {
         or
         len = "h" and base instanceof ShortType
         or
-        len = "l" and base = this.getLongType()
+        len = "l" and base = getLongType()
         or
         len = ["ll", "L"] and
         base instanceof LongLongType

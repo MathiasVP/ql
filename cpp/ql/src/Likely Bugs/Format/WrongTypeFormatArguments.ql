@@ -25,6 +25,19 @@ private predicate formattingFunctionCallExpectedType(
   ffc.getFormat().(FormatLiteral).getConversionType(pos) = expected
 }
 
+private predicate expectedConversion(FormattingFunctionCall ffc, Type expected, string cnv) {
+  cnv = min(string cand | getTypeForCanonicalConversionAndLength(ffc, cand, _) = expected)
+}
+
+private predicate expectedLength(FormattingFunctionCall ffc, Type expected, string cnv, string len) {
+  len = min(string cand | getTypeForCanonicalConversionAndLength(ffc, cnv, cand) = expected)
+}
+
+private predicate expectedFormat(FormattingFunctionCall ffc, Type expected, string cnv, string len) {
+  expectedConversion(ffc, expected, cnv) and
+  expectedLength(ffc, expected, cnv, len)
+}
+
 /**
  * Holds if the argument corresponding to the `pos` conversion specifier
  * of `ffc` could alternatively have type `expected`, for example on a different
@@ -152,9 +165,18 @@ predicate trivialConversion(ExpectedType expected, Type actual) {
  */
 int sizeof_IntType() { exists(IntType it | result = it.getSize()) }
 
-from FormattingFunctionCall ffc, int n, Expr arg, Type expected, Type actual
+from FormattingFunctionCall ffc, int n, Expr arg, Type expected, Type actual, string consider
 where
   (
+    (
+      exists(string cnv, string len |
+        expectedFormat(ffc, arg.getFullyConverted().getUnspecifiedType(), cnv, len) and
+        consider = " Consider using '%" + cnv + len + "' instead."
+      )
+      or
+      not expectedFormat(ffc, arg.getFullyConverted().getUnspecifiedType(), _, _) and
+      consider = ""
+    ) and
     formattingFunctionCallExpectedType(ffc, n, expected) and
     formattingFunctionCallActualType(ffc, n, arg, actual) and
     not exists(Type anyExpected |
@@ -166,11 +188,12 @@ where
     )
     or
     formatOtherArgType(ffc, n, expected, arg, actual) and
-    not actual.getUnspecifiedType().(IntegralType).getSize() = sizeof_IntType()
+    not actual.getUnspecifiedType().(IntegralType).getSize() = sizeof_IntType() and
+    consider = ""
   ) and
   not arg.isAffectedByMacro() and
   not arg.isFromUninstantiatedTemplate(_) and
   not actual.getUnspecifiedType() instanceof ErroneousType
 select arg,
   "This argument should be of type '" + expected.getName() + "' but is of type '" +
-    actual.getUnspecifiedType().getName() + "'."
+    actual.getUnspecifiedType().getName() + "'." + consider
