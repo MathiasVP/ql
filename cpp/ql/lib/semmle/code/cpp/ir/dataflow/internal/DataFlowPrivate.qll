@@ -45,7 +45,7 @@ private module Cached {
    */
   pragma[nomagic]
   cached
-  int getAdditionalFlowIntoCallNodeTerm(ArgumentNode arg, ParameterNode p) {
+  Node getAnAdditionalFlowIntoCallNode(ArgumentNode arg, ParameterNode p) {
     DataFlowImplCommon::forceCachingInSameStage() and
     exists(
       ParameterNode switchee, SwitchInstruction switch, ConditionOperand op, DataFlowCall call
@@ -54,7 +54,7 @@ private module Cached {
       DataFlowImplCommon::viableParamArg(call, switchee, _) and
       switch.getExpressionOperand() = op and
       getAdditionalFlowIntoCallNodeTermStep+(switchee, operandNode(op)) and
-      result = countNumberOfBranchesUsingParameter(switch, p)
+      result = getAPotentiallyExpensivePhiInput(switch, p)
     )
   }
 }
@@ -1164,20 +1164,22 @@ private EdgeKind caseOrDefaultEdge() {
 /**
  * Gets the number of switch branches that that read from (or write to) the parameter `p`.
  */
-private int countNumberOfBranchesUsingParameter(SwitchInstruction switch, ParameterNode p) {
-  exists(Ssa::SourceVariable sv |
+private Node getAPotentiallyExpensivePhiInput(SwitchInstruction switch, ParameterNode p) {
+  exists(Ssa::SourceVariable sv, SsaPhiNode phi |
     parameterNodeHasSourceVariable(p, sv) and
     // Count the number of cases that use the parameter. We do this by finding the phi node
     // that merges the uses/defs of the parameter. There might be multiple such phi nodes, so
     // we pick the one with the highest edge count.
-    result =
-      max(SsaPhiNode phi |
+    phi =
+      max(SsaPhiNode cand, int n |
         switch.getSuccessor(caseOrDefaultEdge()).getBlock().dominanceFrontier() =
-          phi.getBasicBlock() and
-        phi.getSourceVariable() = sv
+          cand.getBasicBlock() and
+        cand.getSourceVariable() = sv and
+        n = strictcount(cand.getAnInput())
       |
-        strictcount(phi.getAnInput())
-      )
+        cand order by n
+      ) and
+    result = phi.getAnInput()
   )
 }
 

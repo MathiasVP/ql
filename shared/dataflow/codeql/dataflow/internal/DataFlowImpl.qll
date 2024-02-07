@@ -1073,7 +1073,12 @@ module MakeImpl<InputSig Lang> {
     pragma[nomagic]
     private int getLanguageSpecificFlowIntoCallNodeCand1(ArgNodeEx arg, ParamNodeEx p) {
       flowIntoCallNodeCand1(_, arg, p) and
-      result = getAdditionalFlowIntoCallNodeTerm(arg.projectToNode(), p.projectToNode())
+      result =
+        count(NodeEx n |
+          n.projectToNode() =
+            getAnAdditionalFlowIntoCallNode(arg.projectToNode(), p.projectToNode()) and
+          Stage1::revFlow(n)
+        )
     }
 
     /**

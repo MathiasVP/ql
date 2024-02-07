@@ -265,7 +265,7 @@ signature module InputSig {
    *
    * Argument `arg` is part of a path from a source to a sink, and `p` is the target parameter.
    */
-  default int getAdditionalFlowIntoCallNodeTerm(ArgumentNode arg, ParameterNode p) { none() }
+  default Node getAnAdditionalFlowIntoCallNode(ArgumentNode arg, ParameterNode p) { none() }
 
   bindingset[call, p, arg]
   default predicate golangSpecificParamArgFilter(
