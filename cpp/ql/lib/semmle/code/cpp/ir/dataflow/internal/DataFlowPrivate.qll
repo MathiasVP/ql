@@ -1259,3 +1259,127 @@ predicate validParameterAliasStep(Node node1, Node node2) {
     )
   )
 }
+
+private predicate topLevel(Cpp::BlockStmt block) { any(Function f).getEntryPoint() = block }
+
+private newtype TDataFlowPseudoCallable =
+  TDataFlowPseudoCallableTopLevel(DataFlowCallable c) {
+    c instanceof Cpp::Function
+    or
+    c instanceof GlobalLikeVariable
+  } or
+  TDataFlowPseudoCallableSecondLevel(Cpp::Stmt s) {
+    exists(Cpp::IfStmt ifStmt |
+      topLevel(ifStmt.getEnclosingBlock()) and s = [ifStmt.getThen(), ifStmt.getElse()]
+    )
+    or
+    exists(Cpp::SwitchStmt switchStmt |
+      topLevel(switchStmt.getEnclosingBlock()) and s = switchStmt.getStmt()
+    )
+  }
+
+/**
+ * Either a `DataFlowCallable`, or the enclosing `Stmt` of a top-level
+ * conditional in a `DataFlowCallable`.
+ */
+class DataFlowPseudoCallable extends TDataFlowPseudoCallable {
+  Cpp::Stmt asSecondLevel() { this = TDataFlowPseudoCallableSecondLevel(result) }
+
+  DataFlowCallable asTopLevel() { this = TDataFlowPseudoCallableTopLevel(result) }
+
+  string toString() {
+    exists(Cpp::Stmt s |
+      s = this.asSecondLevel() and
+      result = s.toString()
+    )
+    or
+    exists(DataFlowCallable c |
+      c = this.asTopLevel() and
+      result = c.toString()
+    )
+  }
+}
+
+private predicate relevant(Cpp::Element e, Cpp::BlockStmt block) {
+  e = any(DataFlowPseudoCallable x).asSecondLevel() and
+  e = block
+  or
+  e = any(DataFlowPseudoCallable x).asTopLevel() and
+  block = e.(Function).getEntryPoint()
+  or
+  e = any(DataFlowPseudoCallable x).asTopLevel().(Function).getEntryPoint() and
+  e = block
+}
+
+private Cpp::BlockStmt getEnclosingBlock(Cpp::Element elem) {
+  if relevant(elem, _)
+  then relevant(elem, result)
+  else (
+    result = getEnclosingBlock(elem.(Cpp::Expr).getParentWithConversions())
+    or
+    exists(Cpp::DestructorCall dc | elem = dc |
+      exists(Cpp::Expr e |
+        e.getAnImplicitDestructorCall() = dc and
+        result = getEnclosingBlock(e)
+      )
+      or
+      exists(Cpp::Stmt s |
+        s.getAnImplicitDestructorCall() = dc and
+        result = getEnclosingBlock(s)
+      )
+    )
+    or
+    result = getEnclosingBlock(elem.(Cpp::Stmt).getParent())
+    or
+    result = getEnclosingBlock(elem.(Cpp::VariableDeclarationEntry).getVariable())
+    or
+    result = getEnclosingBlock(elem.(Cpp::Declaration).getParentScope())
+    or
+    result = getEnclosingBlock(elem.(Cpp::Initializer).getEnclosingStmt())
+  )
+}
+
+private Cpp::BlockStmt getEnclosingBlockForInstr(Instruction i) {
+  result = getEnclosingBlock(i.getAst())
+}
+
+private Cpp::BlockStmt getEnclosingBlockForOperand(Operand op) {
+  result = getEnclosingBlockForInstr(op.getUse())
+}
+
+/** Gets the pseudo callable in which this node occurs. */
+DataFlowPseudoCallable nodeGetEnclosingPseudoCallable(Node n) {
+  result.asTopLevel() = n.getEnclosingCallable().(GlobalLikeVariable)
+  or
+  exists(Cpp::BlockStmt s |
+    s = getEnclosingBlockForInstr(n.asInstruction())
+    or
+    s = getEnclosingBlockForOperand(n.asOperand())
+    or
+    s =
+      getEnclosingBlock(n.(SsaPhiNode).getPhiNode().getBasicBlock().getFirstInstruction().getAst())
+    or
+    exists(Operand op |
+      n.(IndirectOperand).hasOperandAndIndirectionIndex(op, _) and
+      s = getEnclosingBlockForOperand(op)
+    )
+    or
+    exists(Instruction i |
+      n.(IndirectInstruction).hasInstructionAndIndirectionIndex(i, _) and
+      s = getEnclosingBlockForInstr(i)
+    )
+  |
+    result.asSecondLevel() = s
+    or
+    not any(DataFlowPseudoCallable c).asSecondLevel() = s and
+    result.asTopLevel() = n.getEnclosingCallable()
+  )
+  or
+  result = nodeGetEnclosingPseudoCallable(n.(PostUpdateNode).getPreUpdateNode())
+  or
+  result.asTopLevel() = n.(FinalParameterNode).getEnclosingCallable()
+  or
+  result.asTopLevel() = n.(FinalGlobalValue).getEnclosingCallable()
+  or
+  result.asTopLevel() = n.(InitialGlobalValue).getEnclosingCallable()
+}
