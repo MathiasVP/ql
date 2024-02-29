@@ -1260,7 +1260,17 @@ predicate validParameterAliasStep(Node node1, Node node2) {
   )
 }
 
-private predicate topLevel(Cpp::BlockStmt block) { any(Function f).getEntryPoint() = block }
+private predicate topLevel(Cpp::Stmt block) {
+  any(Function f).getEntryPoint() = block
+  or
+  exists(Cpp::IfStmt ifStmt |
+    topLevel(ifStmt.getEnclosingBlock()) and block = [ifStmt.getThen(), ifStmt.getElse()]
+  )
+  or
+  exists(Cpp::SwitchStmt switchStmt |
+    topLevel(switchStmt.getEnclosingBlock()) and block = switchStmt.getASwitchCase().getAStmt()
+  )
+}
 
 private newtype TDataFlowPseudoCallable =
   TDataFlowPseudoCallableTopLevel(DataFlowCallable c) {
@@ -1297,6 +1307,12 @@ class DataFlowPseudoCallable extends TDataFlowPseudoCallable {
       c = this.asTopLevel() and
       result = c.toString()
     )
+  }
+
+  Cpp::Location getLocation() {
+    result = this.asTopLevel().getLocation()
+    or
+    result = this.asSecondLevel().getLocation()
   }
 }
 
