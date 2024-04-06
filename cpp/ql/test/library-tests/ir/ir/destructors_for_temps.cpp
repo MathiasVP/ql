@@ -71,3 +71,14 @@ bool conditional_temp_via_conjunction(bool b)
 {
     return b && const_ref_string("");
 }
+
+ClassWithDestructor2 make();
+
+void temp_test9() {
+    // At the semicolon `~ClassWithDestructor2::ClassWithDestructor2()` is called
+    // to destruct the temporary created by `make()`. We get a consistency error
+    // here because the read side effect instruction doesn't have a memory to
+    // read from since the IR doesn't have return value side effects to produce
+    // a memory. The same problem happens in `temp_test5`.
+    make();
+}
