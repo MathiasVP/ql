@@ -2,6 +2,7 @@ missingOperand
 unexpectedOperand
 duplicateOperand
 missingPhiOperand
+| destructors_for_temps.cpp:88:11:88:11 | Phi: i | Instruction 'Phi: i' is missing an operand for predecessor block 'EnterFunction: temp_test10' in function '$@'. | destructors_for_temps.cpp:87:6:87:16 | void temp_test10(int) | void temp_test10(int) |
 missingOperandType
 | destructors_for_temps.cpp:39:3:39:53 | ChiTotal | Operand 'ChiTotal' of instruction 'Chi' is missing a type in function '$@'. | destructors_for_temps.cpp:38:6:38:15 | void temp_test5(bool) | void temp_test5(bool) |
 | destructors_for_temps.cpp:83:5:83:10 | ChiTotal | Operand 'ChiTotal' of instruction 'Chi' is missing a type in function '$@'. | destructors_for_temps.cpp:77:6:77:15 | void temp_test9() | void temp_test9() |

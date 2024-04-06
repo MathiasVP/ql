@@ -1459,6 +1459,50 @@ destructors_for_temps.cpp:
 #   77|     v77_6(void)                        = AliasedUse                             : ~m83_10
 #   77|     v77_7(void)                        = ExitFunction                           : 
 
+#   87| void temp_test10(int)
+#   87|   Block 0
+#   87|     v87_1(void)       = EnterFunction          : 
+#   87|     m87_2(unknown)    = AliasedDefinition      : 
+#   87|     m87_3(unknown)    = InitializeNonLocal     : 
+#   87|     m87_4(unknown)    = Chi                    : total:m87_2, partial:m87_3
+#   87|     r87_5(glval<int>) = VariableAddress[i]     : 
+#   87|     m87_6(int)        = InitializeParameter[i] : &:r87_5
+#-----|   Goto -> Block 1
+
+#   88|   Block 1
+#   88|     m88_1(ClassWithDestructor2) = Phi                : from 2:m91_14
+#   88|     m88_2(unknown)              = Phi                : from 0:~m87_4, from 2:~m91_10
+#   88|     r88_3(glval<int>)           = VariableAddress[i] : 
+#   88|     r88_4(int)                  = Load[i]            : &:r88_3, m87_6
+#   88|     r88_5(int)                  = Constant[10]       : 
+#   88|     r88_6(bool)                 = CompareLT          : r88_4, r88_5
+#   88|     v88_7(void)                 = ConditionalBranch  : r88_6
+#-----|   False -> Block 3
+#-----|   True -> Block 2
+
+#   91|   Block 2
+#   91|     r91_1(glval<ClassWithDestructor2>) = VariableAddress[#temp91:9]             : 
+#   91|     r91_2(glval<unknown>)              = FunctionAddress[make]                  : 
+#   91|     r91_3(ClassWithDestructor2)        = Call[make]                             : func:r91_2
+#   91|     m91_4(unknown)                     = ^CallSideEffect                        : ~m88_2
+#   91|     m91_5(unknown)                     = Chi                                    : total:m88_2, partial:m91_4
+#   91|     r91_6(glval<ClassWithDestructor2>) = CopyValue                              : r91_1
+#   91|     r91_7(glval<unknown>)              = FunctionAddress[~ClassWithDestructor2] : 
+#   91|     v91_8(void)                        = Call[~ClassWithDestructor2]            : func:r91_7, this:r91_6
+#   91|     m91_9(unknown)                     = ^CallSideEffect                        : ~m91_5
+#   91|     m91_10(unknown)                    = Chi                                    : total:m91_5, partial:m91_9
+#   91|     v91_11(void)                       = ^IndirectReadSideEffect[-1]            : &:r91_6, m88_1
+#   91|     m91_12(ClassWithDestructor2)       = ^IndirectMayWriteSideEffect[-1]        : &:r91_6
+#   91|     m91_13(ClassWithDestructor2)       = Chi                                    : total:m88_1, partial:m91_12
+#   91|     m91_14(ClassWithDestructor2)       = Store[#temp91:9]                       : &:r91_1, r91_3
+#-----|   Goto (back edge) -> Block 1
+
+#   93|   Block 3
+#   93|     v93_1(void) = NoOp         : 
+#   87|     v87_7(void) = ReturnVoid   : 
+#   87|     v87_8(void) = AliasedUse   : ~m88_2
+#   87|     v87_9(void) = ExitFunction : 
+
 ir.c:
 #    7| void MyCoordsTest(int)
 #    7|   Block 0

@@ -82,3 +82,12 @@ void temp_test9() {
     // a memory. The same problem happens in `temp_test5`.
     make();
 }
+
+
+void temp_test10(int i) {
+    while(i < 10) {
+        // Here we get a `missingPhiOperand` inconsistency error for the same reason
+        // that we're getting a `missingOperandType` in `temp_test9`.
+        make();
+    }
+}

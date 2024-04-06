@@ -1304,6 +1304,35 @@
 | destructors_for_temps.cpp:83:5:83:10 | SideEffect | ~m83_5 |
 | destructors_for_temps.cpp:83:5:83:10 | SideEffect | ~m? |
 | destructors_for_temps.cpp:83:5:83:10 | Unary | r83_1 |
+| destructors_for_temps.cpp:87:6:87:16 | ChiPartial | partial:m87_3 |
+| destructors_for_temps.cpp:87:6:87:16 | ChiTotal | total:m87_2 |
+| destructors_for_temps.cpp:87:6:87:16 | SideEffect | ~m88_2 |
+| destructors_for_temps.cpp:87:22:87:22 | Address | &:r87_5 |
+| destructors_for_temps.cpp:88:11:88:11 | Address | &:r88_3 |
+| destructors_for_temps.cpp:88:11:88:11 | Left | r88_4 |
+| destructors_for_temps.cpp:88:11:88:11 | Load | m87_6 |
+| destructors_for_temps.cpp:88:11:88:11 | Phi | from 0:~m87_4 |
+| destructors_for_temps.cpp:88:11:88:11 | Phi | from 2:m91_14 |
+| destructors_for_temps.cpp:88:11:88:11 | Phi | from 2:~m91_10 |
+| destructors_for_temps.cpp:88:11:88:16 | Condition | r88_6 |
+| destructors_for_temps.cpp:88:15:88:16 | Right | r88_5 |
+| destructors_for_temps.cpp:91:9:91:12 | CallTarget | func:r91_2 |
+| destructors_for_temps.cpp:91:9:91:12 | ChiPartial | partial:m91_4 |
+| destructors_for_temps.cpp:91:9:91:12 | ChiTotal | total:m88_2 |
+| destructors_for_temps.cpp:91:9:91:12 | SideEffect | ~m88_2 |
+| destructors_for_temps.cpp:91:9:91:12 | StoreValue | r91_3 |
+| destructors_for_temps.cpp:91:9:91:14 | Address | &:r91_1 |
+| destructors_for_temps.cpp:91:9:91:14 | Address | &:r91_6 |
+| destructors_for_temps.cpp:91:9:91:14 | Address | &:r91_6 |
+| destructors_for_temps.cpp:91:9:91:14 | Arg(this) | this:r91_6 |
+| destructors_for_temps.cpp:91:9:91:14 | CallTarget | func:r91_7 |
+| destructors_for_temps.cpp:91:9:91:14 | ChiPartial | partial:m91_9 |
+| destructors_for_temps.cpp:91:9:91:14 | ChiPartial | partial:m91_12 |
+| destructors_for_temps.cpp:91:9:91:14 | ChiTotal | total:m88_1 |
+| destructors_for_temps.cpp:91:9:91:14 | ChiTotal | total:m91_5 |
+| destructors_for_temps.cpp:91:9:91:14 | SideEffect | m88_1 |
+| destructors_for_temps.cpp:91:9:91:14 | SideEffect | ~m91_5 |
+| destructors_for_temps.cpp:91:9:91:14 | Unary | r91_1 |
 | file://:0:0:0:0 | Address | &:r0_1 |
 | file://:0:0:0:0 | Address | &:r0_1 |
 | file://:0:0:0:0 | Address | &:r0_1 |
