@@ -76,7 +76,9 @@ predicate isSink(DataFlow::Node sink, BufferWrite bw, boolean qualifier) {
 predicate lessThanOrEqual(IRGuardCondition g, Expr e, boolean branch) {
   exists(Operand left |
     g.comparesLt(left, _, _, true, branch) or
-    g.comparesEq(left, _, _, true, branch)
+    g.comparesEq(left, _, _, true, branch) or
+    g.comparesLt(left, _, true, any(BooleanValue bv | bv.getValue() = branch)) or
+    g.comparesEq(left, _, true, any(BooleanValue bv | bv.getValue() = branch))
   |
     left.getDef().getUnconvertedResultExpression() = e
   )
