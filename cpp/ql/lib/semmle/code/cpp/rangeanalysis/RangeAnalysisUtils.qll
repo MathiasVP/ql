@@ -1,4 +1,4 @@
-import cpp
+import semmle.code.cpp.ir.IR
 
 /**
  * Describes whether a relation is 'strict' (that is, a `<` or `>`
@@ -444,7 +444,7 @@ float typeUpperBound(Type t) { typeBounds(stripReference(t), _, result) }
  * `exprMinVal(expr)` you will normally want to call
  * `exprMinVal(expr.getFullyConverted())`.
  */
-float exprMinVal(Expr expr) { result = typeLowerBound(expr.getUnspecifiedType()) }
+float exprMinVal(Instruction expr) { /*result = typeLowerBound(expr.getUnspecifiedType())*/ none() }
 
 /**
  * Gets the maximum value that this expression could represent, based on

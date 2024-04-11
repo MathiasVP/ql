@@ -42,7 +42,8 @@
  * of the type.
  */
 
-import cpp
+// import cpp
+import semmle.code.cpp.ir.IR
 private import RangeAnalysisUtils
 private import experimental.semmle.code.cpp.models.interfaces.SimpleRangeAnalysisExpr
 private import experimental.semmle.code.cpp.models.interfaces.SimpleRangeAnalysisDefinition
@@ -98,51 +99,21 @@ private float wideningUpperBounds(ArithmeticType t) {
  * This predicate also handles the case of constant variables initialized in different
  * compilation units, which doesn't necessarily have a getValue() result from the extractor.
  */
-private string getValue(Expr e) {
-  if exists(e.getValue())
-  then result = e.getValue()
-  else
-    /*
-     * It should be safe to propagate the initialization value to a variable if:
-     * The type of v is const, and
-     * The type of v is not volatile, and
-     * Either:
-     *   v is a local/global variable, or
-     *   v is a static member variable
-     */
-
-    exists(VariableAccess access, StaticStorageDurationVariable v |
-      not v.getUnderlyingType().isVolatile() and
-      v.getUnderlyingType().isConst() and
-      e = access and
-      v = access.getTarget() and
-      result = getValue(v.getAnAssignedValue())
-    )
-}
+private string getValue(Instruction i) { result = i.(ConstantInstruction).getValue() }
 
 /**
  * A bitwise `&` expression in which both operands are unsigned, or are effectively
  * unsigned due to being a non-negative constant.
  */
-private class UnsignedBitwiseAndExpr extends BitwiseAndExpr {
+private class UnsignedBitwiseAndExpr extends BitAndInstruction {
   UnsignedBitwiseAndExpr() {
     (
-      this.getLeftOperand()
-          .getFullyConverted()
-          .getType()
-          .getUnderlyingType()
-          .(IntegralType)
-          .isUnsigned() or
-      getValue(this.getLeftOperand().getFullyConverted()).toInt() >= 0
+      this.getLeftOperand().getType().getUnderlyingType().(IntegralType).isUnsigned() or
+      getValue(this.getLeft()).toInt() >= 0
     ) and
     (
-      this.getRightOperand()
-          .getFullyConverted()
-          .getType()
-          .getUnderlyingType()
-          .(IntegralType)
-          .isUnsigned() or
-      getValue(this.getRightOperand().getFullyConverted()).toInt() >= 0
+      this.getRightOperand().getType().getUnderlyingType().(IntegralType).isUnsigned() or
+      getValue(this.getRight()).toInt() >= 0
     )
   }
 }
@@ -164,15 +135,15 @@ float safeFloor(float v) {
 }
 
 /** A `MulExpr` where exactly one operand is constant. */
-private class MulByConstantExpr extends MulExpr {
+private class MulByConstantExpr extends MulInstruction {
   float constant;
-  Expr operand;
+  Operand operand;
 
   MulByConstantExpr() {
-    exists(Expr constantExpr |
+    exists(Operand constantExpr |
       this.hasOperands(constantExpr, operand) and
-      constant = getValue(constantExpr.getFullyConverted()).toFloat() and
-      not exists(getValue(operand.getFullyConverted()).toFloat())
+      constant = getValue(constantExpr.getDef()).toFloat() and
+      not exists(getValue(operand.getDef()).toFloat())
     )
   }
 
@@ -180,12 +151,12 @@ private class MulByConstantExpr extends MulExpr {
   float getConstant() { result = constant }
 
   /** Gets the non-constant operand. */
-  Expr getOperand() { result = operand }
+  Operand getOperand() { result = operand }
 }
 
-private class UnsignedMulExpr extends MulExpr {
+private class UnsignedMulExpr extends MulInstruction {
   UnsignedMulExpr() {
-    this.getType().(IntegralType).isUnsigned() and
+    this.getResultType().(IntegralType).isUnsigned() and
     // Avoid overlap. It should be slightly cheaper to analyze
     // `MulByConstantExpr`.
     not this instanceof MulByConstantExpr
@@ -196,61 +167,61 @@ private class UnsignedMulExpr extends MulExpr {
  * Holds if `expr` is effectively a multiplication of `operand` with the
  * positive constant `positive`.
  */
-private predicate effectivelyMultipliesByPositive(Expr expr, Expr operand, float positive) {
+private predicate effectivelyMultipliesByPositive(Instruction expr, Operand operand, float positive) {
   operand = expr.(MulByConstantExpr).getOperand() and
   positive = expr.(MulByConstantExpr).getConstant() and
   positive >= 0.0 // includes positive zero
-  or
-  operand = expr.(UnaryPlusExpr).getOperand() and
-  positive = 1.0
-  or
-  operand = expr.(CommaExpr).getRightOperand() and
-  positive = 1.0
-  or
-  operand = expr.(StmtExpr).getResultExpr() and
-  positive = 1.0
+  // or
+  // operand = expr.(CopyValueInstruction).getUnaryOperand() and
+  // positive = 1.0
+  // or
+  // operand = expr.(CommaExpr).getRightOperand() and
+  // positive = 1.0
+  // or
+  // operand = expr.(StmtExpr).getResultExpr() and
+  // positive = 1.0
 }
 
 /**
  * Holds if `expr` is effectively a multiplication of `operand` with the
  * negative constant `negative`.
  */
-private predicate effectivelyMultipliesByNegative(Expr expr, Expr operand, float negative) {
+private predicate effectivelyMultipliesByNegative(Instruction expr, Operand operand, float negative) {
   operand = expr.(MulByConstantExpr).getOperand() and
   negative = expr.(MulByConstantExpr).getConstant() and
   negative < 0.0 // includes negative zero
   or
-  operand = expr.(UnaryMinusExpr).getOperand() and
+  operand = expr.(NegateInstruction).getUnaryOperand() and
   negative = -1.0
 }
 
-private class AssignMulByConstantExpr extends AssignMulExpr {
-  float constant;
+// private class AssignMulByConstantExpr extends MulInstruction {
+//   float constant;
 
-  AssignMulByConstantExpr() { constant = getValue(this.getRValue().getFullyConverted()).toFloat() }
+//   AssignMulByConstantExpr() { constant = getValue(this.getRValue().getFullyConverted()).toFloat() }
 
-  float getConstant() { result = constant }
-}
+//   float getConstant() { result = constant }
+// }
 
-private class AssignMulByPositiveConstantExpr extends AssignMulByConstantExpr {
-  AssignMulByPositiveConstantExpr() { constant >= 0.0 }
-}
+// private class AssignMulByPositiveConstantExpr extends AssignMulByConstantExpr {
+//   AssignMulByPositiveConstantExpr() { constant >= 0.0 }
+// }
 
-private class AssignMulByNegativeConstantExpr extends AssignMulByConstantExpr {
-  AssignMulByNegativeConstantExpr() { constant < 0.0 }
-}
+// private class AssignMulByNegativeConstantExpr extends AssignMulByConstantExpr {
+//   AssignMulByNegativeConstantExpr() { constant < 0.0 }
+// }
 
-private class UnsignedAssignMulExpr extends AssignMulExpr {
-  UnsignedAssignMulExpr() {
-    this.getType().(IntegralType).isUnsigned() and
-    // Avoid overlap. It should be slightly cheaper to analyze
-    // `AssignMulByConstantExpr`.
-    not this instanceof AssignMulByConstantExpr
-  }
-}
+// private class UnsignedAssignMulExpr extends AssignMulExpr {
+//   UnsignedAssignMulExpr() {
+//     this.getType().(IntegralType).isUnsigned() and
+//     // Avoid overlap. It should be slightly cheaper to analyze
+//     // `AssignMulByConstantExpr`.
+//     not this instanceof AssignMulByConstantExpr
+//   }
+// }
 
 /** Set of expressions which we know how to analyze. */
-private predicate analyzableExpr(Expr e) {
+private predicate analyzableExpr(Instruction e) {
   // The type of the expression must be arithmetic. We reuse the logic in
   // `exprMinVal` to check this.
   exists(exprMinVal(e)) and
