@@ -93,6 +93,8 @@ module TaintedAllocationSizeConfig implements DataFlow::ConfigSig {
     // to duplicate results)
     any(HeuristicAllocationFunction f).getAParameter() = node.asParameter()
   }
+
+  predicate isBarrierOut(DataFlow::Node n) { isSink(n) }
 }
 
 module TaintedAllocationSize = TaintTracking::Global<TaintedAllocationSizeConfig>;

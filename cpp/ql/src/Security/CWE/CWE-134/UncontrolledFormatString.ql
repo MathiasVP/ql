@@ -44,6 +44,8 @@ module Config implements DataFlow::ConfigSig {
     or
     isArithmeticNonCharType(node.asInstruction().(StoreInstruction).getResultType())
   }
+
+  predicate isBarrierOut(DataFlow::Node n) { isSink(n) }
 }
 
 module Flow = TaintTracking::Global<Config>;

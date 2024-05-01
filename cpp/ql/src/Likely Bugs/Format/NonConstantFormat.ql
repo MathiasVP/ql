@@ -168,6 +168,8 @@ module NonConstFlowConfig implements DataFlow::ConfigSig {
       cannotContainString(t)
     )
   }
+
+  predicate isBarrierOut(DataFlow::Node n) { isSink(n) }
 }
 
 module NonConstFlow = TaintTracking::Global<NonConstFlowConfig>;

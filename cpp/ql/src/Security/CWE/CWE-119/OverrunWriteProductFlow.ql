@@ -216,6 +216,8 @@ module StringSizeConfig implements ProductFlow::StateConfigSig {
     node = any(DataFlow::SsaPhiNode phi).getAnInput(true)
   }
 
+  predicate isBarrierOut1(DataFlow::Node n) { isSinkPair(n, _, _, _) }
+
   predicate isAdditionalFlowStep2(
     DataFlow::Node node1, FlowState2 state1, DataFlow::Node node2, FlowState2 state2
   ) {

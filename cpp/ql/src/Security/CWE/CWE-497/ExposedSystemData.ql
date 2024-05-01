@@ -34,6 +34,8 @@ module ExposedSystemDataConfig implements DataFlow::ConfigSig {
   predicate isBarrier(DataFlow::Node node) {
     node.asIndirectArgument() = any(MemsetFunction func).getACallToThisFunction().getAnArgument()
   }
+
+  predicate isBarrierOut(DataFlow::Node n) { isSink(n) }
 }
 
 module ExposedSystemData = TaintTracking::Global<ExposedSystemDataConfig>;
