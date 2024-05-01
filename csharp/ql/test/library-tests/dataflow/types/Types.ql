@@ -18,6 +18,8 @@ module TypesConfig implements DataFlow::ConfigSig {
       mc.getAnArgument() = sink.asExpr()
     )
   }
+
+  int fieldFlowBranchLimit() { result = 1000 }
 }
 
 import ValueFlowTest<TypesConfig>

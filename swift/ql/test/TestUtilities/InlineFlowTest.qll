@@ -61,6 +61,8 @@ module DefaultFlowConfig implements DataFlow::ConfigSig {
   predicate isSource(DataFlow::Node source) { defaultSource(source) }
 
   predicate isSink(DataFlow::Node sink) { defaultSink(sink) }
+
+  int fieldFlowBranchLimit() { result = 1000 }
 }
 
 module NoFlowConfig implements DataFlow::ConfigSig {

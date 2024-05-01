@@ -18,6 +18,8 @@ module ValueFlowConfig implements DataFlow::ConfigSig {
   predicate isSink(DataFlow::Node n) {
     exists(MethodCall ma | ma.getMethod().hasName("sink") | n.asExpr() = ma.getAnArgument())
   }
+
+  int fieldFlowBranchLimit() { result = 100 }
 }
 
 module ValueFlow = DataFlow::Global<ValueFlowConfig>;
