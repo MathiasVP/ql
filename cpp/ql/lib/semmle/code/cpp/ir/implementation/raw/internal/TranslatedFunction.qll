@@ -125,17 +125,14 @@ class TranslatedFunction extends TranslatedRootElement, TTranslatedFunction {
       result = this.getInstruction(AliasedDefinitionTag())
       or
       tag = AliasedDefinitionTag() and
-      result = this.getInstruction(InitializeNonLocalTag())
-    )
-    or
-    (
-      tag = InitializeNonLocalTag() and
-      if exists(this.getThisType())
-      then result = this.getParameter(-1).getFirstInstruction(kind)
-      else
-        if exists(this.getParameter(0))
-        then result = this.getParameter(0).getFirstInstruction(kind)
-        else result = this.getBody().getFirstInstruction(kind)
+      (
+        if exists(this.getThisType())
+        then result = this.getParameter(-1).getFirstInstruction(kind)
+        else
+          if exists(this.getParameter(0))
+          then result = this.getParameter(0).getFirstInstruction(kind)
+          else result = this.getBody().getFirstInstruction(kind)
+      )
     )
     or
     kind instanceof GotoEdge and
@@ -187,10 +184,6 @@ class TranslatedFunction extends TranslatedRootElement, TTranslatedFunction {
       or
       tag = AliasedDefinitionTag() and
       opcode instanceof Opcode::AliasedDefinition and
-      resultType = getUnknownType()
-      or
-      tag = InitializeNonLocalTag() and
-      opcode instanceof Opcode::InitializeNonLocal and
       resultType = getUnknownType()
       or
       tag = ReturnValueAddressTag() and
