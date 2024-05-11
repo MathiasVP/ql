@@ -96,6 +96,11 @@ class Instruction extends Construction::TStageInstruction {
       else result = "r"
   }
 
+  private string getConflationPrefix() {
+    this.shouldGenerateDumpStrings() and
+    if this.isResultConflated() then result = "%" else result = ""
+  }
+
   /**
    * Gets the zero-based index of this instruction within its block. This is
    * used by debugging and printing code only.
@@ -147,8 +152,10 @@ class Instruction extends Construction::TStageInstruction {
    * Example: `r1_1(int*)`
    */
   final string getResultString() {
-    this.shouldGenerateDumpStrings() and
-    result = this.getResultId() + "(" + this.getResultLanguageType().getDumpString() + ")"
+    shouldGenerateDumpStrings() and
+    result =
+      this.getConflationPrefix() + this.getResultId() + "(" +
+        this.getResultLanguageType().getDumpString() + ")"
   }
 
   /**
