@@ -30,8 +30,6 @@ useNotDominatedByDefinition
 | try_except.cpp:39:15:39:15 | Left | Operand 'Left' is not dominated by its definition in function '$@'. | try_except.cpp:32:6:32:10 | void h_cpp(int) | void h_cpp(int) |
 | try_except.cpp:39:15:39:15 | Left | Operand 'Left' is not dominated by its definition in function '$@'. | try_except.cpp:32:6:32:10 | void h_cpp(int) | void h_cpp(int) |
 switchInstructionWithoutDefaultEdge
-notMarkedAsConflated
-wronglyMarkedAsConflated
 invalidOverlap
 nonUniqueEnclosingIRFunction
 fieldAddressOnNonPointer
