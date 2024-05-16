@@ -39,7 +39,6 @@ compilations(
  * 5   | f2.c
  * 6   | f3.c
  */
-#keyset[id, num]
 compilation_args(
     int id : @compilation ref,
     int num : int ref,
@@ -63,7 +62,6 @@ compilation_args(
  * Note that even if those files `#include` headers, those headers
  * do not appear as rows.
  */
-#keyset[id, num]
 compilation_compiling_files(
     int id : @compilation ref,
     int num : int ref,
@@ -82,7 +80,6 @@ compilation_compiling_files(
  * 3    | CPU seconds used by the extractor backend
  * 4    | Elapsed seconds during the extractor backend
  */
-#keyset[id, num, kind]
 compilation_time(
     int id : @compilation ref,
     int num : int ref,
@@ -103,7 +100,6 @@ compilation_time(
  * message generated while extracting the `file_number`th file of that
  * invocation.
  */
-#keyset[compilation, file_number, file_number_diagnostic_number]
 diagnostic_for(
     int diagnostic : @diagnostic ref,
     int compilation : @compilation ref,
@@ -334,14 +330,12 @@ macrolocationbind(
     int location: @location ref
 );
 
-#keyset[invocation, argument_index]
 macro_argument_unexpanded(
     int invocation: @macroinvocation ref,
     int argument_index: int ref,
     string text: string ref
 );
 
-#keyset[invocation, argument_index]
 macro_argument_expanded(
     int invocation: @macroinvocation ref,
     int argument_index: int ref,
@@ -414,7 +408,6 @@ member_function_this_type(
     int this_type: @type ref
 );
 
-#keyset[id, type_id]
 fun_decls(
     int id: @fun_decl,
     int function: @function ref,
@@ -429,7 +422,6 @@ fun_decl_specifiers(
     int id: @fun_decl ref,
     string name: string ref
 )
-#keyset[fun_decl, index]
 fun_decl_throws(
     int fun_decl: @fun_decl ref,
     int index: int ref,
@@ -453,7 +445,6 @@ param_decl_bind(
     int fun_decl: @fun_decl ref
 );
 
-#keyset[id, type_id]
 var_decls(
     int id: @var_decl,
     int variable: @variable ref,
@@ -506,8 +497,6 @@ static_asserts(
 );
 
 // each function has an ordered list of parameters
-#keyset[id, type_id]
-#keyset[function, index, type_id]
 params(
     int id: @parameter,
     int function: @functionorblock ref,
@@ -520,21 +509,18 @@ overrides(
     int old: @function ref
 );
 
-#keyset[id, type_id]
 membervariables(
     int id: @membervariable,
     int type_id: @type ref,
     string name: string ref
 );
 
-#keyset[id, type_id]
 globalvariables(
     int id: @globalvariable,
     int type_id: @type ref,
     string name: string ref
 );
 
-#keyset[id, type_id]
 localvariables(
     int id: @localvariable,
     int type_id: @type ref,
@@ -699,7 +685,6 @@ typedefbase(
  * (Please consult the C++11 standard for more details).
  * `parentheses_would_change_meaning` is `true` iff that is the case.
  */
-#keyset[id, expr]
 decltypes(
     int id: @decltype,
     int expr: @expr ref,
@@ -1038,7 +1023,6 @@ direct_base_offsets(
  * `super` within a most-derived object of class `sub`. `super` can be either a
  * direct or indirect base class.
  */
-#keyset[sub, super]
 virtual_base_offsets(
     int sub: @usertype ref,
     int super: @usertype ref,
@@ -1126,8 +1110,6 @@ compgenerated(unique int id: @element ref);
  * destructed in reverse construction order, so for a given `element`
  * these should be called from highest to lowest `i`.
  */
-#keyset[element, destructor_call]
-#keyset[element, i]
 synthetic_destructor_call(
     int element: @element ref,
     int i: int ref,
@@ -1858,7 +1840,6 @@ new_array_allocated_type(
  * The field being initialized by an initializer expression within an aggregate
  * initializer for a class/struct/union. Position is used to sort repeated initializers.
  */
-#keyset[aggregate, position]
 aggregate_field_init(
     int aggregate: @aggregateliteral ref,
     int initializer: @expr ref,
@@ -1870,7 +1851,6 @@ aggregate_field_init(
  * The index of the element being initialized by an initializer expression
  * within an aggregate initializer for an array. Position is used to sort repeated initializers.
  */
-#keyset[aggregate, position]
 aggregate_array_init(
     int aggregate: @aggregateliteral ref,
     int initializer: @expr ref,
@@ -2045,7 +2025,6 @@ switch_initialization(
     int init_id: @stmt ref
 );
 
-#keyset[switch_stmt, index]
 switch_case(
     int switch_stmt: @stmt_switch ref,
     int index: int ref,
