@@ -22,7 +22,7 @@ import PathGraph
 class UnsafeUseOfThisConfig extends MustFlowConfiguration {
   UnsafeUseOfThisConfig() { this = "UnsafeUseOfThisConfig" }
 
-  override predicate isSource(Instruction source) { isSource(source, _, _) }
+  override predicate isSource(Instruction source) { isSource(source, _, _, _) }
 
   override predicate isSink(Operand sink) { isSink(sink, _) }
 }
@@ -43,16 +43,19 @@ predicate isSink(Operand sink, CallInstruction call) {
  * The string `msg` describes whether the enclosing function is a
  * constructor or destructor.
  */
-predicate isSource(InitializeParameterInstruction source, string msg, Class c) {
+predicate isSource(InitializeParameterInstruction source, string msg, Class c, boolean isConstructor) {
   (
     exists(Constructor func |
       not func instanceof CopyConstructor and
       not func instanceof MoveConstructor and
       func = source.getEnclosingFunction() and
-      msg = "construction"
+      msg = "construction" and
+      isConstructor = true
     )
     or
-    source.getEnclosingFunction() instanceof Destructor and msg = "destruction"
+    source.getEnclosingFunction() instanceof Destructor and
+    msg = "destruction" and
+    isConstructor = false
   ) and
   source.getIRVariable() instanceof IRThisVariable and
   source.getEnclosingFunction().getDeclaringType() = c
@@ -67,21 +70,33 @@ predicate isSource(InitializeParameterInstruction source, string msg, Class c) {
  */
 predicate flows(
   MustFlowPathNode source, string msg, Class sourceClass, MustFlowPathNode sink,
-  CallInstruction call
+  CallInstruction call, boolean isConstructor
 ) {
   exists(UnsafeUseOfThisConfig conf |
     conf.hasFlowPath(source, sink) and
-    isSource(source.getInstruction(), msg, sourceClass) and
+    isSource(source.getInstruction(), msg, sourceClass, isConstructor) and
     isSink(sink.getInstruction().getAUse(), call)
   )
 }
 
 from
   MustFlowPathNode source, MustFlowPathNode sink, CallInstruction call, string msg,
-  Class sourceClass
+  Class sourceClass, boolean isConstructor
 where
-  flows(source, msg, sourceClass, sink, call) and
-  // Only raise an alert if there is no override of the pure virtual function in any base class.
+  flows(source, msg, sourceClass, sink, call, isConstructor) and
+  (
+    // If it's a destructor we require that the virtual call happened in a
+    // class more derived than the destructor's enclosing class. This is
+    // because destructors are called starting at the most derived class.
+    isConstructor = false and
+    sink.getInstruction().getResultType().stripType().(Class).getABaseClass+() = sourceClass
+    or
+    // If it's a constructor we require that the virtual call happened in a
+    // class that is a base class of the constructor's enclosing class. This is
+    // because constructors are called starting at the base class.
+    isConstructor = true and
+    sink.getInstruction().getResultType().stripType().(Class).getADerivedClass+() = sourceClass
+  ) and
   not exists(Class c | c = sourceClass.getABaseClass*() |
     c.getAMemberFunction().getAnOverriddenFunction() = call.getStaticCallTarget()
   )
