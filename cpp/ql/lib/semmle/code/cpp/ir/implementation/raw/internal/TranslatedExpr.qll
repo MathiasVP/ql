@@ -38,12 +38,14 @@ TranslatedExpr getTranslatedExpr(Expr expr) {
  * as the `TranslatedAllocatorCall` and `TranslatedAllocationSize` within the
  * translation of a `NewExpr`.
  */
+cached
 abstract class TranslatedExpr extends TranslatedElement {
   Expr expr;
 
   /**
    * Gets the instruction that produces the result of the expression.
    */
+  cached
   abstract Instruction getResult();
 
   /**
@@ -55,8 +57,10 @@ abstract class TranslatedExpr extends TranslatedElement {
    * TranslatedVariableAccess for `x` does not. The TranslatedVariableAccess
    * for `y` does produce its result, however, because there is no load on `y`.
    */
+  cached
   abstract predicate producesExprResult();
 
+  cached
   final CppType getResultType() {
     if this.isResultGLValue()
     then result = getTypeForGLValue(expr.getType())
@@ -66,6 +70,7 @@ abstract class TranslatedExpr extends TranslatedElement {
   /**
    * Holds if the result of this `TranslatedExpr` is a glvalue.
    */
+  cached
   predicate isResultGLValue() {
     // This implementation is overridden in `TranslatedCoreExpr` to mark them as
     // glvalues if they have loads on them. It's also overridden in
@@ -85,8 +90,10 @@ abstract class TranslatedExpr extends TranslatedElement {
    * part of `getChild` unless `handlesDestructorsExplicitly`
    * holds.
    */
+  cached
   abstract TranslatedElement getChildInternal(int id);
 
+  cached
   final override TranslatedElement getChild(int id) {
     result = this.getChildInternal(id)
     or
@@ -100,10 +107,12 @@ abstract class TranslatedExpr extends TranslatedElement {
     result.getExpr() = expr.getImplicitDestructorCall(index)
   }
 
+  cached
   final override predicate hasAnImplicitDestructorCall() {
     exists(this.getImplicitDestructorCall(_))
   }
 
+  cached
   final override int getFirstDestructorCallIndex() {
     not this.handlesDestructorsExplicitly() and
     (
@@ -113,18 +122,22 @@ abstract class TranslatedExpr extends TranslatedElement {
     )
   }
 
+  cached
   final override Locatable getAst() { result = expr }
 
+  cached
   final override Declaration getFunction() { result = getEnclosingDeclaration(expr) }
 
   /**
    * Gets the expression from which this `TranslatedExpr` is generated.
    */
+  cached
   final Expr getExpr() { result = expr }
 
   /**
    * Gets the `TranslatedFunction` containing this expression.
    */
+  cached
   final TranslatedRootElement getEnclosingFunction() {
     result = getTranslatedFunction(getEnclosingFunction(expr))
     or
@@ -183,12 +196,15 @@ Variable getEnclosingVariable(Expr e) {
  * lvalue-to-rvalue conversion on the result. Every expression has a single
  * `TranslatedCoreExpr`.
  */
+cached
 abstract class TranslatedCoreExpr extends TranslatedExpr {
+  cached
   final override string toString() { result = expr.toString() }
 
   /**
    * Holds if the result of this `TranslatedExpr` is a glvalue.
    */
+  cached
   override predicate isResultGLValue() {
     super.isResultGLValue()
     or
@@ -201,6 +217,7 @@ abstract class TranslatedCoreExpr extends TranslatedExpr {
     isPRValueConversionOnGLValue(expr)
   }
 
+  cached
   final override predicate producesExprResult() {
     // If there's no load or temp object, then this is the only TranslatedExpr for this
     // expression.
