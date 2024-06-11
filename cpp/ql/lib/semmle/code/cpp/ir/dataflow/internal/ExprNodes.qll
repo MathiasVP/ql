@@ -8,6 +8,7 @@ private import DataFlowUtil
 private import DataFlowPrivate
 private import semmle.code.cpp.ir.implementation.raw.internal.TranslatedExpr
 private import semmle.code.cpp.ir.implementation.raw.internal.InstructionTag
+private import DataFlowImplCommon as DataFlowImplCommon
 
 cached
 private module Cached {
@@ -244,7 +245,10 @@ private module Cached {
     abstract Expr getConvertedExpr(int n);
 
     /** Gets the non-conversion expression corresponding to this node, if any. */
-    final Expr getExpr(int n) { result = this.getConvertedExpr(n).getUnconverted() }
+    final Expr getExpr(int n) {
+      DataFlowImplCommon::forceCachingInSameStage() and
+      result = this.getConvertedExpr(n).getUnconverted()
+    }
   }
 
   /**
@@ -294,8 +298,8 @@ private module Cached {
     abstract Expr getConvertedExpr(int n, int indirectionIndex);
 
     /** Gets the non-conversion expression corresponding to this node, if any. */
-    cached
     final Expr getExpr(int n, int indirectionIndex) {
+      DataFlowImplCommon::forceCachingInSameStage() and
       result = this.getConvertedExpr(n, indirectionIndex).getUnconverted()
     }
   }
@@ -456,7 +460,10 @@ private module Cached {
      * INTERNAL: Do not use.
      */
     cached
-    Expr getExpr(int n, int indirectionIndex) { result = super.getExpr(n, indirectionIndex) }
+    Expr getExpr(int n, int indirectionIndex) {
+      DataFlowImplCommon::forceCachingInSameStage() and
+      result = super.getExpr(n, indirectionIndex)
+    }
 
     /**
      * INTERNAL: Do not use.
