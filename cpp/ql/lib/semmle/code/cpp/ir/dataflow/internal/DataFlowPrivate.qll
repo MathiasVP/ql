@@ -1325,7 +1325,7 @@ import IsUnreachableInCall
  * Holds if access paths with `c` at their head always should be tracked at high
  * precision. This disables adaptive access path precision for such access paths.
  */
-predicate forceHighPrecision(Content c) { none() }
+predicate forceHighPrecision(Content c) { c instanceof ElementContent }
 
 /** Holds if `n` should be hidden from path explanations. */
 predicate nodeIsHidden(Node n) {
@@ -1396,7 +1396,8 @@ private predicate unionHasApproxName(Cpp::Union u, string s) { s = u.getName().c
 cached
 private newtype TContentApprox =
   TFieldApproxContent(string s) { fieldHasApproxName(_, s) } or
-  TUnionApproxContent(string s) { unionHasApproxName(_, s) }
+  TUnionApproxContent(string s) { unionHasApproxName(_, s) } or
+  TElementApproxContent()
 
 /** An approximated `Content`. */
 class ContentApprox extends TContentApprox {
@@ -1427,6 +1428,10 @@ private class UnionApproxContent extends ContentApprox, TUnionApproxContent {
   final override string toString() { result = s }
 }
 
+private class ElementApproxContent extends ContentApprox, TElementApproxContent {
+  final override string toString() { result = "ElementApprox" }
+}
+
 /** Gets an approximated value for content `c`. */
 pragma[inline]
 ContentApprox getContentApprox(Content c) {
@@ -1441,6 +1446,9 @@ ContentApprox getContentApprox(Content c) {
     u = c.(UnionContent).getUnion() and
     unionHasApproxName(u, prefix)
   )
+  or
+  c instanceof ElementContent and
+  result instanceof ElementApproxContent
 }
 
 /**

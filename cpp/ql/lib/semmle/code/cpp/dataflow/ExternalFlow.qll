@@ -81,6 +81,7 @@ private import internal.FlowSummaryImpl::Private::External
 private import internal.ExternalFlowExtensions as Extensions
 private import codeql.mad.ModelValidation as SharedModelVal
 private import codeql.util.Unit
+private import semmle.code.cpp.internal.QualifiedName as Q
 
 /**
  * A unit class for adding additional source model rows.
@@ -367,16 +368,146 @@ private predicate elementSpec(
   summaryModel(namespace, type, subtypes, name, signature, ext, _, _, _, _)
 }
 
-private string paramsStringPart(Function c, int i) {
-  i = -1 and result = "(" and exists(c)
-  or
-  exists(int n, string p | c.getParameter(n).getType().toString() = p |
-    i = 2 * n and result = p
-    or
-    i = 2 * n - 1 and result = "," and n != 0
+/** Gets the fully termplated version of `f`. */
+private Function getFullyTemplatedMemberFunction(Function f) {
+  not f.isFromUninstantiatedTemplate(_) and
+  exists(Class c, Class templateClass, int i |
+    c.isConstructedFrom(templateClass) and
+    f = c.getAMember(i) and
+    result = templateClass.getCanonicalMember(i)
+  )
+}
+
+/**
+ * Gets the type name of the `n`'th parameter of `f` without any template
+ * arguments.
+ */
+bindingset[f]
+pragma[inline_late]
+string getParameterTypeWithoutTemplateArguments(Function f, int n) {
+  exists(string s, string base, string specifiers |
+    s = f.getParameter(n).getType().getName() and
+    base = s.regexpCapture("([^<]+)(?:<.+>)?([^>]+)", 1) and
+    specifiers = s.regexpCapture("([^<]+)(?:<.+>)?([^>]+)", 2) and
+    result = base + specifiers
+  )
+}
+
+/**
+ * Normalize the `n`'th parameter of `f` by replacing template names
+ * with `func:N` (where `N` is the index of the template).
+ */
+private string getTypeNameWithoutFunctionTemplates(Function f, int n, int iteration) {
+  exists(Function templateFunction |
+    templateFunction = getFullyTemplatedMemberFunction(f) and
+    iteration = templateFunction.getNumberOfTemplateArguments() and
+    result = getParameterTypeWithoutTemplateArguments(templateFunction, n)
   )
   or
-  i = 2 * c.getNumberOfParameters() and result = ")"
+  exists(string mid, TemplateParameter tp, Function templateFunction |
+    mid = getTypeNameWithoutFunctionTemplates(f, n, iteration + 1) and
+    templateFunction = getFullyTemplatedMemberFunction(f) and
+    tp = templateFunction.getTemplateArgument(iteration) and
+    result = mid.replaceAll(tp.getName(), "func:" + iteration.toString())
+  )
+}
+
+/**
+ * Normalize the `n`'th parameter of `f` by replacing template names
+ * with `class:N` (where `N` is the index of the template).
+ */
+private string getTypeNameWithoutClassTemplates(Function f, int n, int iteration) {
+  exists(Class template |
+    f.getDeclaringType().isConstructedFrom(template) and
+    iteration = template.getNumberOfTemplateArguments() and
+    result = getTypeNameWithoutFunctionTemplates(f, n, 0)
+  )
+  or
+  exists(string mid, TemplateParameter tp, Class template |
+    mid = getTypeNameWithoutClassTemplates(f, n, iteration + 1) and
+    f.getDeclaringType().isConstructedFrom(template) and
+    tp = template.getTemplateArgument(iteration) and
+    result = mid.replaceAll(tp.getName(), "class:" + iteration.toString())
+  )
+}
+
+private string getSignatureWithoutClassTemplateNames(
+  string signatureArgs, string typeArgs, string nameArgs, int iteration
+) {
+  arguments0(_, _, _, signatureArgs, typeArgs, nameArgs) and
+  iteration = count(signatureArgs.indexOf(",")) + 1 and
+  result = signatureArgs
+  or
+  exists(string mid |
+    mid = getSignatureWithoutClassTemplateNames(signatureArgs, typeArgs, nameArgs, iteration + 1)
+  |
+    exists(string typeArg |
+      typeArg = typeArgs.splitAt(",", iteration) and
+      typeArg != "" and
+      result = mid.replaceAll(typeArg, "class:" + iteration.toString())
+    )
+    or
+    (
+      typeArgs.splitAt(",", iteration) = ""
+      or
+      iteration = [0 .. strictcount(signatureArgs.indexOf(",")) + 1] and
+      not exists(typeArgs.splitAt(",", iteration))
+    ) and
+    result = mid
+  )
+}
+
+private string getSignatureWithoutFunctionTemplateNames(
+  string signatureArgs, string typeArgs, string nameArgs, int iteration
+) {
+  iteration = count(signatureArgs.indexOf(",")) + 1 and
+  result = getSignatureWithoutClassTemplateNames(signatureArgs, typeArgs, nameArgs, 0)
+  or
+  exists(string mid |
+    mid = getSignatureWithoutFunctionTemplateNames(signatureArgs, typeArgs, nameArgs, iteration + 1)
+  |
+    exists(string nameArg |
+      nameArg = nameArgs.splitAt(",", iteration) and
+      nameArg != "" and
+      result = mid.replaceAll(nameArg, "func:" + iteration.toString())
+    )
+    or
+    (
+      nameArgs.splitAt(",", iteration) = ""
+      or
+      iteration = [0 .. strictcount(signatureArgs.indexOf(",")) + 1] and
+      not exists(nameArgs.splitAt(",", iteration))
+    ) and
+    result = mid
+  )
+}
+
+private predicate arguments(
+  string signature, string type, string name, string signatureArgs, string typeArgs, string nameArgs
+) {
+  exists(string signatureArgs0 |
+    arguments0(signature, type, name, signatureArgs0, typeArgs, nameArgs) and
+    signatureArgs = getSignatureWithoutFunctionTemplateNames(signatureArgs0, typeArgs, nameArgs, 0)
+  )
+}
+
+private string getParameterTypeName(Function c, int i) {
+  result = getTypeNameWithoutClassTemplates(c, i, 0)
+}
+
+private string paramsStringPart(Function f, int i) {
+  not f.isFromUninstantiatedTemplate(_) and
+  (
+    i = -1 and result = "(" and exists(f)
+    or
+    exists(int n, string p | getParameterTypeName(f, n) = p |
+      i = 2 * n and result = p
+      or
+      i = 2 * n - 1 and result = "," and n != 0
+    )
+    or
+    i = 2 * f.getNumberOfParameters() and result = ")"
+  )
 }
 
 /**
@@ -396,6 +527,67 @@ private predicate matchesSignature(Function func, string signature) {
   paramsString(func) = signature
 }
 
+string getSignatureParameterName(string signature, string type, string name, int n) {
+  exists(string signatureArgs |
+    arguments(signature, type, name, signatureArgs, _, _) and
+    result = signatureArgs.splitAt(",", n)
+  )
+}
+
+/**
+ * Holds if the `i`'th name in `signature` matches the `i` name in `paramsString(func)`.
+ *
+ * When `paramsString(func)[i]` is `class:n` then the signature name is
+ * compared with the `n`'th name in `type`, and when `paramsString(func)[i]`
+ * is `func:n` then the signature name is compared with the `n`'th name
+ * in `name`.
+ */
+private predicate signatureMatches(Function func, string signature, string type, string name, int i) {
+  exists(string s |
+    s = getSignatureParameterName(signature, type, name, i) and
+    s = getParameterTypeName(func, i)
+  ) and
+  if exists(getParameterTypeName(func, i + 1))
+  then signatureMatches(func, signature, type, name, i + 1)
+  else i = count(signature.indexOf(","))
+}
+
+private predicate arguments0(
+  string signature, string type, string name, string signatureArgs, string typeArgs, string nameArgs
+) {
+  elementSpec(_, type, _, name, signature, _) and
+  (if name.matches("%<%") then nameArgs = name.splitAt("<", 1).splitAt(">", 0) else nameArgs = "") and
+  (if type.matches("%<%") then typeArgs = type.splitAt("<", 1).splitAt(">", 0) else typeArgs = "") and
+  signatureArgs = signature.splitAt("(", 1).splitAt(")", 0)
+}
+
+pragma[nomagic]
+private predicate elementSpecMatchesSignature(
+  Function method, string namespace, string type, boolean subtypes, string name, string signature
+) {
+  elementSpec(namespace, pragma[only_bind_into](type), subtypes, pragma[only_bind_into](name),
+    pragma[only_bind_into](signature), _) and
+  signatureMatches(method, signature, type, name, 0)
+}
+
+bindingset[name]
+pragma[inline_late]
+private predicate hasClassAndName(Class classWithMethod, Function method, string name) {
+  exists(string nameWithoutArgs |
+    nameWithoutArgs = name.splitAt("<", 0).splitAt(">", 0) and
+    classWithMethod = method.getClassAndName(nameWithoutArgs)
+  )
+}
+
+bindingset[type, namespace]
+pragma[inline_late]
+private predicate hasQualifiedName(Class namedClass, string namespace, string type) {
+  exists(string typeWithoutArgs |
+    typeWithoutArgs = type.splitAt("<", 0).splitAt(">", 0) and
+    namedClass.hasQualifiedName(namespace, typeWithoutArgs)
+  )
+}
+
 /**
  * Gets the element in module `namespace` that satisfies the following properties:
  * 1. If the element is a member of a class-like type, then the class-like type has name `type`
@@ -410,8 +602,8 @@ pragma[nomagic]
 private Element interpretElement0(
   string namespace, string type, boolean subtypes, string name, string signature
 ) {
-  elementSpec(namespace, type, subtypes, name, signature, _) and
   (
+    elementSpec(namespace, type, subtypes, name, signature, _) and
     // Non-member functions
     exists(Function func |
       func.hasQualifiedName(namespace, name) and
@@ -423,21 +615,28 @@ private Element interpretElement0(
     )
     or
     // Member functions
-    exists(Class namedClass, Class classWithMethod, Function method |
-      classWithMethod = method.getClassAndName(name) and
-      namedClass.hasQualifiedName(namespace, type) and
-      matchesSignature(method, signature) and
-      result = method
-    |
-      // member declared in the named type or a subtype of it
-      subtypes = true and
-      classWithMethod = namedClass.getADerivedClass*()
-      or
-      // member declared directly in the named type
-      subtypes = false and
-      classWithMethod = namedClass
+    exists(Class namedClass, Class classWithMethod |
+      (
+        elementSpecMatchesSignature(result, namespace, type, subtypes, name, signature) and
+        hasClassAndName(classWithMethod, result, name)
+        or
+        signature = "" and
+        elementSpec(namespace, type, subtypes, name, "", _) and
+        hasClassAndName(classWithMethod, result, name)
+      ) and
+      hasQualifiedName(namedClass, namespace, type) and
+      (
+        // member declared in the named type or a subtype of it
+        subtypes = true and
+        classWithMethod = namedClass.getADerivedClass*()
+        or
+        // member declared directly in the named type
+        subtypes = false and
+        classWithMethod = namedClass
+      )
     )
     or
+    elementSpec(namespace, type, subtypes, name, signature, _) and
     // Member variables
     signature = "" and
     exists(Class namedClass, Class classWithMember, MemberVariable member |
@@ -456,6 +655,7 @@ private Element interpretElement0(
     )
     or
     // Global or namespace variables
+    elementSpec(namespace, type, subtypes, name, signature, _) and
     signature = "" and
     type = "" and
     subtypes = false and

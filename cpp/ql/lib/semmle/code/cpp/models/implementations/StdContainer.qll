@@ -4,6 +4,7 @@
 
 import semmle.code.cpp.models.interfaces.Taint
 import semmle.code.cpp.models.interfaces.Iterator
+import semmle.code.cpp.models.interfaces.FlowSource
 
 /**
  * A sequence container template class (for example, `std::vector`) from the
@@ -99,6 +100,34 @@ private class StdSequenceContainerConstructor extends Constructor, TaintFunction
   }
 }
 
+private class StdSequenceContainerConstructorSummaries extends SummaryModelCsv {
+  override predicate row(string row) {
+    row =
+      [
+        "std;vector;true;vector;(const vector &);;Argument[*0].Element[*];Argument[-1].Element[*];value",
+        "std;vector<T,Allocator>;true;vector<InputIterator>;(InputIterator,InputIterator,const Allocator &);;Argument[0].Element[*];Argument[-1].Element[*];value",
+        "std;deque;true;deque;(const deque &);;Argument[*0].Element[*];Argument[-1].Element[*];value",
+        "std;deque<T,Allocator>;true;deque<InputIterator>;(InputIterator,InputIterator,const Allocator &);;Argument[0].Element[*];Argument[-1].Element[*];value",
+        "std;list;true;list;(const list &);;Argument[*0].Element[*];Argument[-1].Element[*];value",
+        "std;list<T,Allocator>;true;list<InputIterator>;(InputIterator,InputIterator,const Allocator &);;Argument[0].Element[*];Argument[-1].Element[*];value",
+        "std;forward_list;true;forward_list;(const forward_list &);;Argument[*0].Element[*];Argument[-1].Element[*];value",
+        "std;forward_list<T, Allocator>;true;forward_list;(InputIterator,InputIterator,const Allocator &);;Argument[0].Element[*];Argument[-1].Element[*];value",
+      ]
+  }
+}
+
+private class StdSequenceContainerAssignmentSummaries extends SummaryModelCsv {
+  override predicate row(string row) {
+    row =
+      [
+        "std;vector;true;operator=;;;Argument[*0].Element[*];Argument[-1].Element[*];value",
+        "std;deque;true;operator=;;;Argument[*0].Element[*];Argument[-1].Element[*];value",
+        "std;list;true;operator=;;;Argument[*0].Element[*];Argument[-1].Element[*];value",
+        "std;forward_list;true;operator=;;;Argument[*0].Element[*];Argument[-1].Element[*];value"
+      ]
+  }
+}
+
 /**
  * The standard container function `data`.
  */
@@ -143,14 +172,18 @@ class StdSequenceContainerPush extends MemberFunction {
   }
 }
 
-private class StdSequenceContainerPushModel extends StdSequenceContainerPush, TaintFunction {
-  override predicate hasTaintFlow(FunctionInput input, FunctionOutput output) {
-    // flow from parameter to qualifier
-    input.isParameterDeref(0) and
-    output.isQualifierObject()
+private class StdSequenceContainerPushSummaries extends SummaryModelCsv {
+  override predicate row(string row) {
+    row =
+      [
+        "std;vector;true;push_back;;;Argument[*0];Argument[-1].Element[*];value",
+        "std;deque;true;push_back;;;Argument[*0];Argument[-1].Element[*];value",
+        "std;deque;true;push_front;;;Argument[*0];Argument[-1].Element[*];value",
+        "std;forward_list;true;push_front;;;Argument[*0];Argument[-1].Element[*];value",
+        "std;list;true;push_back;;;Argument[*0];Argument[-1].Element[*];value",
+        "std;list;true;push_front;;;Argument[*0];Argument[-1].Element[*];value"
+      ]
   }
-
-  override predicate isPartialWrite(FunctionOutput output) { output.isQualifierObject() }
 }
 
 /**
@@ -198,21 +231,64 @@ class StdSequenceContainerInsert extends MemberFunction {
   int getAnIteratorParameterIndex() { this.getParameter(result).getType() instanceof Iterator }
 }
 
-private class StdSequenceContainerInsertModel extends StdSequenceContainerInsert, TaintFunction {
-  override predicate hasTaintFlow(FunctionInput input, FunctionOutput output) {
-    // flow from parameter to container itself (qualifier) and return value
-    (
-      input.isQualifierObject() or
-      input.isParameterDeref(this.getAValueTypeParameterIndex()) or
-      input.isParameter(this.getAnIteratorParameterIndex())
-    ) and
-    (
-      output.isQualifierObject() or
-      output.isReturnValue()
-    )
+private class StdSequenceContainerInsertSummaries extends SummaryModelCsv {
+  override predicate row(string row) {
+    row =
+      [
+        "std;vector;true;insert<InputIt>;(const_iterator,InputIt,InputIt);;Argument[1].Element[*];Argument[-1].Element[*];value",
+        "std;vector;true;insert<InputIt>;(const_iterator,InputIt,InputIt);;Argument[1].Element[*];ReturnValue.Element[*];value",
+        "std;vector<T>;true;insert;(const_iterator,const T &);;Argument[*1];Argument[-1].Element[*];value",
+        "std;vector<T>;true;insert;(const_iterator,const T &);;Argument[*1];ReturnValue.Element[*];value",
+        "std;vector<T>;true;insert;(const_iterator,size_type,const T &);;Argument[*2];ReturnValue.Element[*];value",
+        "std;vector;true;insert<InputIt>;(const_iterator,InputIt,InputIt);;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;vector<T>;true;insert;(const_iterator,const T &);;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;vector<T>;true;insert;(const_iterator,size_type,const T &);;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;deque;true;insert<InputIt>;(const_iterator,InputIt,InputIt);;Argument[1].Element[*];Argument[-1].Element[*];value",
+        "std;deque;true;insert<InputIt>;(const_iterator,InputIt,InputIt);;Argument[1].Element[*];ReturnValue.Element[*];value",
+        "std;deque<T>;true;insert;(const_iterator,const T &);;Argument[*1];Argument[-1].Element[*];value",
+        "std;deque<T>;true;insert;(const_iterator,const T &);;Argument[*1];ReturnValue.Element[*];value",
+        "std;deque<T>;true;insert;(const_iterator,size_type,const T &);;Argument[*2];ReturnValue.Element[*];value",
+        "std;deque;true;insert<InputIt>;(const_iterator,InputIt,InputIt);;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;deque<T>;true;insert;(const_iterator,const T &);;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;deque<T>;true;insert;(const_iterator,size_type,const T &);;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;list;true;insert<InputIt>;(const_iterator,InputIt,InputIt);;Argument[1].Element[*];Argument[-1].Element[*];value",
+        "std;list;true;insert<InputIt>;(const_iterator,InputIt,InputIt);;Argument[1].Element[*];ReturnValue.Element[*];value",
+        "std;list<T>;true;insert;(const_iterator,const T &);;Argument[*1];Argument[-1].Element[*];value",
+        "std;list<T>;true;insert;(const_iterator,const T &);;Argument[*1];ReturnValue.Element[*];value",
+        "std;list<T>;true;insert;(const_iterator,size_type,const T &);;Argument[*2];ReturnValue.Element[*];value",
+        "std;list;true;insert<InputIt>;(const_iterator,InputIt,InputIt);;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;list<T>;true;insert;(const_iterator,const T &);;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;list<T>;true;insert;(const_iterator,size_type,const T &);;Argument[-1].Element[*];ReturnValue.Element[*];value"
+      ]
   }
+}
 
-  override predicate isPartialWrite(FunctionOutput output) { output.isQualifierObject() }
+private class StdSequenceContainerBeginSummaries extends SummaryModelCsv {
+  override predicate row(string row) {
+    row =
+      [
+        "std;vector<T,Allocator>;true;begin;;;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;vector<T,Allocator>;true;cbegin;;;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;vector<T,Allocator>;true;rbegin;;;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;vector<T,Allocator>;true;rcbegin;;;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;array;true;begin;;;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;array;true;cbegin;;;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;array;true;rbegin;;;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;array;true;rcbegin;;;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;deque;true;begin;;;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;deque;true;cbegin;;;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;deque;true;rbegin;;;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;deque;true;rcbegin;;;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;forward_list;true;begin;;;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;forward_list;true;cbegin;;;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;forward_list;true;rbegin;;;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;forward_list;true;rcbegin;;;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;list;true;begin;;;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;list;true;cbegin;;;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;list;true;rbegin;;;Argument[-1].Element[*];ReturnValue.Element[*];value",
+        "std;list;true;rcbegin;;;Argument[-1].Element[*];ReturnValue.Element[*];value"
+      ]
+  }
 }
 
 /**
@@ -261,18 +337,18 @@ class StdSequenceContainerAt extends MemberFunction {
   }
 }
 
-private class StdSequenceContainerAtModel extends StdSequenceContainerAt, TaintFunction {
-  override predicate hasTaintFlow(FunctionInput input, FunctionOutput output) {
-    // flow from qualifier to referenced return value
-    input.isQualifierObject() and
-    output.isReturnValueDeref()
-    or
-    // reverse flow from returned reference to the qualifier
-    input.isReturnValueDeref() and
-    output.isQualifierObject()
+private class StdSequenceContainerAtSummaries extends SummaryModelCsv {
+  override predicate row(string row) {
+    row =
+      [
+        "std;array;true;at;;;Argument[-1].Element[*];ReturnValue[*];value",
+        "std;array;true;operator[];;;Argument[-1].Element[*];ReturnValue[*];value",
+        "std;deque;true;at;;;Argument[-1].Element[*];ReturnValue[*];value",
+        "std;deque;true;operator[];;;Argument[-1].Element[*];ReturnValue[*];value",
+        "std;vector;true;at;;;Argument[-1].Element[*];ReturnValue[*];value",
+        "std;vector;true;operator[];;;Argument[-1].Element[*];ReturnValue[*];value"
+      ]
   }
-
-  override predicate isPartialWrite(FunctionOutput output) { output.isQualifierObject() }
 }
 
 /**

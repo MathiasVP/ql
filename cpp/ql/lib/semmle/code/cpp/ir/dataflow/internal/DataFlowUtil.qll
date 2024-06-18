@@ -2064,6 +2064,14 @@ private Field getAFieldWithSize(Union u, int bytes) {
   bytes = getFieldSize(result)
 }
 
+/**
+ * Gets the maximum number of indirections to use for `ElementContent`.
+ *
+ * This should be equal to the largest number of stars (i.e., `*`s) in any
+ * `Element` content across all of our MaD summaries, sources, and sinks.
+ */
+private int getMaxElementContentIndirectionIndex() { result = 5 }
+
 cached
 private newtype TContent =
   TFieldContent(Field f, int indirectionIndex) {
@@ -2083,6 +2091,9 @@ private newtype TContent =
       indirectionIndex =
         [1 .. max(Ssa::getMaxIndirectionsForType(getAFieldWithSize(u, bytes).getUnspecifiedType()))]
     )
+  } or
+  TElementContent(int indirectionIndex) {
+    indirectionIndex = [1 .. getMaxElementContentIndirectionIndex()]
   }
 
 /**
@@ -2191,6 +2202,21 @@ class UnionContent extends Content, TUnionContent {
       uc.getIndirectionIndex() >= indirectionIndex
     )
   }
+}
+
+class ElementContent extends Content, TElementContent {
+  int indirectionIndex;
+
+  ElementContent() { this = TElementContent(indirectionIndex) }
+
+  pragma[inline]
+  override int getIndirectionIndex() {
+    pragma[only_bind_into](result) = pragma[only_bind_out](indirectionIndex)
+  }
+
+  override predicate impliesClearOf(Content c) { none() }
+
+  override string toString() { result = contentStars(this) + "element" }
 }
 
 /**

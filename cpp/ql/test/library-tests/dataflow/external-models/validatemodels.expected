@@ -1,0 +1,22 @@
+| Dubious member name "operator=" in summary model. |
+| Dubious member name "operator[]" in summary model. |
+| Dubious signature "(InputIt,InputIt,const Allocator &)" in summary model. |
+| Dubious signature "(InputIt,InputIt,const Compare &,const Allocator &)" in summary model. |
+| Dubious signature "(InputIterator,InputIterator,const Allocator &)" in summary model. |
+| Dubious signature "(const T &,const U &)" in summary model. |
+| Dubious signature "(const deque &)" in summary model. |
+| Dubious signature "(const forward_list &)" in summary model. |
+| Dubious signature "(const list &)" in summary model. |
+| Dubious signature "(const map &)" in summary model. |
+| Dubious signature "(const multipmap &)" in summary model. |
+| Dubious signature "(const multiset &)" in summary model. |
+| Dubious signature "(const pair &)" in summary model. |
+| Dubious signature "(const set &)" in summary model. |
+| Dubious signature "(const value_type &)" in summary model. |
+| Dubious signature "(const vector &)" in summary model. |
+| Dubious signature "(const_iterator,const T &)" in summary model. |
+| Dubious signature "(const_iterator,const value_type &)" in summary model. |
+| Dubious signature "(const_iterator,size_type,const T &)" in summary model. |
+| Dubious signature "(const_iterator,value_type &&)" in summary model. |
+| Dubious signature "(iterator,const value_type &)" in summary model. |
+| Dubious type "forward_list<T, Allocator>" in summary model. |
