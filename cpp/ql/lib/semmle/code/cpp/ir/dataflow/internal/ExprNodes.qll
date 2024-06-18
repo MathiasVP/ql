@@ -193,6 +193,33 @@ private module Cached {
     )
   }
 
+  private predicate isIRTempVariable(Operand operand) {
+    operand.getDef().(VariableAddressInstruction).getIRVariable() instanceof IRTempVariable
+  }
+
+  private predicate isIndirectOperandOfArgument(
+    IndirectOperand node, ArgumentOperand operand, Expr e, int n
+  ) {
+    node.hasOperandAndIndirectionIndex(operand, 1) and
+    e = getConvertedResultExpression(operand.getDef(), n)
+  }
+
+  private predicate isConversionStep(Operand opFrom, Operand opTo) {
+    exists(Instruction mid |
+      conversionFlow(opFrom, mid, false, false) and
+      opTo = unique( | | getAUse(mid))
+    )
+  }
+
+  private predicate irTempOperandConversionFlows(Operand op) {
+    isIRTempVariable(op)
+    or
+    exists(Operand mid |
+      irTempOperandConversionFlows(mid) and
+      isConversionStep(mid, op)
+    )
+  }
+
   /** Holds if `node` should be an `IndirectOperand` that maps `node.asExpr()` to `e`. */
   private predicate exprNodeShouldBeIndirectOperand(IndirectOperand node, Expr e, int n) {
     exists(ArgumentOperand operand |
@@ -203,9 +230,8 @@ private module Cached {
       // result. However, the instruction actually represents the _address_ of
       // the argument. So to fix this mismatch, we have the indirection of the
       // `VariableAddressInstruction` map to the expression.
-      node.hasOperandAndIndirectionIndex(operand, 1) and
-      e = getConvertedResultExpression(operand.getDef(), n) and
-      operand.getDef().(VariableAddressInstruction).getIRVariable() instanceof IRTempVariable
+      isIndirectOperandOfArgument(node, operand, e, n) and
+      irTempOperandConversionFlows(operand)
     )
   }
 
