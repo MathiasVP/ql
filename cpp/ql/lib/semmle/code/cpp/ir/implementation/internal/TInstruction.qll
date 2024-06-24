@@ -30,17 +30,6 @@ newtype TInstruction =
   TUnaliasedSsaChiInstruction(TRawInstruction primaryInstruction) { none() } or
   TUnaliasedSsaUnreachedInstruction(IRFunctionBase irFunc) {
     UnaliasedSsa::Ssa::hasUnreachedInstruction(irFunc)
-  } or
-  TAliasedSsaPhiInstruction(
-    TRawInstruction blockStartInstr, AliasedSsa::Ssa::MemoryLocation memoryLocation
-  ) {
-    AliasedSsa::Ssa::hasPhiInstruction(blockStartInstr, memoryLocation)
-  } or
-  TAliasedSsaChiInstruction(TRawInstruction primaryInstruction) {
-    AliasedSsa::Ssa::hasChiInstruction(primaryInstruction)
-  } or
-  TAliasedSsaUnreachedInstruction(IRFunctionBase irFunc) {
-    AliasedSsa::Ssa::hasUnreachedInstruction(irFunc)
   }
 
 /**
@@ -70,37 +59,5 @@ module UnaliasedSsaInstructions {
 
   TUnreachedInstruction unreachedInstruction(IRFunctionBase irFunc) {
     result = TUnaliasedSsaUnreachedInstruction(irFunc)
-  }
-}
-
-/**
- * Provides wrappers for the constructors of each branch of `TInstruction` that is used by the
- * aliased SSA stage.
- * These wrappers are not parameterized because it is not possible to invoke an IPA constructor via
- * a class alias.
- */
-module AliasedSsaInstructions {
-  class TPhiInstruction = TAliasedSsaPhiInstruction or TUnaliasedSsaPhiInstruction;
-
-  TPhiInstruction phiInstruction(
-    TRawInstruction blockStartInstr, AliasedSsa::Ssa::MemoryLocation memoryLocation
-  ) {
-    result = TAliasedSsaPhiInstruction(blockStartInstr, memoryLocation)
-  }
-
-  TPhiInstruction reusedPhiInstruction(TRawInstruction blockStartInstr) {
-    result = TUnaliasedSsaPhiInstruction(blockStartInstr, _)
-  }
-
-  class TChiInstruction = TAliasedSsaChiInstruction;
-
-  TChiInstruction chiInstruction(TRawInstruction primaryInstruction) {
-    result = TAliasedSsaChiInstruction(primaryInstruction)
-  }
-
-  class TUnreachedInstruction = TAliasedSsaUnreachedInstruction;
-
-  TUnreachedInstruction unreachedInstruction(IRFunctionBase irFunc) {
-    result = TAliasedSsaUnreachedInstruction(irFunc)
   }
 }

@@ -2,10 +2,8 @@ private import TInstruction
 private import OperandTag
 private import semmle.code.cpp.ir.implementation.raw.internal.IRConstruction as RawConstruction
 private import semmle.code.cpp.ir.implementation.unaliased_ssa.internal.SSAConstruction as UnaliasedConstruction
-private import semmle.code.cpp.ir.implementation.aliased_ssa.internal.SSAConstruction as AliasedConstruction
 private import semmle.code.cpp.ir.implementation.raw.IR as Raw
 private import semmle.code.cpp.ir.implementation.unaliased_ssa.IR as Unaliased
-private import semmle.code.cpp.ir.implementation.aliased_ssa.IR as Aliased
 private import semmle.code.cpp.ir.internal.Overlap
 
 /**
@@ -38,21 +36,7 @@ private module Internal {
       Unaliased::PhiInstruction useInstr, Unaliased::IRBlock predecessorBlock, Overlap overlap
     ) {
       exists(UnaliasedConstruction::getPhiOperandDefinition(useInstr, predecessorBlock, overlap))
-    } or
-    //// ALIASED
-    ////
-    // Until we share SSA, these will be all the phis there are. With SSA
-    // sharing, these will add to the ones that are already there.
-    // If we share SSA, be careful with the case where we remove all possible
-    // indirect writes to a variable because they're dead code. In that case it's
-    // important that we use the same definition of "is variable aliased" across
-    // the phases.
-    TAliasedPhiOperand(
-      TAliasedSsaPhiInstruction useInstr, Aliased::IRBlock predecessorBlock, Overlap overlap
-    ) {
-      exists(AliasedConstruction::getPhiOperandDefinition(useInstr, predecessorBlock, overlap))
-    } or
-    TAliasedChiOperand(TAliasedSsaChiInstruction useInstr, ChiOperandTag tag) { any() }
+    }
 }
 
 /**
@@ -156,52 +140,4 @@ module UnaliasedSsaOperands {
    * Returns the Chi operand with the specified parameters.
    */
   TChiOperand chiOperand(Unaliased::Instruction useInstr, ChiOperandTag tag) { none() }
-}
-
-/**
- * Provides wrappers for the constructors of each branch of `TOperand` that is used by the
- * aliased SSA stage.
- * These wrappers are not parameterized because it is not possible to invoke an IPA constructor via
- * a class alias.
- */
-module AliasedSsaOperands {
-  import Shared
-
-  class TPhiOperand = Internal::TAliasedPhiOperand or Internal::TUnaliasedPhiOperand;
-
-  class TChiOperand = Internal::TAliasedChiOperand;
-
-  class TNonPhiMemoryOperand = TNonSsaMemoryOperand or TChiOperand;
-
-  /**
-   * Returns the Phi operand with the specified parameters.
-   */
-  TPhiOperand phiOperand(
-    Aliased::PhiInstruction useInstr, Aliased::Instruction defInstr,
-    Aliased::IRBlock predecessorBlock, Overlap overlap
-  ) {
-    defInstr = AliasedConstruction::getPhiOperandDefinition(useInstr, predecessorBlock, overlap) and
-    result = Internal::TAliasedPhiOperand(useInstr, predecessorBlock, overlap)
-  }
-
-  /**
-   * Returns the Phi operand with the specified parameters.
-   */
-  TPhiOperand reusedPhiOperand(
-    Aliased::PhiInstruction useInstr, Aliased::Instruction defInstr,
-    Aliased::IRBlock predecessorBlock, Overlap overlap
-  ) {
-    exists(Unaliased::IRBlock oldBlock |
-      predecessorBlock = AliasedConstruction::getNewBlock(oldBlock) and
-      result = Internal::TUnaliasedPhiOperand(useInstr, oldBlock, _) and
-      defInstr = AliasedConstruction::getPhiOperandDefinition(useInstr, predecessorBlock, overlap)
-    )
-  }
-
-  /**
-   * Returns the Chi operand with the specified parameters.
-   */
-  TChiOperand chiOperand(TAliasedSsaChiInstruction useInstr, ChiOperandTag tag) {
-    result = Internal::TAliasedChiOperand(useInstr, tag)
-  }
 }
