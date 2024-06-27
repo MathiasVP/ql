@@ -191,6 +191,9 @@ private predicate operandIsPropagated(Operand operand, IntValue bitOffset, Instr
     // A copy propagates the source value.
     operand = instr.(CopyInstruction).getSourceValueOperand() and bitOffset = 0
   )
+  or
+  instr.(PhiInstruction).getAnInputOperand() = operand and
+  bitOffset = 0
 }
 
 private predicate operandEscapesNonReturn(Operand operand) {
@@ -211,9 +214,6 @@ private predicate operandEscapesNonReturn(Operand operand) {
   )
   or
   isOnlyEscapesViaReturnArgument(operand) and resultEscapesNonReturn(operand.getUse())
-  or
-  operand instanceof PhiInputOperand and
-  resultEscapesNonReturn(operand.getUse())
   or
   operandEscapesDomain(operand)
 }
@@ -236,9 +236,6 @@ private predicate operandMayReachReturn(Operand operand) {
   operand.getUse() instanceof ReturnValueInstruction
   or
   isOnlyEscapesViaReturnArgument(operand) and resultMayReachReturn(operand.getUse())
-  or
-  operand instanceof PhiInputOperand and
-  resultMayReachReturn(operand.getUse())
 }
 
 private predicate operandReturned(Operand operand, IntValue bitOffset) {
