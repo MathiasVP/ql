@@ -16,49 +16,41 @@ private predicate isIndirectOrBufferMemoryAccess(MemoryAccessKind kind) {
   kind instanceof BufferMemoryAccess
 }
 
+predicate hasMemoryAccess(
+  AddressOperand addrOperand, Allocation var, IntValue startBitOffset, boolean grouped
+) {
+  addressOperandAllocationAndOffset(addrOperand, var, startBitOffset) and
+  if strictcount(Allocation alloc | addressOperandAllocationAndOffset(addrOperand, alloc, _)) > 1
+  then grouped = true
+  else grouped = false
+}
+
 private predicate hasResultMemoryAccess(
   Instruction instr, Allocation var, IRType type, Language::LanguageType languageType,
   IntValue startBitOffset, IntValue endBitOffset, boolean isMayAccess, boolean grouped
 ) {
-  exists(AddressOperand addrOperand |
-    addrOperand = instr.getResultAddressOperand() and
-    addressOperandAllocationAndOffset(addrOperand, var, startBitOffset) and
-    languageType = instr.getResultLanguageType() and
-    type = languageType.getIRType() and
-    isIndirectOrBufferMemoryAccess(instr.getResultMemoryAccess()) and
-    (if instr.hasResultMayMemoryAccess() then isMayAccess = true else isMayAccess = false) and
-    if exists(type.getByteSize())
-    then endBitOffset = Ints::add(startBitOffset, Ints::mul(type.getByteSize(), 8))
-    else endBitOffset = Ints::unknown()
-  |
-    if strictcount(Allocation alloc | addressOperandAllocationAndOffset(addrOperand, alloc, _)) > 1
-    then grouped = true
-    else grouped = false
-  )
+  hasMemoryAccess(instr.getResultAddressOperand(), var, startBitOffset, grouped) and
+  languageType = instr.getResultLanguageType() and
+  type = languageType.getIRType() and
+  isIndirectOrBufferMemoryAccess(instr.getResultMemoryAccess()) and
+  (if instr.hasResultMayMemoryAccess() then isMayAccess = true else isMayAccess = false) and
+  if exists(type.getByteSize())
+  then endBitOffset = Ints::add(startBitOffset, Ints::mul(type.getByteSize(), 8))
+  else endBitOffset = Ints::unknown()
 }
 
 private predicate hasOperandMemoryAccess(
   MemoryOperand operand, Allocation var, IRType type, Language::LanguageType languageType,
   IntValue startBitOffset, IntValue endBitOffset, boolean isMayAccess, boolean grouped
 ) {
-  exists(AddressOperand addrOperand |
-    addrOperand = operand.getAddressOperand() and
-    addressOperandAllocationAndOffset(addrOperand, var, startBitOffset) and
-    languageType = operand.getLanguageType() and
-    type = languageType.getIRType() and
-    isIndirectOrBufferMemoryAccess(operand.getMemoryAccess()) and
-    (if operand.hasMayReadMemoryAccess() then isMayAccess = true else isMayAccess = false) and
-    if exists(type.getByteSize())
-    then endBitOffset = Ints::add(startBitOffset, Ints::mul(type.getByteSize(), 8))
-    else endBitOffset = Ints::unknown()
-  |
-    if
-      strictcount(Allocation alloc |
-        addressOperandAllocationAndOffset(addrOperand, alloc, startBitOffset)
-      ) > 1
-    then grouped = true
-    else grouped = false
-  )
+  hasMemoryAccess(operand.getAddressOperand(), var, startBitOffset, grouped) and
+  languageType = operand.getLanguageType() and
+  type = languageType.getIRType() and
+  isIndirectOrBufferMemoryAccess(operand.getMemoryAccess()) and
+  (if operand.hasMayReadMemoryAccess() then isMayAccess = true else isMayAccess = false) and
+  if exists(type.getByteSize())
+  then endBitOffset = Ints::add(startBitOffset, Ints::mul(type.getByteSize(), 8))
+  else endBitOffset = Ints::unknown()
 }
 
 newtype TVariableGroup =
