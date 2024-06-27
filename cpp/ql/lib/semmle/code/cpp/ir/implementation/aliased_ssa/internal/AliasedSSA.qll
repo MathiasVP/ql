@@ -53,14 +53,11 @@ private predicate hasOperandMemoryAccess(
   else endBitOffset = Ints::unknown()
 }
 
-newtype TVariableGroup =
-  TInstructionVariableGroup(
-    Instruction instr, IRType type, Language::LanguageType languageType, int startBitOffset,
-    int endBitOffset, boolean isMayAccess
-  ) {
-    hasResultMemoryAccess(instr, _, type, _, startBitOffset, endBitOffset, isMayAccess, true) and
-    languageType = type.getCanonicalLanguageType()
-  } //or
+Allocation getAnAllocation(Instruction instr) {
+  hasResultMemoryAccess(instr, result, _, _, _, _, _, true)
+}
+
+private module AllocationSet = QlBuiltins::InternSets<Instruction, Allocation, getAnAllocation/1>;
 
 // TOperandVariableGroup(
 //   MemoryOperand operand, IRType type, Language::LanguageType languageType, int startBitOffset,
@@ -69,7 +66,7 @@ newtype TVariableGroup =
 //   hasOperandMemoryAccess(operand, _, type, _, startBitOffset, endBitOffset, isMayAccess, true) and
 //   languageType = type.getCanonicalLanguageType()
 // }
-abstract class VariableGroup extends TVariableGroup {
+abstract class VariableGroup extends AllocationSet::Set {
   abstract Allocation getAnAllocation();
 
   string toString() { result = "{" + strictconcat(this.getAnAllocation().toString(), ", ") + "}" }
@@ -81,41 +78,18 @@ abstract class VariableGroup extends TVariableGroup {
   abstract Language::LanguageType getType();
 }
 
-class InstructionVariableGroup extends TInstructionVariableGroup, VariableGroup {
-  Instruction instr;
-
-  InstructionVariableGroup() { this = TInstructionVariableGroup(instr, _, _, _, _, _) }
-
-  final override Location getLocation() { result = this.getInstruction().getLocation() }
+class InstructionVariableGroup extends VariableGroup {
+  final override Location getLocation() { result = this.getIRFunction().getLocation() }
 
   final override IRFunction getIRFunction() {
-    result = this.getInstruction().getEnclosingIRFunction()
+    result = unique( | | this.getAnAllocation().getEnclosingIRFunction())
   }
-
-  Instruction getInstruction() { result = instr }
 
   final override Language::LanguageType getType() {
-    if
-      strictcount(Language::LanguageType accessType |
-        hasResultMemoryAccess(instr, _, _, accessType, _, _, _, true)
-      ) = 1
-    then
-      // All of the accesses have the same `LanguageType`, so just use that.
-      hasResultMemoryAccess(instr, _, _, result, _, _, _, true)
-    else
-      exists(IRType type |
-        hasResultMemoryAccess(instr, _, _, _, _, _, _, true) and
-        // There is no single type for all accesses, so just use the canonical one for this `IRType`.
-        result = type.getCanonicalLanguageType()
-      )
+    result = this.getAnAllocation().getIRType().getCanonicalLanguageType()
   }
 
-  final override Allocation getAnAllocation() {
-    exists(IRType type, int startBitOffset, int endBitOffset, boolean isMayAccess |
-      this = TInstructionVariableGroup(instr, type, _, startBitOffset, endBitOffset, isMayAccess) and
-      hasResultMemoryAccess(instr, result, type, _, startBitOffset, endBitOffset, isMayAccess, true)
-    )
-  }
+  final override Allocation getAnAllocation() { super.contains(result) }
 }
 
 // class OperandVariableGroup extends TOperandVariableGroup, VariableGroup {
