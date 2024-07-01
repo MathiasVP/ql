@@ -251,12 +251,8 @@ abstract class AllocationMemoryLocation extends MemoryLocation {
   Allocation var;
   boolean isMayAccess;
 
-  AllocationMemoryLocation() {
-    this instanceof TMemoryLocation and
-    isMayAccess = false
-    or
-    isMayAccess = true // Just ensures that `isMayAccess` is bound.
-  }
+  bindingset[isMayAccess]
+  AllocationMemoryLocation() { any() }
 
   final override VirtualVariable getVirtualVariable() {
     if allocationEscapes(var)
