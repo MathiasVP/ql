@@ -18977,9 +18977,6 @@ try_except.c:
 #    6|     v6_6(void)            = AliasedUse                     : ~m11_5
 #    6|     v6_7(void)            = ExitFunction                   : 
 
-#    6|   Block 1
-#    6|     v6_8(void) = Unreached : 
-
 #   18| void g()
 #   18|   Block 0
 #   18|     v18_1(void)           = EnterFunction                  : 
@@ -19047,9 +19044,6 @@ try_except.c:
 #   32|     v32_8(void)    = AliasedUse   : ~m42_1
 #   32|     v32_9(void)    = ExitFunction : 
 
-#   32|   Block 3
-#   32|     v32_10(void) = Unreached : 
-
 try_except.cpp:
 #    6| void f_cpp()
 #    6|   Block 0
@@ -19080,9 +19074,6 @@ try_except.cpp:
 #    6|     v6_5(void)            = ReturnVoid                     : 
 #    6|     v6_6(void)            = AliasedUse                     : ~m11_5
 #    6|     v6_7(void)            = ExitFunction                   : 
-
-#    6|   Block 1
-#    6|     v6_8(void) = Unreached : 
 
 #   18| void g_cpp()
 #   18|   Block 0
@@ -19152,9 +19143,6 @@ try_except.cpp:
 #   32|     v32_7(void)    = ReturnVoid   : 
 #   32|     v32_8(void)    = AliasedUse   : ~m42_1
 #   32|     v32_9(void)    = ExitFunction : 
-
-#   32|   Block 3
-#   32|     v32_10(void) = Unreached : 
 
 #   44| void throw_cpp(int)
 #   44|   Block 0

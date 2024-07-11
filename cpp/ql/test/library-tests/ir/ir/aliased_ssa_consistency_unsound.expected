@@ -12,6 +12,10 @@ unnecessaryPhiInstruction
 memoryOperandDefinitionIsUnmodeled
 operandAcrossFunctions
 instructionWithoutUniqueBlock
+| try_except.c:6:6:6:6 | Unreached: f | Instruction 'Unreached: f' is a member of 0 blocks in function '$@'. | try_except.c:6:6:6:6 | void f() | void f() |
+| try_except.c:32:6:32:6 | Unreached: h | Instruction 'Unreached: h' is a member of 0 blocks in function '$@'. | try_except.c:32:6:32:6 | void h(int) | void h(int) |
+| try_except.cpp:6:6:6:10 | Unreached: f_cpp | Instruction 'Unreached: f_cpp' is a member of 0 blocks in function '$@'. | try_except.cpp:6:6:6:10 | void f_cpp() | void f_cpp() |
+| try_except.cpp:32:6:32:10 | Unreached: h_cpp | Instruction 'Unreached: h_cpp' is a member of 0 blocks in function '$@'. | try_except.cpp:32:6:32:10 | void h_cpp(int) | void h_cpp(int) |
 missingCanonicalLanguageType
 multipleCanonicalLanguageTypes
 containsLoopOfForwardEdges

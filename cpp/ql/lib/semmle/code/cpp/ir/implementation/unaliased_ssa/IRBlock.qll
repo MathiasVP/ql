@@ -115,21 +115,42 @@ class IRBlockBase extends TIRBlock {
   }
 }
 
+private TIRBlock getABlockSuccessor(TIRBlock b) { blockSuccessor(b, result) }
+
+private TIRBlock getABlockPredecessor(TIRBlock b) { b = getABlockSuccessor(result) }
+
+pragma[nomagic]
+private IRBlockBase getEntryBlock(IRFunction f) {
+  result.getFirstInstruction() = f.getEnterFunctionInstruction()
+}
+
+private predicate isReachableFromFunctionEntry(TIRBlock b) {
+  exists(Instruction firstInstr, IRFunction f |
+    b = MkIRBlock(firstInstr) and
+    f = firstInstr.getEnclosingIRFunction() and
+    b = getEntryBlock(f)
+  )
+  or
+  isReachableFromFunctionEntry(getABlockPredecessor(b))
+}
+
 /**
  * A basic block with additional information about its predecessor and successor edges. Each edge
  * corresponds to the control flow between the last instruction of one block and the first
  * instruction of another block.
  */
 class IRBlock extends IRBlockBase {
+  IRBlock() { isReachableFromFunctionEntry(this) }
+
   /**
    * Gets a block to which control flows directly from this block.
    */
-  final IRBlock getASuccessor() { blockSuccessor(this, result) }
+  final IRBlock getASuccessor() { result = getABlockSuccessor(this) }
 
   /**
    * Gets a block from which control flows directly to this block.
    */
-  final IRBlock getAPredecessor() { blockSuccessor(result, this) }
+  final IRBlock getAPredecessor() { result = getABlockPredecessor(this) }
 
   /**
    * Gets the block to which control flows directly from this block along an edge of kind `kind`.
@@ -231,10 +252,7 @@ class IRBlock extends IRBlockBase {
   /**
    * Holds if this block is reachable from the entry block of its function.
    */
-  final predicate isReachableFromFunctionEntry() {
-    this = this.getEnclosingIRFunction().getEntryBlock() or
-    this.getAPredecessor().isReachableFromFunctionEntry()
-  }
+  final predicate isReachableFromFunctionEntry() { isReachableFromFunctionEntry(this) }
 }
 
 private predicate startsBasicBlock(Instruction instr) {
