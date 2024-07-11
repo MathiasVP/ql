@@ -412,20 +412,32 @@ Configuration::Allocation getAddressOperandAllocation(AddressOperand addrOperand
 }
 
 /**
+ * Holds if `addrOperand` is at offset `bitOffset` from `base`. The offset may
+ * be `unknown()`.
+ */
+private predicate addressOperandAllocationAndOffset0(
+  AddressOperand addrOperand, Instruction base, IntValue bitOffset
+) {
+  hasBaseAndOffset(addrOperand, base, bitOffset) and
+  not exists(Instruction previousBase |
+    hasBaseAndOffset(addrOperand, pragma[only_bind_out](previousBase), _) and
+    previousBase = base.getAnOperand().getDef()
+  )
+}
+
+/**
  * Holds if `addrOperand` is at offset `bitOffset` from a base instruction of `allocation`. The
  * offset may be `unknown()`.
+ *
+ * Only holds for `AddressOperand` for which all base instructions belong to some allocation.
  */
 predicate addressOperandAllocationAndOffset(
   AddressOperand addrOperand, Configuration::Allocation allocation, IntValue bitOffset
 ) {
-  exists(Instruction base |
-    allocation.getABaseInstruction() = base and
-    hasBaseAndOffset(addrOperand, base, bitOffset) and
-    not exists(Instruction previousBase |
-      hasBaseAndOffset(addrOperand, pragma[only_bind_out](previousBase), _) and
-      previousBase = base.getAnOperand().getDef()
-    )
-  )
+  forex(Instruction base | addressOperandAllocationAndOffset0(addrOperand, base, _) |
+    exists(Configuration::Allocation alloc | alloc.getABaseInstruction() = base)
+  ) and
+  addressOperandAllocationAndOffset0(addrOperand, allocation.getABaseInstruction(), bitOffset)
 }
 
 /**

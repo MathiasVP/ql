@@ -18834,18 +18834,17 @@ ir.cpp:
 #-----|   Goto -> Block 2
 
 # 2670|   Block 2
-# 2670|     m2670_1(int)            = Phi                      : from 1:m2667_3
-# 2670|     m2670_2(int *)          = Phi                      : from 0:m2665_3, from 1:m2668_4
-# 2670|     r2670_3(glval<unknown>) = FunctionAddress[use_int] : 
-# 2670|     r2670_4(glval<int *>)   = VariableAddress[data]    : 
-# 2670|     r2670_5(int *)          = Load[data]               : &:r2670_4, m2670_2
-# 2670|     r2670_6(int)            = Load[?]                  : &:r2670_5, ~m2670_1
-# 2670|     v2670_7(void)           = Call[use_int]            : func:r2670_3, 0:r2670_6
-# 2670|     m2670_8(unknown)        = ^CallSideEffect          : ~m2663_4
-# 2670|     m2670_9(unknown)        = Chi                      : total:m2663_4, partial:m2670_8
+# 2670|     m2670_1(int *)          = Phi                      : from 0:m2665_3, from 1:m2668_4
+# 2670|     r2670_2(glval<unknown>) = FunctionAddress[use_int] : 
+# 2670|     r2670_3(glval<int *>)   = VariableAddress[data]    : 
+# 2670|     r2670_4(int *)          = Load[data]               : &:r2670_3, m2670_1
+# 2670|     r2670_5(int)            = Load[?]                  : &:r2670_4, ~m2663_4
+# 2670|     v2670_6(void)           = Call[use_int]            : func:r2670_2, 0:r2670_5
+# 2670|     m2670_7(unknown)        = ^CallSideEffect          : ~m2663_4
+# 2670|     m2670_8(unknown)        = Chi                      : total:m2663_4, partial:m2670_7
 # 2671|     v2671_1(void)           = NoOp                     : 
 # 2663|     v2663_7(void)           = ReturnVoid               : 
-# 2663|     v2663_8(void)           = AliasedUse               : ~m2670_9
+# 2663|     v2663_8(void)           = AliasedUse               : ~m2670_8
 # 2663|     v2663_9(void)           = ExitFunction             : 
 
 # 2684| void test(bool)
