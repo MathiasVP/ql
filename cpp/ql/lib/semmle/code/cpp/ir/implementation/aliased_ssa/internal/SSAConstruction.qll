@@ -302,6 +302,7 @@ private module Cached {
   Instruction getPhiOperandDefinition(
     Instruction instr, IRBlock newPredecessorBlock, Overlap overlap
   ) {
+    instr instanceof PhiInstruction and
     exists(
       Alias::MemoryLocation defLocation, Alias::MemoryLocation useLocation, OldBlock phiBlock,
       OldBlock predBlock, OldBlock defBlock, int defOffset, Alias::MemoryLocation actualDefLocation
@@ -332,7 +333,7 @@ private module Cached {
   }
 
   cached
-  Instruction getPhiInstructionBlockStart(PhiInstruction instr) {
+  TInstruction getPhiInstructionBlockStart(TPhiInstruction instr) {
     exists(OldBlock oldBlock |
       (
         instr = getPhi(oldBlock, _)
@@ -351,7 +352,7 @@ private module Cached {
    */
 
   cached
-  Instruction getInstructionSuccessor(Instruction instruction, EdgeKind kind) {
+  TStageInstruction getInstructionSuccessor(TStageInstruction instruction, EdgeKind kind) {
     if hasChiNode(_, getOldInstruction(instruction))
     then
       result = getChi(getOldInstruction(instruction)) and
@@ -365,14 +366,14 @@ private module Cached {
         ) and
         (
           if Reachability::isInfeasibleInstructionSuccessor(oldInstruction, kind)
-          then result = unreachedInstruction(instruction.getEnclosingIRFunction())
+          then result = unreachedInstruction(getInstructionEnclosingIRFunction(instruction))
           else result = getNewInstruction(oldInstruction.getSuccessor(kind))
         )
       )
   }
 
   cached
-  Instruction getInstructionBackEdgeSuccessor(Instruction instruction, EdgeKind kind) {
+  TStageInstruction getInstructionBackEdgeSuccessor(TStageInstruction instruction, EdgeKind kind) {
     exists(OldInstruction oldInstruction |
       not Reachability::isInfeasibleInstructionSuccessor(oldInstruction, kind) and
       // There is only one case for the translation into `result` because the
@@ -441,7 +442,7 @@ private module Cached {
    * in the characteristic predicates of the `Instruction` subclasses.
    */
   cached
-  predicate getInstructionOpcode(Opcode opcode, Instruction instr) {
+  predicate getInstructionOpcode(Opcode opcode, TStageInstruction instr) {
     opcode = getOldInstruction(instr).getOpcode()
     or
     instr = phiInstruction(_, _) and opcode instanceof Opcode::Phi
@@ -452,7 +453,7 @@ private module Cached {
   }
 
   cached
-  IRFunctionBase getInstructionEnclosingIRFunction(Instruction instr) {
+  IRFunctionBase getInstructionEnclosingIRFunction(TStageInstruction instr) {
     result = getOldInstruction(instr).getEnclosingIRFunction()
     or
     exists(OldInstruction blockStartInstr |
@@ -481,13 +482,17 @@ private module Cached {
   }
 }
 
-private Instruction getNewInstruction(OldInstruction instr) { getOldInstruction(result) = instr }
+private TStageInstruction getNewInstruction(OldInstruction instr) {
+  getOldInstruction(result) = instr
+}
 
-private OldInstruction getOldInstruction(Instruction instr) { instr = result }
+private OldInstruction getOldInstruction(TStageInstruction instr) { instr = result }
 
-private ChiInstruction getChi(OldInstruction primaryInstr) { result = chiInstruction(primaryInstr) }
+private TChiInstruction getChi(OldInstruction primaryInstr) {
+  result = chiInstruction(primaryInstr)
+}
 
-private PhiInstruction getPhi(OldBlock defBlock, Alias::MemoryLocation defLocation) {
+private TPhiInstruction getPhi(OldBlock defBlock, Alias::MemoryLocation defLocation) {
   result = phiInstruction(defBlock.getFirstInstruction(), defLocation)
 }
 

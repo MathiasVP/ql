@@ -37,7 +37,14 @@ private predicate blockSortKeys(
  */
 class IRBlockBase extends TIRBlock {
   /** Gets a textual representation of this block. */
-  final string toString() { result = getFirstInstruction(this).toString() }
+  final string toString() {
+    exists(Construction::TStageInstruction firstInstr, Opcode opcode, Language::AST ast |
+      this = MkIRBlock(firstInstr) and
+      Construction::getInstructionOpcode(opcode, firstInstr) and
+      ast = Construction::getInstructionAst(firstInstr) and
+      result = opcode.toString() + ": " + ast.toString()
+    )
+  }
 
   /** Gets the source location of the first non-`Phi` instruction in this block. */
   final Language::Location getLocation() { result = this.getFirstInstruction().getLocation() }
@@ -66,13 +73,22 @@ class IRBlockBase extends TIRBlock {
   /**
    * Gets the `index`th non-`Phi` instruction in this block.
    */
-  final Instruction getInstruction(int index) { result = getInstruction(this, index) }
+  final Instruction getInstruction(int index) { result = this.getInstruction0(index) }
+
+  /**
+   * Gets the `index`th non-`Phi` instruction in this block.
+   */
+  final Construction::TStageInstruction getInstruction0(int index) {
+    result = getInstruction(this, index)
+  }
 
   /**
    * Get the `Phi` instructions that appear at the start of this block.
    */
-  final PhiInstruction getAPhiInstruction() {
-    Construction::getPhiInstructionBlockStart(result) = this.getFirstInstruction()
+  final PhiInstruction getAPhiInstruction() { result = this.getAPhiInstruction0() }
+
+  final Construction::TStageInstruction getAPhiInstruction0() {
+    Construction::getPhiInstructionBlockStart(result) = getFirstInstruction(this)
   }
 
   /**
@@ -83,10 +99,19 @@ class IRBlockBase extends TIRBlock {
     result = this.getAPhiInstruction()
   }
 
+  final Construction::TStageInstruction getAnInstruction0() {
+    result = this.getInstruction0(_) or
+    result = this.getAPhiInstruction0()
+  }
+
   /**
    * Gets the first non-`Phi` instruction in this block.
    */
-  final Instruction getFirstInstruction() { result = getFirstInstruction(this) }
+  final Instruction getFirstInstruction() { result = this.getFirstInstruction0() }
+
+  final Construction::TStageInstruction getFirstInstruction0() {
+    result = getFirstInstruction(this)
+  }
 
   /**
    * Gets the last instruction in this block.
@@ -104,14 +129,17 @@ class IRBlockBase extends TIRBlock {
    * Gets the `IRFunction` that contains this block.
    */
   final IRFunction getEnclosingIRFunction() {
-    result = getFirstInstruction(this).getEnclosingIRFunction()
+    exists(Construction::TStageInstruction firstInstr |
+      this = MkIRBlock(firstInstr) and
+      result = Construction::getInstructionEnclosingIRFunction(firstInstr)
+    )
   }
 
   /**
    * Gets the `Function` that contains this block.
    */
   final Language::Declaration getEnclosingFunction() {
-    result = getFirstInstruction(this).getEnclosingFunction()
+    result = this.getEnclosingIRFunction().getFunction()
   }
 }
 
@@ -121,13 +149,13 @@ private TIRBlock getABlockPredecessor(TIRBlock b) { b = getABlockSuccessor(resul
 
 pragma[nomagic]
 private IRBlockBase getEntryBlock(IRFunction f) {
-  result.getFirstInstruction() = f.getEnterFunctionInstruction()
+  result.getFirstInstruction0() = f.getEnterFunctionInstruction()
 }
 
 private predicate isReachableFromFunctionEntry(TIRBlock b) {
-  exists(Instruction firstInstr, IRFunction f |
+  exists(Construction::TStageInstruction firstInstr, IRFunction f |
     b = MkIRBlock(firstInstr) and
-    f = firstInstr.getEnclosingIRFunction() and
+    f = Construction::getInstructionEnclosingIRFunction(firstInstr) and
     b = getEntryBlock(f)
   )
   or
@@ -255,20 +283,22 @@ class IRBlock extends IRBlockBase {
   final predicate isReachableFromFunctionEntry() { isReachableFromFunctionEntry(this) }
 }
 
-private predicate startsBasicBlock(Instruction instr) {
-  not instr instanceof PhiInstruction and
+private predicate startsBasicBlock(Construction::TStageInstruction instr) {
+  not instr instanceof Construction::SsaInstructions::TPhiInstruction and
   not adjacentInBlock(_, instr)
 }
 
 /** Holds if `i2` follows `i1` in a `IRBlock`. */
-private predicate adjacentInBlock(Instruction i1, Instruction i2) {
+private predicate adjacentInBlock(
+  Construction::TStageInstruction i1, Construction::TStageInstruction i2
+) {
   // - i2 must be the only successor of i1
-  i2 = unique(Instruction i | i = i1.getASuccessor()) and
+  i2 = unique( | | Construction::getInstructionSuccessor(i1, _)) and
   // - i1 must be the only predecessor of i2
-  i1 = unique(Instruction i | i.getASuccessor() = i2) and
+  i1 = unique(Construction::TStageInstruction i | Construction::getInstructionSuccessor(i, _) = i2) and
   // - The edge between the two must be a GotoEdge. We just check that one
   //   exists since we've already checked that it's unique.
-  exists(GotoEdge edgeKind | exists(i1.getSuccessor(edgeKind))) and
+  exists(GotoEdge edgeKind | exists(Construction::getInstructionSuccessor(i1, edgeKind))) and
   // - The edge must not be a back edge. This means we get the same back edges
   //   in the basic-block graph as we do in the raw CFG.
   not exists(Construction::getInstructionBackEdgeSuccessor(i1, _))
@@ -284,15 +314,17 @@ private predicate isEntryBlock(TIRBlock block) {
 cached
 private module Cached {
   cached
-  newtype TIRBlock = MkIRBlock(Instruction firstInstr) { startsBasicBlock(firstInstr) }
+  newtype TIRBlock =
+    MkIRBlock(Construction::TStageInstruction firstInstr) { startsBasicBlock(firstInstr) }
 
   /** Holds if `i` is the `index`th instruction the block starting with `first`. */
-  private Instruction getInstructionFromFirst(Instruction first, int index) =
-    shortestDistances(startsBasicBlock/1, adjacentInBlock/2)(first, result, index)
+  private Construction::TStageInstruction getInstructionFromFirst(
+    Construction::TStageInstruction first, int index
+  ) = shortestDistances(startsBasicBlock/1, adjacentInBlock/2)(first, result, index)
 
   /** Holds if `i` is the `index`th instruction in `block`. */
   cached
-  Instruction getInstruction(TIRBlock block, int index) {
+  Construction::TStageInstruction getInstruction(TIRBlock block, int index) {
     result = getInstructionFromFirst(getFirstInstruction(block), index)
   }
 
@@ -301,9 +333,9 @@ private module Cached {
 
   cached
   predicate blockSuccessor(TIRBlock pred, TIRBlock succ, EdgeKind kind) {
-    exists(Instruction predLast, Instruction succFirst |
+    exists(Construction::TStageInstruction predLast, Construction::TStageInstruction succFirst |
       predLast = getInstruction(pred, getInstructionCount(pred) - 1) and
-      succFirst = predLast.getSuccessor(kind) and
+      succFirst = Construction::getInstructionSuccessor(predLast, kind) and
       succ = MkIRBlock(succFirst)
     )
   }
@@ -362,7 +394,9 @@ private module Cached {
     idominance(isEntryBlock/1, blockSuccessor/2)(_, dominator, block)
 }
 
-private Instruction getFirstInstruction(TIRBlock block) { block = MkIRBlock(result) }
+private Construction::TStageInstruction getFirstInstruction(TIRBlock block) {
+  block = MkIRBlock(result)
+}
 
 private predicate blockFunctionExit(IRBlock exit) {
   exit.getLastInstruction() instanceof ExitFunctionInstruction

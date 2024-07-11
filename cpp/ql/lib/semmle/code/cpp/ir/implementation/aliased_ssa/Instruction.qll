@@ -35,6 +35,7 @@ private Instruction getAnInstructionAtLine(IRFunction irFunc, Language::File fil
  */
 class Instruction extends Construction::TStageInstruction {
   Instruction() {
+    exists(IRBlock b | b.getAnInstruction0() = this) and
     // The base `TStageInstruction` type is a superset of the actual instructions appearing in this
     // stage. This call lets the stage filter out the ones that are not reused from raw IR.
     Construction::hasInstruction(this)

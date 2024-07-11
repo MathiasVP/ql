@@ -16,8 +16,9 @@ class IRFunction extends IRFunctionBase {
    * Gets the entry point for this function.
    */
   pragma[noinline]
-  final EnterFunctionInstruction getEnterFunctionInstruction() {
-    result.getEnclosingIRFunction() = this
+  final Construction::TStageInstruction getEnterFunctionInstruction() {
+    Construction::getInstructionEnclosingIRFunction(result) = this and
+    Construction::getInstructionOpcode(any(Opcode::EnterFunction opcode), result)
   }
 
   /**
