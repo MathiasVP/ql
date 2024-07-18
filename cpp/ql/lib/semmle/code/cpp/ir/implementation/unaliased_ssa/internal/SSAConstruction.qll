@@ -218,12 +218,13 @@ private module Cached {
     exists(
       OldBlock useBlock, int useRank, Alias::MemoryLocation useLocation,
       Alias::MemoryLocation defLocation, OldBlock defBlock, int defRank, int defOffset,
-      Alias::MemoryLocation actualDefLocation
+      Alias::MemoryLocation actualDefLocation, Overlap overlap0
     |
       useLocation = Alias::getOperandMemoryLocation(oldOperand) and
       hasUseAtRank(useLocation, useBlock, useRank, oldInstruction) and
       definitionReachesUse(useLocation, defBlock, defRank, useBlock, useRank) and
-      hasDefinitionAtRank(useLocation, defLocation, defBlock, defRank, defOffset) and
+      hasDefinitionAtRank(useLocation, overlap0, defBlock, defRank, defOffset) and
+      overlap0 = Alias::getOverlap(defLocation, useLocation) and
       instr = getDefinitionOrChiInstruction(defBlock, defOffset, defLocation, actualDefLocation) and
       overlap = Alias::getOverlap(actualDefLocation, useLocation)
     )
@@ -377,10 +378,12 @@ private module Cached {
   ) {
     exists(
       Alias::MemoryLocation defLocation, Alias::MemoryLocation useLocation, OldBlock phiBlock,
-      OldBlock predBlock, OldBlock defBlock, int defOffset, Alias::MemoryLocation actualDefLocation
+      OldBlock predBlock, OldBlock defBlock, int defOffset, Alias::MemoryLocation actualDefLocation,
+      Overlap overlap0
     |
-      hasPhiOperandDefinition(defLocation, useLocation, phiBlock, predBlock, defBlock, defOffset) and
+      hasPhiOperandDefinition(overlap0, useLocation, phiBlock, predBlock, defBlock, defOffset) and
       instr = getPhi(phiBlock, useLocation) and
+      overlap0 = Alias::getOverlap(defLocation, useLocation) and
       newPredecessorBlock = getNewBlock(predBlock) and
       result = getDefinitionOrChiInstruction(defBlock, defOffset, defLocation, actualDefLocation) and
       overlap = Alias::getOverlap(actualDefLocation, useLocation)
@@ -975,7 +978,8 @@ module DefUse {
     )
     or
     defOffset = -1 and
-    hasDefinition(_, defLocation, defBlock, defOffset) and
+    // If defOffset = -1 then defLocation = useLocation
+    hasDefinition(defLocation, _, defBlock, defOffset) and
     result = getPhi(defBlock, defLocation) and
     actualDefLocation = defLocation
     or
@@ -1159,9 +1163,9 @@ module DefUse {
    * This predicate does not include definitions for Phi nodes.
    */
   private predicate hasNonPhiDefinition(
-    Alias::MemoryLocation useLocation, Alias::MemoryLocation defLocation, OldBlock block, int offset
+    Alias::MemoryLocation useLocation, Overlap overlap, OldBlock block, int offset
   ) {
-    exists(OldInstruction def, Overlap overlap, int index |
+    exists(OldInstruction def, int index, Alias::MemoryLocation defLocation |
       defLocation = Alias::getResultMemoryLocation(def) and
       block.getInstruction(index) = def and
       overlap = Alias::getOverlap(defLocation, useLocation) and
@@ -1170,7 +1174,10 @@ module DefUse {
       else offset = getNonChiOffset(index, block) // The use will be connected to the definition on the original instruction.
     )
     or
-    exists(UninitializedGroupInstruction initGroup, int index, Overlap overlap, VariableGroup vg |
+    exists(
+      UninitializedGroupInstruction initGroup, int index, VariableGroup vg,
+      Alias::MemoryLocation defLocation
+    |
       initGroup.getEnclosingIRFunction().getEntryBlock() = getNewBlock(block) and
       vg = defLocation.(Alias::GroupedMemoryLocation).getGroup() and
       // EnterFunction + AliasedDefinition + InitializeNonLocal + index
@@ -1188,34 +1195,35 @@ module DefUse {
    * This predicate includes definitions for Phi nodes (at offset -1).
    */
   private predicate hasDefinition(
-    Alias::MemoryLocation useLocation, Alias::MemoryLocation defLocation, OldBlock block, int offset
+    Alias::MemoryLocation useLocation, Overlap overlap, OldBlock block, int offset
   ) {
     (
       // If there is a Phi node for the use location itself, treat that as a definition at offset -1.
       offset = -1 and
       if definitionHasPhiNode(useLocation, block)
-      then defLocation = useLocation
-      else (
-        definitionHasPhiNode(defLocation, block) and
-        defLocation = useLocation.getVirtualVariable() and
-        // Handle the unusual case where a virtual variable does not overlap one of its member
-        // locations. For example, a definition of the virtual variable representing all aliased
-        // memory does not overlap a use of a string literal, because the contents of a string
-        // literal can never be redefined. The string literal's location could still be a member of
-        // the `AliasedVirtualVariable` due to something like:
-        // ```
-        // char s[10];
-        // strcpy(s, p);
-        // const char* p = b ? "SomeLiteral" : s;
-        // return p[3];
-        // ```
-        // In the above example, `p[3]` may access either the string literal or the local variable
-        // `s`, so both of those locations must be members of the `AliasedVirtualVariable`.
-        exists(Alias::getOverlap(defLocation, useLocation))
-      )
+      then overlap = Alias::getOverlap(useLocation, useLocation)
+      else
+        exists(Alias::MemoryLocation defLocation |
+          definitionHasPhiNode(defLocation, block) and
+          defLocation = useLocation.getVirtualVariable() and
+          // Handle the unusual case where a virtual variable does not overlap one of its member
+          // locations. For example, a definition of the virtual variable representing all aliased
+          // memory does not overlap a use of a string literal, because the contents of a string
+          // literal can never be redefined. The string literal's location could still be a member of
+          // the `AliasedVirtualVariable` due to something like:
+          // ```
+          // char s[10];
+          // strcpy(s, p);
+          // const char* p = b ? "SomeLiteral" : s;
+          // return p[3];
+          // ```
+          // In the above example, `p[3]` may access either the string literal or the local variable
+          // `s`, so both of those locations must be members of the `AliasedVirtualVariable`.
+          overlap = Alias::getOverlap(defLocation, useLocation)
+        )
     )
     or
-    hasNonPhiDefinition(useLocation, defLocation, block, offset)
+    hasNonPhiDefinition(useLocation, overlap, block, offset)
   }
 
   /**
@@ -1223,10 +1231,9 @@ module DefUse {
    * `rankIndex` is the rank of the definition as computed by `defUseRank()`.
    */
   predicate hasDefinitionAtRank(
-    Alias::MemoryLocation useLocation, Alias::MemoryLocation defLocation, OldBlock block,
-    int rankIndex, int offset
+    Alias::MemoryLocation useLocation, Overlap overlap, OldBlock block, int rankIndex, int offset
   ) {
-    hasDefinition(useLocation, defLocation, block, offset) and
+    hasDefinition(useLocation, overlap, block, offset) and
     defUseRank(useLocation, block, rankIndex, offset)
   }
 
@@ -1282,15 +1289,15 @@ module DefUse {
    */
   pragma[noopt]
   predicate hasPhiOperandDefinition(
-    Alias::MemoryLocation defLocation, Alias::MemoryLocation useLocation, OldBlock phiBlock,
-    OldBlock predBlock, OldBlock defBlock, int defOffset
+    Overlap overlap, Alias::MemoryLocation useLocation, OldBlock phiBlock, OldBlock predBlock,
+    OldBlock defBlock, int defOffset
   ) {
-    exists(int defRank |
+    exists(int defRank, Alias::MemoryLocation defLocation |
       definitionHasPhiNode(useLocation, phiBlock) and
       predBlock = phiBlock.getAFeasiblePredecessor() and
       definitionReachesEndOfBlock(useLocation, defBlock, defRank, predBlock) and
-      hasDefinitionAtRank(useLocation, defLocation, defBlock, defRank, defOffset) and
-      exists(Alias::getOverlap(defLocation, useLocation))
+      hasDefinitionAtRank(useLocation, overlap, defBlock, defRank, defOffset) and
+      overlap = Alias::getOverlap(defLocation, useLocation)
     )
   }
 }
