@@ -4724,11 +4724,9 @@ ir.cpp:
 #  372|     m372_4(unknown)        = Chi                       : total:m372_2, partial:m372_3
 #  373|     r373_1(glval<unknown>) = FunctionAddress[VoidFunc] : 
 #  373|     v373_2(void)           = Call[VoidFunc]            : func:r373_1
-#  373|     m373_3(unknown)        = ^CallSideEffect           : ~m372_4
-#  373|     m373_4(unknown)        = Chi                       : total:m372_4, partial:m373_3
 #  374|     v374_1(void)           = NoOp                      : 
 #  372|     v372_5(void)           = ReturnVoid                : 
-#  372|     v372_6(void)           = AliasedUse                : ~m373_4
+#  372|     v372_6(void)           = AliasedUse                : m372_3
 #  372|     v372_7(void)           = ExitFunction              : 
 
 #  376| int CallAdd(int, int)
@@ -4769,21 +4767,19 @@ ir.cpp:
 #  381|     r381_1(glval<int>)     = VariableAddress[#return]  : 
 #  381|     r381_2(glval<unknown>) = FunctionAddress[VoidFunc] : 
 #  381|     v381_3(void)           = Call[VoidFunc]            : func:r381_2
-#  381|     m381_4(unknown)        = ^CallSideEffect           : ~m380_4
-#  381|     m381_5(unknown)        = Chi                       : total:m380_4, partial:m381_4
-#  381|     r381_6(glval<unknown>) = FunctionAddress[CallAdd]  : 
-#  381|     r381_7(glval<int>)     = VariableAddress[x]        : 
-#  381|     r381_8(int)            = Load[x]                   : &:r381_7, m380_6
-#  381|     r381_9(glval<int>)     = VariableAddress[y]        : 
-#  381|     r381_10(int)           = Load[y]                   : &:r381_9, m380_8
-#  381|     r381_11(int)           = Call[CallAdd]             : func:r381_6, 0:r381_8, 1:r381_10
-#  381|     m381_12(unknown)       = ^CallSideEffect           : ~m381_5
-#  381|     m381_13(unknown)       = Chi                       : total:m381_5, partial:m381_12
-#  381|     r381_14(int)           = CopyValue                 : r381_11
-#  381|     m381_15(int)           = Store[#return]            : &:r381_1, r381_14
+#  381|     r381_4(glval<unknown>) = FunctionAddress[CallAdd]  : 
+#  381|     r381_5(glval<int>)     = VariableAddress[x]        : 
+#  381|     r381_6(int)            = Load[x]                   : &:r381_5, m380_6
+#  381|     r381_7(glval<int>)     = VariableAddress[y]        : 
+#  381|     r381_8(int)            = Load[y]                   : &:r381_7, m380_8
+#  381|     r381_9(int)            = Call[CallAdd]             : func:r381_4, 0:r381_6, 1:r381_8
+#  381|     m381_10(unknown)       = ^CallSideEffect           : ~m380_4
+#  381|     m381_11(unknown)       = Chi                       : total:m380_4, partial:m381_10
+#  381|     r381_12(int)           = CopyValue                 : r381_9
+#  381|     m381_13(int)           = Store[#return]            : &:r381_1, r381_12
 #  380|     r380_9(glval<int>)     = VariableAddress[#return]  : 
-#  380|     v380_10(void)          = ReturnValue               : &:r380_9, m381_15
-#  380|     v380_11(void)          = AliasedUse                : ~m381_13
+#  380|     v380_10(void)          = ReturnValue               : &:r380_9, m381_13
+#  380|     v380_11(void)          = AliasedUse                : ~m381_11
 #  380|     v380_12(void)          = ExitFunction              : 
 
 #  384| void Switch(int)
@@ -5323,23 +5319,18 @@ ir.cpp:
 #  493|   Block 1
 #  493|     r493_4(glval<unknown>) = FunctionAddress[VoidFunc] : 
 #  493|     v493_5(void)           = Call[VoidFunc]            : func:r493_4
-#  493|     m493_6(unknown)        = ^CallSideEffect           : ~m492_4
-#  493|     m493_7(unknown)        = Chi                       : total:m492_4, partial:m493_6
 #-----|   Goto -> Block 3
 
 #  493|   Block 2
-#  493|     r493_8(glval<unknown>) = FunctionAddress[VoidFunc] : 
-#  493|     v493_9(void)           = Call[VoidFunc]            : func:r493_8
-#  493|     m493_10(unknown)       = ^CallSideEffect           : ~m492_4
-#  493|     m493_11(unknown)       = Chi                       : total:m492_4, partial:m493_10
+#  493|     r493_6(glval<unknown>) = FunctionAddress[VoidFunc] : 
+#  493|     v493_7(void)           = Call[VoidFunc]            : func:r493_6
 #-----|   Goto -> Block 3
 
 #  494|   Block 3
-#  494|     m494_1(unknown) = Phi          : from 1:~m493_7, from 2:~m493_11
-#  494|     v494_2(void)    = NoOp         : 
-#  492|     v492_7(void)    = ReturnVoid   : 
-#  492|     v492_8(void)    = AliasedUse   : ~m494_1
-#  492|     v492_9(void)    = ExitFunction : 
+#  494|     v494_1(void) = NoOp         : 
+#  492|     v492_7(void) = ReturnVoid   : 
+#  492|     v492_8(void) = AliasedUse   : m492_3
+#  492|     v492_9(void) = ExitFunction : 
 
 #  496| void Nullptr()
 #  496|   Block 0
@@ -15026,15 +15017,13 @@ ir.cpp:
 # 2144|   Block 2
 # 2144|     r2144_1(glval<unknown>) = FunctionAddress[VoidFunc] : 
 # 2144|     v2144_2(void)           = Call[VoidFunc]            : func:r2144_1
-# 2144|     m2144_3(unknown)        = ^CallSideEffect           : ~m2141_7
-# 2144|     m2144_4(unknown)        = Chi                       : total:m2141_7, partial:m2144_3
 # 2145|     r2145_1(glval<int>)     = VariableAddress[#return]  : 
 # 2145|     r2145_2(glval<int>)     = VariableAddress[x]        : 
 # 2145|     r2145_3(int)            = Load[x]                   : &:r2145_2, m2141_8
 # 2145|     m2145_4(int)            = Store[#return]            : &:r2145_1, r2145_3
 # 2140|     r2140_6(glval<int>)     = VariableAddress[#return]  : 
 # 2140|     v2140_7(void)           = ReturnValue               : &:r2140_6, m2145_4
-# 2140|     v2140_8(void)           = AliasedUse                : ~m2144_4
+# 2140|     v2140_8(void)           = AliasedUse                : ~m2141_7
 # 2140|     v2140_9(void)           = ExitFunction              : 
 
 # 2148| void CallsNonExit()
@@ -15045,13 +15034,11 @@ ir.cpp:
 # 2148|     m2148_4(unknown)        = Chi                       : total:m2148_2, partial:m2148_3
 # 2149|     r2149_1(glval<unknown>) = FunctionAddress[VoidFunc] : 
 # 2149|     v2149_2(void)           = Call[VoidFunc]            : func:r2149_1
-# 2149|     m2149_3(unknown)        = ^CallSideEffect           : ~m2148_4
-# 2149|     m2149_4(unknown)        = Chi                       : total:m2148_4, partial:m2149_3
 # 2150|     r2150_1(glval<unknown>) = FunctionAddress[exit]     : 
 # 2150|     r2150_2(int)            = Constant[3]               : 
 # 2150|     v2150_3(void)           = Call[exit]                : func:r2150_1, 0:r2150_2
-# 2150|     m2150_4(unknown)        = ^CallSideEffect           : ~m2149_4
-# 2150|     m2150_5(unknown)        = Chi                       : total:m2149_4, partial:m2150_4
+# 2150|     m2150_4(unknown)        = ^CallSideEffect           : ~m2148_4
+# 2150|     m2150_5(unknown)        = Chi                       : total:m2148_4, partial:m2150_4
 # 2148|     v2148_5(void)           = Unreached                 : 
 
 # 2153| int TransNonExit()
@@ -15084,15 +15071,13 @@ ir.cpp:
 # 2157|   Block 2
 # 2157|     r2157_1(glval<unknown>) = FunctionAddress[VoidFunc] : 
 # 2157|     v2157_2(void)           = Call[VoidFunc]            : func:r2157_1
-# 2157|     m2157_3(unknown)        = ^CallSideEffect           : ~m2154_7
-# 2157|     m2157_4(unknown)        = Chi                       : total:m2154_7, partial:m2157_3
 # 2158|     r2158_1(glval<int>)     = VariableAddress[#return]  : 
 # 2158|     r2158_2(glval<int>)     = VariableAddress[x]        : 
 # 2158|     r2158_3(int)            = Load[x]                   : &:r2158_2, m2154_8
 # 2158|     m2158_4(int)            = Store[#return]            : &:r2158_1, r2158_3
 # 2153|     r2153_6(glval<int>)     = VariableAddress[#return]  : 
 # 2153|     v2153_7(void)           = ReturnValue               : &:r2153_6, m2158_4
-# 2153|     v2153_8(void)           = AliasedUse                : ~m2157_4
+# 2153|     v2153_8(void)           = AliasedUse                : ~m2154_7
 # 2153|     v2153_9(void)           = ExitFunction              : 
 
 # 2161| void newArrayCorrectType(size_t)
@@ -17239,14 +17224,12 @@ ir.cpp:
 # 2363|   Block 4
 # 2363|     r2363_1(glval<unknown>)  = FunctionAddress[VoidFunc]       : 
 # 2363|     v2363_2(void)            = Call[VoidFunc]                  : func:r2363_1
-# 2363|     m2363_3(unknown)         = ^CallSideEffect                 : ~m2358_9
-# 2363|     m2363_4(unknown)         = Chi                             : total:m2358_9, partial:m2363_3
-# 2363|     v2363_5(void)            = NoOp                            : 
+# 2363|     v2363_3(void)            = NoOp                            : 
 # 2366|     r2366_9(glval<String>)   = VariableAddress[s]              : 
 # 2366|     r2366_10(glval<unknown>) = FunctionAddress[~String]        : 
 # 2366|     v2366_11(void)           = Call[~String]                   : func:r2366_10, this:r2366_9
-# 2366|     m2366_12(unknown)        = ^CallSideEffect                 : ~m2363_4
-# 2366|     m2366_13(unknown)        = Chi                             : total:m2363_4, partial:m2366_12
+# 2366|     m2366_12(unknown)        = ^CallSideEffect                 : ~m2358_9
+# 2366|     m2366_13(unknown)        = Chi                             : total:m2358_9, partial:m2366_12
 # 2366|     v2366_14(void)           = ^IndirectReadSideEffect[-1]     : &:r2366_9, ~m2366_13
 # 2366|     m2366_15(String)         = ^IndirectMayWriteSideEffect[-1] : &:r2366_9
 # 2366|     m2366_16(unknown)        = Chi                             : total:m2366_13, partial:m2366_15
@@ -17341,14 +17324,12 @@ ir.cpp:
 # 2377|     m2377_9(unknown)        = Chi                             : total:m2377_7, partial:m2377_8
 # 2378|     r2378_1(glval<unknown>) = FunctionAddress[VoidFunc]       : 
 # 2378|     v2378_2(void)           = Call[VoidFunc]                  : func:r2378_1
-# 2378|     m2378_3(unknown)        = ^CallSideEffect                 : ~m2377_9
-# 2378|     m2378_4(unknown)        = Chi                             : total:m2377_9, partial:m2378_3
-# 2378|     v2378_5(void)           = NoOp                            : 
+# 2378|     v2378_3(void)           = NoOp                            : 
 # 2379|     r2379_1(glval<String>)  = VariableAddress[s]              : 
 # 2379|     r2379_2(glval<unknown>) = FunctionAddress[~String]        : 
 # 2379|     v2379_3(void)           = Call[~String]                   : func:r2379_2, this:r2379_1
-# 2379|     m2379_4(unknown)        = ^CallSideEffect                 : ~m2378_4
-# 2379|     m2379_5(unknown)        = Chi                             : total:m2378_4, partial:m2379_4
+# 2379|     m2379_4(unknown)        = ^CallSideEffect                 : ~m2377_9
+# 2379|     m2379_5(unknown)        = Chi                             : total:m2377_9, partial:m2379_4
 # 2379|     v2379_6(void)           = ^IndirectReadSideEffect[-1]     : &:r2379_1, ~m2379_5
 # 2379|     m2379_7(String)         = ^IndirectMayWriteSideEffect[-1] : &:r2379_1
 # 2379|     m2379_8(unknown)        = Chi                             : total:m2379_5, partial:m2379_7
