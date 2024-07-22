@@ -38,6 +38,7 @@ newtype TInstruction =
     AliasedSsa::Ssa::hasPhiInstruction(blockStartInstr, memoryLocation)
   } or
   TAliasedSsaChiInstruction(TRawInstruction primaryInstruction) {
+    not AliasedSsa::removedInstruction(primaryInstruction) and
     AliasedSsa::Ssa::hasChiInstruction(primaryInstruction)
   } or
   TAliasedSsaUnreachedInstruction(IRFunctionBase irFunc) {

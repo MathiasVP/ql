@@ -1742,6 +1742,12 @@ class SideEffectInstruction extends Instruction {
  */
 class CallSideEffectInstruction extends SideEffectInstruction {
   CallSideEffectInstruction() { this.getOpcode() instanceof Opcode::CallSideEffect }
+
+  /** Gets the operand for the value that will be read by this instruction. */
+  final SideEffectOperand getSideEffectOperand() { result = this.getAnOperand() }
+
+  /** Gets the value that will be read by this instruction, if known. */
+  final Instruction getSideEffect() { result = this.getAnOperand().getDef() }
 }
 
 /**
