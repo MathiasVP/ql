@@ -20,6 +20,10 @@ module JavaDataFlow implements InputSig<Location> {
 
   Node exprNode(DataFlowExpr e) { result = Public::exprNode(e) }
 
+  predicate getSecondLevelScope = Private::getSecondLevelScope/1;
+
+  predicate validParameterAliasStep = Private::validParameterAliasStep/2;
+
   predicate mayBenefitFromCallContext = Private::mayBenefitFromCallContext/1;
 
   predicate viableImplInCallContext = Private::viableImplInCallContext/2;

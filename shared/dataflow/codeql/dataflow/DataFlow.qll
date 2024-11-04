@@ -72,12 +72,18 @@ signature module InputSig<LocationSig Location> {
     /** Gets a textual representation of this element. */
     string toString();
 
+    /** Gets the location of this call. */
+    Location getLocation();
+
     DataFlowCallable getEnclosingCallable();
   }
 
   class DataFlowCallable {
     /** Gets a textual representation of this element. */
     string toString();
+
+    /** Gets the location of this callable. */
+    Location getLocation();
   }
 
   class ReturnKind {
@@ -118,8 +124,6 @@ signature module InputSig<LocationSig Location> {
     string toString();
   }
 
-  string ppReprType(DataFlowType t);
-
   /**
    * Holds if `t1` and `t2` are compatible types.
    *
@@ -130,7 +134,6 @@ signature module InputSig<LocationSig Location> {
    * steps, then it will check that the types of `n1` and `n2` are compatible.
    * If they are not, then flow will be blocked.
    */
-  bindingset[t1, t2]
   predicate compatibleTypes(DataFlowType t1, DataFlowType t2);
 
   /**
@@ -208,7 +211,7 @@ signature module InputSig<LocationSig Location> {
    * Holds if there is a simple local flow step from `node1` to `node2`. These
    * are the value-preserving intra-callable flow steps.
    */
-  predicate simpleLocalFlowStep(Node node1, Node node2);
+  predicate simpleLocalFlowStep(Node node1, Node node2, string model);
 
   /**
    * Holds if the data-flow step from `node1` to `node2` can be used to
@@ -251,10 +254,16 @@ signature module InputSig<LocationSig Location> {
    */
   predicate expectsContent(Node n, ContentSet c);
 
+  /** A set of `Node`s in a `DataFlowCallable`. */
+  class NodeRegion {
+    /** Holds if this region contains `n`. */
+    predicate contains(Node n);
+  }
+
   /**
-   * Holds if the node `n` is unreachable when the call context is `call`.
+   * Holds if the nodes in `nr` are unreachable when the call context is `call`.
    */
-  predicate isUnreachableInCall(Node n, DataFlowCall call);
+  predicate isUnreachableInCall(NodeRegion nr, DataFlowCall call);
 
   default int accessPathLimit() { result = 5 }
 
@@ -289,6 +298,10 @@ signature module InputSig<LocationSig Location> {
   /** Extra data-flow steps needed for lambda flow analysis. */
   predicate additionalLambdaFlowStep(Node nodeFrom, Node nodeTo, boolean preservesValue);
 
+  predicate knownSourceModel(Node source, string model);
+
+  predicate knownSinkModel(Node sink, string model);
+
   /**
    * Holds if `n` should never be skipped over in the `PathGraph` and in path
    * explanations.
@@ -303,6 +316,24 @@ signature module InputSig<LocationSig Location> {
    * Argument `arg` is part of a path from a source to a sink, and `p` is the target parameter.
    */
   default int getAdditionalFlowIntoCallNodeTerm(ArgumentNode arg, ParameterNode p) { none() }
+
+  /**
+   * A second-level control-flow scope in a callable.
+   *
+   * This is used to provide a more fine-grained separation of a callable
+   * context for the purpose of identifying uncertain control flow. For most
+   * languages, this is not needed, as this separation is handled through
+   * virtual dispatch, but for some cases (for example, C++) this can be used to
+   * identify, for example, large top-level switch statements acting like
+   * virtual dispatch.
+   */
+  class DataFlowSecondLevelScope {
+    /** Gets a textual representation of this element. */
+    string toString();
+  }
+
+  /** Gets the second-level scope containing the node `n`, if any. */
+  default DataFlowSecondLevelScope getSecondLevelScope(Node n) { none() }
 
   bindingset[call, p, arg]
   default predicate golangSpecificParamArgFilter(
@@ -393,12 +424,6 @@ module Configs<LocationSig Location, InputSig<Location> Lang> {
      */
     default FlowFeature getAFeature() { none() }
 
-    /** Holds if sources should be grouped in the result of `flowPath`. */
-    default predicate sourceGrouping(Node source, string sourceGroup) { none() }
-
-    /** Holds if sinks should be grouped in the result of `flowPath`. */
-    default predicate sinkGrouping(Node sink, string sinkGroup) { none() }
-
     /**
      * Holds if hidden nodes should be included in the data flow graph.
      *
@@ -406,6 +431,17 @@ module Configs<LocationSig Location, InputSig<Location> Lang> {
      * is not visualized (as it is in a `path-problem` query).
      */
     default predicate includeHiddenNodes() { none() }
+
+    /**
+     * Holds if sources and sinks should be filtered to only include those that
+     * may lead to a flow path with either a source or a sink in the location
+     * range given by `AlertFiltering`. This only has an effect when running
+     * in diff-informed incremental mode.
+     *
+     * This flag should only be applied to flow configurations whose results
+     * are used directly in a query result.
+     */
+    default predicate observeDiffInformedIncrementalMode() { none() }
   }
 
   /** An input configuration for data flow using flow state. */
@@ -515,12 +551,6 @@ module Configs<LocationSig Location, InputSig<Location> Lang> {
      */
     default FlowFeature getAFeature() { none() }
 
-    /** Holds if sources should be grouped in the result of `flowPath`. */
-    default predicate sourceGrouping(Node source, string sourceGroup) { none() }
-
-    /** Holds if sinks should be grouped in the result of `flowPath`. */
-    default predicate sinkGrouping(Node sink, string sinkGroup) { none() }
-
     /**
      * Holds if hidden nodes should be included in the data flow graph.
      *
@@ -528,6 +558,41 @@ module Configs<LocationSig Location, InputSig<Location> Lang> {
      * is not visualized (as it is in a `path-problem` query).
      */
     default predicate includeHiddenNodes() { none() }
+
+    /**
+     * Holds if sources and sinks should be filtered to only include those that
+     * may lead to a flow path with either a source or a sink in the location
+     * range given by `AlertFiltering`. This only has an effect when running
+     * in diff-informed incremental mode.
+     *
+     * This flag should only be applied to flow configurations whose results
+     * are used directly in a query result.
+     */
+    default predicate observeDiffInformedIncrementalMode() { none() }
+  }
+}
+
+/** A type with `toString`. */
+private signature class TypeWithToString {
+  string toString();
+}
+
+import PathGraphSigMod
+
+private module PathGraphSigMod {
+  signature module PathGraphSig<TypeWithToString PathNode> {
+    /** Holds if `(a,b)` is an edge in the graph of data flow path explanations. */
+    predicate edges(PathNode a, PathNode b, string key, string val);
+
+    /** Holds if `n` is a node in the graph of data flow path explanations. */
+    predicate nodes(PathNode n, string key, string val);
+
+    /**
+     * Holds if `(arg, par, ret, out)` forms a subpath-tuple, that is, flow through
+     * a subpath between `par` and `ret` with the connecting edges `arg -> par` and
+     * `ret -> out` is summarized as the edge `arg -> out`.
+     */
+    predicate subpaths(PathNode arg, PathNode par, PathNode ret, PathNode out);
   }
 }
 
@@ -585,6 +650,10 @@ module DataFlowMake<LocationSig Location, InputSig<Location> Lang> {
       import Config
 
       predicate accessPathLimit = Config::accessPathLimit/0;
+
+      predicate isAdditionalFlowStep(Node node1, Node node2, string model) {
+        Config::isAdditionalFlowStep(node1, node2) and model = "Config"
+      }
     }
 
     import Impl<C>
@@ -603,6 +672,16 @@ module DataFlowMake<LocationSig Location, InputSig<Location> Lang> {
       import Config
 
       predicate accessPathLimit = Config::accessPathLimit/0;
+
+      predicate isAdditionalFlowStep(Node node1, Node node2, string model) {
+        Config::isAdditionalFlowStep(node1, node2) and model = "Config"
+      }
+
+      predicate isAdditionalFlowStep(
+        Node node1, FlowState state1, Node node2, FlowState state2, string model
+      ) {
+        Config::isAdditionalFlowStep(node1, state1, node2, state2) and model = "Config"
+      }
     }
 
     import Impl<C>
@@ -624,20 +703,7 @@ module DataFlowMake<LocationSig Location, InputSig<Location> Lang> {
     Location getLocation();
   }
 
-  signature module PathGraphSig<PathNodeSig PathNode> {
-    /** Holds if `(a,b)` is an edge in the graph of data flow path explanations. */
-    predicate edges(PathNode a, PathNode b, string key, string val);
-
-    /** Holds if `n` is a node in the graph of data flow path explanations. */
-    predicate nodes(PathNode n, string key, string val);
-
-    /**
-     * Holds if `(arg, par, ret, out)` forms a subpath-tuple, that is, flow through
-     * a subpath between `par` and `ret` with the connecting edges `arg -> par` and
-     * `ret -> out` is summarized as the edge `arg -> out`.
-     */
-    predicate subpaths(PathNode arg, PathNode par, PathNode ret, PathNode out);
-  }
+  import PathGraphSigMod
 
   /**
    * Constructs a `PathGraph` from two `PathGraph`s by disjoint union.

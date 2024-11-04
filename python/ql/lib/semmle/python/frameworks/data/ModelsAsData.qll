@@ -18,14 +18,19 @@ private import semmle.python.dataflow.new.RemoteFlowSources
 private import semmle.python.dataflow.new.DataFlow
 private import semmle.python.ApiGraphs
 private import semmle.python.dataflow.new.FlowSummary
+private import semmle.python.Concepts
 
 /**
- * A remote flow source originating from a CSV source row.
+ * A threat-model flow source originating from a data extension.
  */
-private class RemoteFlowSourceFromCsv extends RemoteFlowSource {
-  RemoteFlowSourceFromCsv() { this = ModelOutput::getASourceNode("remote").asSource() }
+private class ThreatModelSourceFromDataExtension extends ThreatModelSource::Range {
+  ThreatModelSourceFromDataExtension() { this = ModelOutput::getASourceNode(_).asSource() }
 
-  override string getSourceType() { result = "Remote flow (from model)" }
+  override string getThreatModel() { this = ModelOutput::getASourceNode(result).asSource() }
+
+  override string getSourceType() {
+    result = "Source node (" + this.getThreatModel() + ") [from data-extension]"
+  }
 }
 
 private class SummarizedCallableFromModel extends SummarizedCallable {
@@ -33,7 +38,7 @@ private class SummarizedCallableFromModel extends SummarizedCallable {
   string path;
 
   SummarizedCallableFromModel() {
-    ModelOutput::relevantSummaryModel(type, path, _, _, _) and
+    ModelOutput::relevantSummaryModel(type, path, _, _, _, _) and
     this = type + ";" + path
   }
 
@@ -46,8 +51,10 @@ private class SummarizedCallableFromModel extends SummarizedCallable {
     )
   }
 
-  override predicate propagatesFlow(string input, string output, boolean preservesValue) {
-    exists(string kind | ModelOutput::relevantSummaryModel(type, path, input, output, kind) |
+  override predicate propagatesFlow(
+    string input, string output, boolean preservesValue, string model
+  ) {
+    exists(string kind | ModelOutput::relevantSummaryModel(type, path, input, output, kind, model) |
       kind = "value" and
       preservesValue = true
       or

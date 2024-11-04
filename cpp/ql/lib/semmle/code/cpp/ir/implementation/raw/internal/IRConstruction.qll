@@ -377,6 +377,10 @@ CppType getInstructionResultType(TStageInstruction instr) {
   result = getVoidType()
 }
 
+IRType getInstructionResultIRType(Instruction instr) {
+  result = instr.getResultLanguageType().getIRType()
+}
+
 predicate getInstructionOpcode(Opcode opcode, TStageInstruction instr) {
   getInstructionTranslatedElement(instr).hasInstruction(opcode, getInstructionTag(instr), _)
   or
@@ -402,6 +406,8 @@ predicate hasUnreachedInstruction(IRFunction func) {
     any(Options opt).exits(c.getTarget())
   )
 }
+
+IRVariable getAnUninitializedGroupVariable(UninitializedGroupInstruction instr) { none() }
 
 import CachedForDebugging
 

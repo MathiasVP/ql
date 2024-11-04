@@ -1933,6 +1933,20 @@ namespace missing_declaration_entries {
         Bar2<int> b;
         b.two_missing_variable_declaration_entries();
     }
+
+    template<typename T> struct Bar3 {
+
+        int two_more_missing_variable_declaration_entries() {
+            extern int g;
+            int z(float);
+            return g;
+        }
+    };
+
+    void test3() {
+        Bar3<int> b;
+        b.two_more_missing_variable_declaration_entries();
+    }
 }
 
 template<typename T> T global_template = 42;
@@ -2177,6 +2191,7 @@ public:
 
     void set_x(char y) { *x = y; }
     char get_x() { return *x; }
+    operator bool() const;
 };
 
 constexpr bool initialization_with_destructor_bool = true;
@@ -2391,6 +2406,293 @@ int small_operation_should_not_be_constant_folded() {
 
 int large_operation_should_be_constant_folded() {
     return BINOP64(1);
+}
+
+void initialization_with_temp_destructor() {
+    if (char x = ClassWithDestructor().get_x())
+        x++;
+
+    if (char x = ClassWithDestructor().get_x(); x)
+        x++;
+
+    if constexpr (char x = ClassWithDestructor().get_x(); initialization_with_destructor_bool)
+        x++;
+
+    switch(char x = ClassWithDestructor().get_x()) {
+        case 'a':
+          x++;
+    }
+
+    switch(char x = ClassWithDestructor().get_x(); x) {
+        case 'a':
+          x++;
+    }
+
+    for(char x = ClassWithDestructor().get_x(); char y : std::vector<char>(x))
+        y += x;
+}
+
+void param_with_destructor_by_value(ClassWithDestructor c) {
+    // The call to ~ClassWithDestructor::ClassWithDestructor() happens on the side of the caller
+}
+
+void param_with_destructor_by_pointer(ClassWithDestructor* c) {
+    // No destructor call should be here
+}
+
+void param_with_destructor_by_ref(ClassWithDestructor& c) {
+    // No destructor call should be here
+}
+
+void param_with_destructor_by_rref(ClassWithDestructor&& c) {
+    // No destructor call should be here
+}
+
+void rethrow_with_destruction(int x) {
+    ClassWithDestructor c;
+    throw;
+}
+
+struct ByValueConstructor {
+    ByValueConstructor(ClassWithDestructor);
+};
+
+void new_with_destructor(ClassWithDestructor a)
+{
+    ByValueConstructor* b = new ByValueConstructor(a);
+}
+
+namespace rvalue_conversion_with_destructor {
+    struct A {
+        unsigned a;
+    };
+
+    struct B
+    {
+        ~B();
+
+        inline A *operator->() const;
+    };
+
+    B get();
+
+    void test()
+    {
+        auto a = get()->a;
+    }
+}
+
+void destructor_without_block(bool b)
+{
+    if (b)
+      ClassWithDestructor c;
+
+    if (b)
+      ClassWithDestructor d;
+    else
+      ClassWithDestructor e;
+
+    while (b)
+      ClassWithDestructor f;
+
+    for(int i = 0; i < 42; ++i)
+      ClassWithDestructor g;
+}
+
+void destruction_in_switch_1(int c) {
+  switch (c) {
+    case 0: {
+      ClassWithDestructor x;
+      break;
+    }
+  }
+}
+
+void destruction_in_switch_2(int c) {
+  switch (ClassWithDestructor y; c) {
+    case 0: {
+      break;
+    }
+    default: {
+      break;
+    }
+  }
+}
+
+void destruction_in_switch_3(int c) {
+  switch (ClassWithDestructor y; c) {
+    case 0: {
+      ClassWithDestructor x;
+      break;
+    }
+    default: {
+      break;
+    }
+  }
+}
+
+void destructor_possibly_not_handled() {
+  ClassWithDestructor x;
+  try {
+    throw 42;
+  }
+  catch(char) {
+  }
+}
+
+ClassWithDestructor getClassWithDestructor();
+
+void this_inconsistency(bool b) {
+  if (const ClassWithDestructor& a = getClassWithDestructor())
+    ;
+}
+
+void constexpr_inconsistency(bool b) {
+  if constexpr (const ClassWithDestructor& a = getClassWithDestructor(); initialization_with_destructor_bool)
+    ;
+}
+
+void builtin_bitcast(unsigned long ul) {
+    double d = __builtin_bit_cast(double, ul);
+}
+
+void p_points_to_x_or_y(int a, int b) {
+    int x;
+    int y;
+    int* p;
+    if (a < b) {
+        p = &x;
+    } else {
+        p = &y;
+    }
+    *p = 5;
+    int z = x;
+    int w = y;
+}
+
+int phi_after_while() {
+  int r;
+  int *rP = &r;
+
+  while(predicateA()) {
+    int s = 0;
+    *rP = s;
+    rP = &s;
+  }
+
+  return r;
+}
+
+// This testcase will loop infinitely if the analysis attempts to propagate
+// phi inputs with a non-unknown bit offset.
+char *recursive_conditional_call_with_increment(char *d, bool b)
+{
+  if (b) {
+    d = recursive_conditional_call_with_increment(d, b);
+  }
+  d++;
+  return d;
+}
+
+struct Recursive
+{
+  Recursive *next;
+};
+
+static Recursive *merge(Recursive *a)
+{
+  Recursive *b;
+  Recursive **p = &b;
+
+  while (predicateA())
+  {
+    *p = a;
+    p = &a->next;
+  }
+  
+  return b;
+}
+
+void use_const_int(const int*);
+
+void escaping_pointer(bool b)
+{
+  int *data;
+  int l1, l2;
+  if (b)
+  {
+    data = &l1;
+  }
+  else
+  {
+    data = &l2;
+  }
+  use_const_int(data);
+}
+
+using int64_t = long long;
+#define NULL ((void *)0)
+
+void *malloc(unsigned long);
+void use_const_void_pointer(const void *);
+
+static void needs_chi_for_initialize_groups()
+{
+  if (predicateA())
+  {
+    int64_t *data = (int64_t *)malloc(100);
+    if (data != NULL)
+    {
+      data = (int64_t *)malloc(100);
+    }
+    use_const_void_pointer(data);
+  }
+  else
+  {
+    int64_t *data = (int64_t *)malloc(100);
+    if (data != NULL)
+    {
+      data = (int64_t *)malloc(200);
+    }
+    use_const_void_pointer(data);
+  }
+}
+
+void use_int(int);
+
+static void phi_with_single_input_at_merge(bool b)
+{
+  int *data = nullptr;
+  if(b) {
+    int intBuffer = 8;
+    data = &intBuffer;
+  }
+  use_int(*data);
+}
+
+void use(const char *fmt);
+
+#define call_use(format) use(format)
+
+#define twice_call_use(format) \
+  do                       \
+  {                        \
+    call_use(format);           \
+    call_use(format);           \
+  } while (0)
+
+void test(bool b)
+{
+  twice_call_use(b ? "" : "");
+}
+
+namespace concepts {
+
+int requires_use() {
+  int y = requires { sizeof(int) > 0; };
+  return y;
+}
+
 }
 
 // semmle-extractor-options: -std=c++20 --clang

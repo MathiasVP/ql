@@ -3,6 +3,7 @@
  */
 
 import csharp
+private import semmle.code.csharp.security.dataflow.flowsinks.FlowSinks
 private import semmle.code.csharp.security.dataflow.flowsources.FlowSources
 private import semmle.code.csharp.controlflow.Guards
 private import semmle.code.csharp.frameworks.Format
@@ -20,27 +21,12 @@ abstract class Source extends DataFlow::Node { }
 /**
  * A data flow sink for unvalidated URL redirect vulnerabilities.
  */
-abstract class Sink extends DataFlow::ExprNode { }
+abstract class Sink extends ApiSinkExprNode { }
 
 /**
  * A sanitizer for unvalidated URL redirect vulnerabilities.
  */
 abstract class Sanitizer extends DataFlow::ExprNode { }
-
-/**
- * DEPRECATED: Use `UrlRedirect` instead.
- *
- * A taint-tracking configuration for reasoning about unvalidated URL redirect vulnerabilities.
- */
-deprecated class TaintTrackingConfiguration extends TaintTracking::Configuration {
-  TaintTrackingConfiguration() { this = "UrlRedirect" }
-
-  override predicate isSource(DataFlow::Node source) { source instanceof Source }
-
-  override predicate isSink(DataFlow::Node sink) { sink instanceof Sink }
-
-  override predicate isSanitizer(DataFlow::Node node) { node instanceof Sanitizer }
-}
 
 /**
  * A taint-tracking configuration for reasoning about unvalidated URL redirect vulnerabilities.
@@ -66,7 +52,7 @@ module UrlRedirect = TaintTracking::Global<UrlRedirectConfig>;
 deprecated class RemoteSource extends DataFlow::Node instanceof RemoteFlowSource { }
 
 /** A source supported by the current threat model. */
-class ThreatModelSource extends Source instanceof ThreatModelFlowSource { }
+class ThreatModelSource extends Source instanceof ActiveThreatModelSource { }
 
 /** URL Redirection sinks defined through Models as Data. */
 private class ExternalUrlRedirectExprSink extends Sink {

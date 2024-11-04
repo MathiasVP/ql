@@ -48,7 +48,7 @@ class Scope extends Scope_ {
   string getName() { py_strs(result, this, 0) }
 
   /** Gets the docstring for this scope */
-  StrConst getDocString() { result = this.getStmt(0).(ExprStmt).getValue() }
+  StringLiteral getDocString() { result = this.getStmt(0).(ExprStmt).getValue() }
 
   /** Gets the entry point into this Scope's control flow graph */
   ControlFlowNode getEntryNode() { py_scope_flow(result, this, -1) }
@@ -85,9 +85,10 @@ class Scope extends Scope_ {
       this instanceof Module
       or
       exists(Module m | m = this.getEnclosingScope() and m.isPublic() |
-        /* If the module has an __all__, is this in it */
+        // The module is implicitly exported
         not exists(getAModuleExport(m))
         or
+        // The module is explicitly exported
         getAModuleExport(m) = this.getName()
       )
       or

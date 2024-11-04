@@ -79,11 +79,6 @@ class TranslatedMicrosoftTryExceptHandler extends TranslatedElement,
     tag = TryExceptCompareOneBranch() and
     opcode instanceof Opcode::ConditionalBranch and
     resultType = getVoidType()
-    or
-    // unwind stack
-    tag = UnwindTag() and
-    opcode instanceof Opcode::Unwind and
-    resultType = getVoidType()
   }
 
   final override Instruction getInstructionRegisterOperand(InstructionTag tag, OperandTag operandTag) {
@@ -156,7 +151,7 @@ class TranslatedMicrosoftTryExceptHandler extends TranslatedElement,
       // TODO: This is not really correct. The semantics of `EXCEPTION_CONTINUE_EXECUTION` is that
       // we should continue execution at the point where the exception occurred. But we don't have
       // any instruction to model this behavior.
-      result = this.getInstruction(UnwindTag())
+      result = this.getExceptionSuccessorInstruction(any(GotoEdge edge))
       or
       kind instanceof FalseEdge and
       result = this.getInstruction(TryExceptGenerateZero())
@@ -176,7 +171,7 @@ class TranslatedMicrosoftTryExceptHandler extends TranslatedElement,
     tag = TryExceptCompareZeroBranch() and
     (
       kind instanceof TrueEdge and
-      result = this.getInstruction(UnwindTag())
+      result = this.getExceptionSuccessorInstruction(any(GotoEdge edge))
       or
       kind instanceof FalseEdge and
       result = this.getInstruction(TryExceptGenerateOne())
@@ -196,10 +191,6 @@ class TranslatedMicrosoftTryExceptHandler extends TranslatedElement,
     tag = TryExceptCompareOneBranch() and
     kind instanceof TrueEdge and
     result = this.getTranslatedHandler().getFirstInstruction(any(GotoEdge edge))
-    or
-    // Unwind -> Parent
-    tag = UnwindTag() and
-    result = this.getParent().getChildSuccessor(this, kind)
   }
 
   override Instruction getChildSuccessorInternal(TranslatedElement child, EdgeKind kind) {
@@ -215,8 +206,6 @@ class TranslatedMicrosoftTryExceptHandler extends TranslatedElement,
 
   override Instruction getALastInstructionInternal() {
     result = this.getTranslatedHandler().getALastInstruction()
-    or
-    result = this.getInstruction(UnwindTag())
   }
 
   private TranslatedExpr getTranslatedCondition() {
@@ -236,6 +225,68 @@ class TranslatedMicrosoftTryExceptHandler extends TranslatedElement,
   }
 
   final override Function getFunction() { result = tryExcept.getEnclosingFunction() }
+
+  override Instruction getExceptionSuccessorInstruction(EdgeKind kind) {
+    // A throw from within a `__except` block flows to the handler for the parent of
+    // the `__try`.
+    result = this.getParent().getParent().getExceptionSuccessorInstruction(kind)
+  }
+}
+
+TranslatedMicrosoftTryFinallyHandler getTranslatedMicrosoftTryFinallyHandler(
+  MicrosoftTryFinallyStmt tryFinally
+) {
+  result.getAst() = tryFinally.getFinally()
+}
+
+class TranslatedMicrosoftTryFinallyHandler extends TranslatedElement,
+  TTranslatedMicrosoftTryFinallyHandler
+{
+  MicrosoftTryFinallyStmt tryFinally;
+
+  TranslatedMicrosoftTryFinallyHandler() {
+    this = TTranslatedMicrosoftTryFinallyHandler(tryFinally)
+  }
+
+  final override string toString() { result = tryFinally.toString() }
+
+  final override Locatable getAst() { result = tryFinally.getFinally() }
+
+  override Instruction getFirstInstruction(EdgeKind kind) {
+    result = this.getTranslatedFinally().getFirstInstruction(kind)
+  }
+
+  override Instruction getALastInstructionInternal() {
+    result = this.getTranslatedFinally().getALastInstruction()
+  }
+
+  override Instruction getChildSuccessorInternal(TranslatedElement child, EdgeKind kind) {
+    child = this.getTranslatedFinally() and
+    result = this.getParent().getChildSuccessor(this, kind)
+  }
+
+  override Instruction getInstructionSuccessorInternal(InstructionTag tag, EdgeKind kind) { none() }
+
+  override TranslatedElement getChild(int id) {
+    id = 0 and
+    result = this.getTranslatedFinally()
+  }
+
+  override predicate hasInstruction(Opcode opcode, InstructionTag tag, CppType resultType) {
+    none()
+  }
+
+  final override Function getFunction() { result = tryFinally.getEnclosingFunction() }
+
+  private TranslatedStmt getTranslatedFinally() {
+    result = getTranslatedStmt(tryFinally.getFinally())
+  }
+
+  override Instruction getExceptionSuccessorInstruction(EdgeKind kind) {
+    // A throw from within a `__finally` block flows to the handler for the parent of
+    // the `__try`.
+    result = this.getParent().getParent().getExceptionSuccessorInstruction(kind)
+  }
 }
 
 abstract class TranslatedStmt extends TranslatedElement, TTranslatedStmt {
@@ -248,19 +299,9 @@ abstract class TranslatedStmt extends TranslatedElement, TTranslatedStmt {
   final override TranslatedElement getChild(int id) {
     result = this.getChildInternal(id)
     or
-    exists(int destructorIndex, int tempDestructorCount |
+    exists(int destructorIndex |
       result.(TranslatedExpr).getExpr() = stmt.getImplicitDestructorCall(destructorIndex) and
-      id = this.getFirstDestructorCallIndex() + destructorIndex - tempDestructorCount and
-      // suppress destructors of temporary variables until proper support is added for them.
-      tempDestructorCount =
-        count(DestructorCall call, int tempIndex |
-          stmt.getImplicitDestructorCall(tempIndex) = call and
-          tempIndex < destructorIndex and
-          call.getQualifier() instanceof ReuseExpr
-        |
-          call
-        ) and
-      not stmt.getImplicitDestructorCall(destructorIndex).getQualifier() instanceof ReuseExpr
+      id = this.getFirstDestructorCallIndex() + destructorIndex
     )
   }
 
@@ -271,19 +312,12 @@ abstract class TranslatedStmt extends TranslatedElement, TTranslatedStmt {
   }
 
   final override predicate hasAnImplicitDestructorCall() {
-    exists(stmt.getAnImplicitDestructorCall()) and
-    // suppress destructors of temporary variables until proper support is added for them.
-    exists(Expr expr | stmt.getAnImplicitDestructorCall().getQualifier() = expr |
-      not expr instanceof ReuseExpr
-    )
+    exists(stmt.getAnImplicitDestructorCall())
   }
 
   final override string toString() { result = stmt.toString() }
 
   final override Locatable getAst() { result = stmt }
-
-  /** DEPRECATED: Alias for getAst */
-  deprecated override Locatable getAST() { result = this.getAst() }
 
   final override Function getFunction() { result = stmt.getEnclosingFunction() }
 }
@@ -600,7 +634,7 @@ class TranslatedNoValueReturnStmt extends TranslatedReturnStmt, TranslatedVariab
 /**
  * A C/C++ `try` statement, or a `__try __except` or `__try __finally` statement.
  */
-private class TryOrMicrosoftTryStmt extends Stmt {
+class TryOrMicrosoftTryStmt extends Stmt {
   TryOrMicrosoftTryStmt() {
     this instanceof TryStmt or
     this instanceof MicrosoftTryStmt
@@ -633,7 +667,9 @@ private class TryOrMicrosoftTryStmt extends Stmt {
   }
 
   /** Gets the `finally` statement (usually a BlockStmt), if any. */
-  Stmt getFinally() { result = this.(MicrosoftTryFinallyStmt).getFinally() }
+  TranslatedElement getTranslatedFinally() {
+    result = getTranslatedMicrosoftTryFinallyHandler(this)
+  }
 }
 
 /**
@@ -703,11 +739,14 @@ class TranslatedTryStmt extends TranslatedStmt {
 
   final override Instruction getExceptionSuccessorInstruction(EdgeKind kind) {
     result = this.getHandler(0).getFirstInstruction(kind)
+    or
+    not exists(this.getHandler(_)) and
+    result = this.getFinally().getFirstInstruction(kind)
   }
 
   private TranslatedElement getHandler(int index) { result = stmt.getTranslatedHandler(index) }
 
-  private TranslatedStmt getFinally() { result = getTranslatedStmt(stmt.getFinally()) }
+  private TranslatedElement getFinally() { result = stmt.getTranslatedFinally() }
 
   private TranslatedStmt getBody() { result = getTranslatedStmt(stmt.getStmt()) }
 }
@@ -792,6 +831,72 @@ abstract class TranslatedHandler extends TranslatedStmt {
 }
 
 /**
+ * The IR translation of the destructor calls of the parent `TranslatedCatchByTypeHandler`.
+ *
+ * This object does not itself generate the destructor calls. Instead, its
+ * children provide the actual calls.
+ */
+class TranslatedDestructorsAfterHandler extends TranslatedElement,
+  TTranslatedDestructorsAfterHandler
+{
+  Handler handler;
+
+  TranslatedDestructorsAfterHandler() { this = TTranslatedDestructorsAfterHandler(handler) }
+
+  override string toString() { result = "Destructor calls after handler: " + handler }
+
+  private TranslatedCall getTranslatedImplicitDestructorCall(int id) {
+    result.getExpr() = handler.getImplicitDestructorCall(id)
+  }
+
+  override Instruction getFirstInstruction(EdgeKind kind) {
+    result = this.getChild(0).getFirstInstruction(kind)
+  }
+
+  override Handler getAst() { result = handler }
+
+  override Instruction getInstructionSuccessorInternal(InstructionTag tag, EdgeKind kind) { none() }
+
+  override TranslatedElement getChild(int id) {
+    result = this.getTranslatedImplicitDestructorCall(id)
+  }
+
+  override predicate handlesDestructorsExplicitly() { any() }
+
+  override Declaration getFunction() { result = handler.getEnclosingFunction() }
+
+  override Instruction getChildSuccessorInternal(TranslatedElement child, EdgeKind kind) {
+    exists(int id | child = this.getChild(id) |
+      // Transition to the next child, if any.
+      result = this.getChild(id + 1).getFirstInstruction(kind)
+      or
+      // And otherwise go to the next handler, if any.
+      not exists(this.getChild(id + 1)) and
+      result =
+        getTranslatedStmt(handler)
+            .getParent()
+            .(TranslatedTryStmt)
+            .getNextHandler(getTranslatedStmt(handler), kind)
+    )
+  }
+
+  override TranslatedElement getLastChild() {
+    result =
+      this.getTranslatedImplicitDestructorCall(max(int id |
+          exists(handler.getImplicitDestructorCall(id))
+        ))
+  }
+
+  override Instruction getALastInstructionInternal() {
+    result = this.getLastChild().getALastInstruction()
+  }
+
+  override predicate hasInstruction(Opcode opcode, InstructionTag tag, CppType resultType) {
+    none()
+  }
+}
+
+/**
  * The IR translation of a C++ `catch` block that catches an exception with a
  * specific type (e.g. `catch (const std::exception&)`).
  */
@@ -804,10 +909,14 @@ class TranslatedCatchByTypeHandler extends TranslatedHandler {
     resultType = getVoidType()
   }
 
+  override predicate handlesDestructorsExplicitly() { any() }
+
   override TranslatedElement getChildInternal(int id) {
     result = super.getChildInternal(id)
     or
     id = 0 and result = this.getParameter()
+    or
+    id = 1 and result = this.getDestructors()
   }
 
   override Instruction getChildSuccessorInternal(TranslatedElement child, EdgeKind kind) {
@@ -824,7 +933,9 @@ class TranslatedCatchByTypeHandler extends TranslatedHandler {
       result = this.getParameter().getFirstInstruction(kind)
       or
       kind instanceof ExceptionEdge and
-      result = this.getParent().(TranslatedTryStmt).getNextHandler(this, any(GotoEdge edge))
+      if exists(this.getDestructors())
+      then result = this.getDestructors().getFirstInstruction(any(GotoEdge edge))
+      else result = this.getParent().(TranslatedTryStmt).getNextHandler(this, any(GotoEdge edge))
     )
   }
 
@@ -836,6 +947,8 @@ class TranslatedCatchByTypeHandler extends TranslatedHandler {
   private TranslatedParameter getParameter() {
     result = getTranslatedParameter(stmt.getParameter())
   }
+
+  private TranslatedDestructorsAfterHandler getDestructors() { result.getAst() = stmt }
 }
 
 /**
@@ -856,9 +969,7 @@ class TranslatedCatchAnyHandler extends TranslatedHandler {
   }
 }
 
-class TranslatedIfStmt extends TranslatedStmt, ConditionContext {
-  override IfStmt stmt;
-
+abstract class TranslatedIfLikeStmt extends TranslatedStmt, ConditionContext {
   override Instruction getFirstInstruction(EdgeKind kind) {
     if this.hasInitialization()
     then result = this.getInitialization().getFirstInstruction(kind)
@@ -871,6 +982,8 @@ class TranslatedIfStmt extends TranslatedStmt, ConditionContext {
 
   override TranslatedElement getLastChild() { result = this.getElse() or result = this.getThen() }
 
+  override predicate handlesDestructorsExplicitly() { any() }
+
   override TranslatedElement getChildInternal(int id) {
     id = 0 and result = this.getInitialization()
     or
@@ -881,25 +994,21 @@ class TranslatedIfStmt extends TranslatedStmt, ConditionContext {
     id = 3 and result = this.getElse()
   }
 
-  private predicate hasInitialization() { exists(stmt.getInitialization()) }
+  abstract predicate hasInitialization();
 
-  private TranslatedStmt getInitialization() {
-    result = getTranslatedStmt(stmt.getInitialization())
-  }
+  abstract TranslatedStmt getInitialization();
 
-  private TranslatedCondition getCondition() {
-    result = getTranslatedCondition(stmt.getCondition().getFullyConverted())
-  }
+  abstract TranslatedCondition getCondition();
 
   private Instruction getFirstConditionInstruction(EdgeKind kind) {
     result = this.getCondition().getFirstInstruction(kind)
   }
 
-  private TranslatedStmt getThen() { result = getTranslatedStmt(stmt.getThen()) }
+  abstract TranslatedStmt getThen();
 
-  private TranslatedStmt getElse() { result = getTranslatedStmt(stmt.getElse()) }
+  abstract TranslatedStmt getElse();
 
-  private predicate hasElse() { exists(stmt.getElse()) }
+  abstract predicate hasElse();
 
   override Instruction getInstructionSuccessorInternal(InstructionTag tag, EdgeKind kind) { none() }
 
@@ -912,7 +1021,11 @@ class TranslatedIfStmt extends TranslatedStmt, ConditionContext {
     child = this.getCondition() and
     if this.hasElse()
     then result = this.getElse().getFirstInstruction(kind)
-    else result = this.getParent().getChildSuccessor(this, kind)
+    else (
+      if this.hasAnImplicitDestructorCall()
+      then result = this.getChild(this.getFirstDestructorCallIndex()).getFirstInstruction(kind)
+      else result = this.getParent().getChildSuccessor(this, kind)
+    )
   }
 
   override Instruction getChildSuccessorInternal(TranslatedElement child, EdgeKind kind) {
@@ -920,7 +1033,24 @@ class TranslatedIfStmt extends TranslatedStmt, ConditionContext {
     result = this.getFirstConditionInstruction(kind)
     or
     (child = this.getThen() or child = this.getElse()) and
-    result = this.getParent().getChildSuccessor(this, kind)
+    (
+      if this.hasAnImplicitDestructorCall()
+      then result = this.getChild(this.getFirstDestructorCallIndex()).getFirstInstruction(kind)
+      else result = this.getParent().getChildSuccessor(this, kind)
+    )
+    or
+    exists(int destructorId |
+      destructorId >= this.getFirstDestructorCallIndex() and
+      child = this.getChild(destructorId) and
+      result = this.getChild(destructorId + 1).getFirstInstruction(kind)
+    )
+    or
+    exists(int lastDestructorIndex |
+      lastDestructorIndex =
+        max(int n | exists(this.getChild(n)) and n >= this.getFirstDestructorCallIndex()) and
+      child = this.getChild(lastDestructorIndex) and
+      result = this.getParent().getChildSuccessor(this, kind)
+    )
   }
 
   override predicate hasInstruction(Opcode opcode, InstructionTag tag, CppType resultType) {
@@ -928,76 +1058,44 @@ class TranslatedIfStmt extends TranslatedStmt, ConditionContext {
   }
 }
 
-class TranslatedConstExprIfStmt extends TranslatedStmt, ConditionContext {
-  override ConstexprIfStmt stmt;
+class TranslatedIfStmt extends TranslatedIfLikeStmt {
+  override IfStmt stmt;
 
-  override Instruction getFirstInstruction(EdgeKind kind) {
-    if this.hasInitialization()
-    then result = this.getInitialization().getFirstInstruction(kind)
-    else result = this.getFirstConditionInstruction(kind)
-  }
+  override predicate hasInitialization() { exists(stmt.getInitialization()) }
 
-  override TranslatedElement getChildInternal(int id) {
-    id = 0 and result = this.getInitialization()
-    or
-    id = 1 and result = this.getCondition()
-    or
-    id = 2 and result = this.getThen()
-    or
-    id = 3 and result = this.getElse()
-  }
-
-  private predicate hasInitialization() { exists(stmt.getInitialization()) }
-
-  private TranslatedStmt getInitialization() {
+  override TranslatedStmt getInitialization() {
     result = getTranslatedStmt(stmt.getInitialization())
   }
 
-  private TranslatedCondition getCondition() {
+  override TranslatedCondition getCondition() {
     result = getTranslatedCondition(stmt.getCondition().getFullyConverted())
   }
 
-  private Instruction getFirstConditionInstruction(EdgeKind kind) {
-    result = this.getCondition().getFirstInstruction(kind)
+  override TranslatedStmt getThen() { result = getTranslatedStmt(stmt.getThen()) }
+
+  override TranslatedStmt getElse() { result = getTranslatedStmt(stmt.getElse()) }
+
+  override predicate hasElse() { exists(stmt.getElse()) }
+}
+
+class TranslatedConstExprIfStmt extends TranslatedIfLikeStmt {
+  override ConstexprIfStmt stmt;
+
+  override predicate hasInitialization() { exists(stmt.getInitialization()) }
+
+  override TranslatedStmt getInitialization() {
+    result = getTranslatedStmt(stmt.getInitialization())
   }
 
-  private TranslatedStmt getThen() { result = getTranslatedStmt(stmt.getThen()) }
-
-  private TranslatedStmt getElse() { result = getTranslatedStmt(stmt.getElse()) }
-
-  private predicate hasElse() { exists(stmt.getElse()) }
-
-  override Instruction getInstructionSuccessorInternal(InstructionTag tag, EdgeKind kind) { none() }
-
-  override Instruction getChildTrueSuccessor(TranslatedCondition child, EdgeKind kind) {
-    child = this.getCondition() and
-    result = this.getThen().getFirstInstruction(kind)
+  override TranslatedCondition getCondition() {
+    result = getTranslatedCondition(stmt.getCondition().getFullyConverted())
   }
 
-  override Instruction getChildFalseSuccessor(TranslatedCondition child, EdgeKind kind) {
-    child = this.getCondition() and
-    if this.hasElse()
-    then result = this.getElse().getFirstInstruction(kind)
-    else result = this.getParent().getChildSuccessor(this, kind)
-  }
+  override TranslatedStmt getThen() { result = getTranslatedStmt(stmt.getThen()) }
 
-  override Instruction getChildSuccessorInternal(TranslatedElement child, EdgeKind kind) {
-    child = this.getInitialization() and
-    result = this.getFirstConditionInstruction(kind)
-    or
-    (child = this.getThen() or child = this.getElse()) and
-    result = this.getParent().getChildSuccessor(this, kind)
-  }
+  override TranslatedStmt getElse() { result = getTranslatedStmt(stmt.getElse()) }
 
-  override predicate hasInstruction(Opcode opcode, InstructionTag tag, CppType resultType) {
-    none()
-  }
-
-  override Instruction getALastInstructionInternal() {
-    result = this.getThen().getALastInstruction()
-    or
-    result = this.getElse().getALastInstruction()
-  }
+  override predicate hasElse() { exists(stmt.getElse()) }
 }
 
 abstract class TranslatedLoop extends TranslatedStmt, ConditionContext {
@@ -1177,6 +1275,8 @@ class TranslatedForStmt extends TranslatedLoop {
 class TranslatedRangeBasedForStmt extends TranslatedStmt, ConditionContext {
   override RangeBasedForStmt stmt;
 
+  override predicate handlesDestructorsExplicitly() { any() }
+
   override TranslatedElement getChildInternal(int id) {
     id = 0 and result = this.getInitialization()
     or
@@ -1230,6 +1330,19 @@ class TranslatedRangeBasedForStmt extends TranslatedStmt, ConditionContext {
     or
     child = this.getUpdate() and
     result = this.getCondition().getFirstInstruction(kind)
+    or
+    exists(int destructorId |
+      destructorId >= this.getFirstDestructorCallIndex() and
+      child = this.getChild(destructorId) and
+      result = this.getChild(destructorId + 1).getFirstInstruction(kind)
+    )
+    or
+    exists(int lastDestructorIndex |
+      lastDestructorIndex =
+        max(int n | exists(this.getChild(n)) and n >= this.getFirstDestructorCallIndex()) and
+      child = this.getChild(lastDestructorIndex) and
+      result = this.getParent().getChildSuccessor(this, kind)
+    )
   }
 
   override predicate hasInstruction(Opcode opcode, InstructionTag tag, CppType resultType) {
@@ -1245,7 +1358,9 @@ class TranslatedRangeBasedForStmt extends TranslatedStmt, ConditionContext {
 
   override Instruction getChildFalseSuccessor(TranslatedCondition child, EdgeKind kind) {
     child = this.getCondition() and
-    result = this.getParent().getChildSuccessor(this, kind)
+    if this.hasAnImplicitDestructorCall()
+    then result = this.getChild(this.getFirstDestructorCallIndex()).getFirstInstruction(kind)
+    else result = this.getParent().getChildSuccessor(this, kind)
   }
 
   private TranslatedDeclStmt getRangeVariableDeclStmt() {
@@ -1290,6 +1405,11 @@ class TranslatedJumpStmt extends TranslatedStmt {
   override JumpStmt stmt;
 
   override Instruction getFirstInstruction(EdgeKind kind) {
+    // The first instruction is a destructor call, if any.
+    result = this.getChildInternal(0).getFirstInstruction(kind)
+    or
+    // Otherwise, the first (and only) instruction is a `NoOp`
+    not exists(this.getChildInternal(0)) and
     result = this.getInstruction(OnlyInstructionTag()) and
     kind instanceof GotoEdge
   }
@@ -1298,7 +1418,20 @@ class TranslatedJumpStmt extends TranslatedStmt {
     result = this.getInstruction(OnlyInstructionTag())
   }
 
-  override TranslatedElement getChildInternal(int id) { none() }
+  private TranslatedCall getTranslatedImplicitDestructorCall(int id) {
+    result.getExpr() = stmt.getImplicitDestructorCall(id)
+  }
+
+  override TranslatedElement getLastChild() {
+    result =
+      this.getTranslatedImplicitDestructorCall(max(int id |
+          exists(stmt.getImplicitDestructorCall(id))
+        ))
+  }
+
+  override TranslatedElement getChildInternal(int id) {
+    result = this.getTranslatedImplicitDestructorCall(id)
+  }
 
   override predicate hasInstruction(Opcode opcode, InstructionTag tag, CppType resultType) {
     tag = OnlyInstructionTag() and
@@ -1311,7 +1444,19 @@ class TranslatedJumpStmt extends TranslatedStmt {
     result = getTranslatedStmt(stmt.getTarget()).getFirstInstruction(kind)
   }
 
-  override Instruction getChildSuccessorInternal(TranslatedElement child, EdgeKind kind) { none() }
+  final override predicate handlesDestructorsExplicitly() { any() }
+
+  override Instruction getChildSuccessorInternal(TranslatedElement child, EdgeKind kind) {
+    exists(int id | child = this.getChildInternal(id) |
+      // Transition to the next destructor call, if any.
+      result = this.getChildInternal(id + 1).getFirstInstruction(kind)
+      or
+      // And otherwise, exit this element by flowing to the target of the jump.
+      not exists(this.getChildInternal(id + 1)) and
+      kind instanceof GotoEdge and
+      result = this.getInstruction(OnlyInstructionTag())
+    )
+  }
 }
 
 private EdgeKind getCaseEdge(SwitchCase switchCase) {
@@ -1514,4 +1659,42 @@ class TranslatedVlaDeclarationStmt extends TranslatedStmt {
   }
 
   override Instruction getChildSuccessorInternal(TranslatedElement child, EdgeKind kind) { none() }
+}
+
+class TranslatedCoReturnStmt extends TranslatedStmt {
+  override CoReturnStmt stmt;
+
+  private TranslatedExpr getTranslatedOperand() {
+    result = getTranslatedExpr(stmt.getOperand().getFullyConverted())
+  }
+
+  override TranslatedExpr getChildInternal(int id) {
+    id = 0 and
+    result = this.getTranslatedOperand()
+  }
+
+  override Instruction getFirstInstruction(EdgeKind kind) {
+    result = this.getTranslatedOperand().getFirstInstruction(kind)
+  }
+
+  override Instruction getALastInstructionInternal() {
+    result = this.getInstruction(OnlyInstructionTag())
+  }
+
+  override predicate hasInstruction(Opcode opcode, InstructionTag tag, CppType resultType) {
+    tag = OnlyInstructionTag() and
+    opcode instanceof Opcode::NoOp and
+    resultType = getVoidType()
+  }
+
+  override Instruction getInstructionSuccessorInternal(InstructionTag tag, EdgeKind kind) {
+    tag = OnlyInstructionTag() and
+    result = this.getParent().getChildSuccessor(this, kind)
+  }
+
+  override Instruction getChildSuccessorInternal(TranslatedElement child, EdgeKind kind) {
+    child = this.getTranslatedOperand() and
+    kind instanceof GotoEdge and
+    result = this.getInstruction(OnlyInstructionTag())
+  }
 }

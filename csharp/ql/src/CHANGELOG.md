@@ -1,3 +1,83 @@
+## 1.0.10
+
+No user-facing changes.
+
+## 1.0.9
+
+### Minor Analysis Improvements
+
+* C#: The indexer and `Add` method on `System.Web.UI.AttributeCollection` is no longer considered an HTML sink.
+
+## 1.0.8
+
+No user-facing changes.
+
+## 1.0.7
+
+No user-facing changes.
+
+## 1.0.6
+
+### Minor Analysis Improvements
+
+* Attributes in the `System.Runtime.CompilerServices` namespace are ignored when checking if a declaration requires documentation comments.
+* C# build-mode `none` analyses now report a warning on the CodeQL status page when there are significant analysis problems -- defined as 5% of expressions lacking a type, or 5% of call targets being unknown. Other messages reported on the status page are downgraded from warnings to notes and so are less prominent, but are still available for review.
+
+## 1.0.5
+
+No user-facing changes.
+
+## 1.0.4
+
+No user-facing changes.
+
+## 1.0.3
+
+No user-facing changes.
+
+## 1.0.2
+
+No user-facing changes.
+
+## 1.0.1
+
+### Minor Analysis Improvements
+
+* .NET 8 Runtime models have been updated based on the newest version of the model generator. Furthermore, the database sources have been changed slightly to reduce result multiplicity.
+
+## 1.0.0
+
+### Breaking Changes
+
+* CodeQL package management is now generally available, and all GitHub-produced CodeQL packages have had their version numbers increased to 1.0.0.
+
+## 0.8.16
+
+No user-facing changes.
+
+## 0.8.15
+
+No user-facing changes.
+
+## 0.8.14
+
+No user-facing changes.
+
+## 0.8.13
+
+### Major Analysis Improvements
+
+* The `Stored` variants of some queries (`cs/stored-command-line-injection`, `cs/web/stored-xss`, `cs/stored-ldap-injection`, `cs/xml/stored-xpath-injection`, `cs/second-order-sql-injection`) have been removed. If you were using these queries, their results can be restored by enabling the `file` and `database` threat models in your threat model configuration.
+
+### Minor Analysis Improvements
+
+* The alert message of `cs/wrong-compareto-signature` has been changed to remove unnecessary element references.
+* Data flow queries that track flow from *local* flow sources now use the current *threat model* configuration instead. This may lead to changes in the produced alerts if the threat model configuration only uses *remote* flow sources. The changed queries are `cs/code-injection`, `cs/resource-injection`, `cs/sql-injection`, and `cs/uncontrolled-format-string`.
+
+## 0.8.12
+
+No user-facing changes.
+
 ## 0.8.11
 
 No user-facing changes.

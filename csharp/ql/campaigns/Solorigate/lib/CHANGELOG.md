@@ -1,3 +1,67 @@
+## 1.7.27
+
+No user-facing changes.
+
+## 1.7.26
+
+No user-facing changes.
+
+## 1.7.25
+
+No user-facing changes.
+
+## 1.7.24
+
+No user-facing changes.
+
+## 1.7.23
+
+No user-facing changes.
+
+## 1.7.22
+
+No user-facing changes.
+
+## 1.7.21
+
+No user-facing changes.
+
+## 1.7.20
+
+No user-facing changes.
+
+## 1.7.19
+
+No user-facing changes.
+
+## 1.7.18
+
+No user-facing changes.
+
+## 1.7.17
+
+No user-facing changes.
+
+## 1.7.16
+
+No user-facing changes.
+
+## 1.7.15
+
+No user-facing changes.
+
+## 1.7.14
+
+No user-facing changes.
+
+## 1.7.13
+
+No user-facing changes.
+
+## 1.7.12
+
+No user-facing changes.
+
 ## 1.7.11
 
 No user-facing changes.

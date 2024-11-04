@@ -227,6 +227,11 @@ module API {
     Node getASubclass() { result = this.getASuccessor(Label::subclass()) }
 
     /**
+     * Gets a node representing an instance of the class (or a transitive subclass of the class) represented by this node.
+     */
+    Node getAnInstance() { result = this.getASubclass*().getReturn() }
+
+    /**
      * Gets a node representing the result from awaiting this node.
      */
     Node getAwaited() { result = this.getASuccessor(Label::await()) }
@@ -257,7 +262,7 @@ module API {
      */
     Node getSubscript(string key) {
       exists(API::Node index | result = this.getSubscriptAt(index) |
-        key = index.getAValueReachingSink().asExpr().(PY::StrConst).getText()
+        key = index.getAValueReachingSink().asExpr().(PY::StringLiteral).getText()
       )
     }
 
@@ -837,6 +842,13 @@ module API {
         lbl = Label::subscript() and
         ref = pred.getSubscript(_) and
         ref.asCfgNode().isLoad()
+        or
+        // Subscript via comprehension
+        lbl = Label::subscript() and
+        exists(PY::Comp comp |
+          pred.asExpr() = comp.getIterable() and
+          ref.asExpr() = comp.getNthInnerLoop(0).getTarget()
+        )
         or
         // Subclassing a node
         lbl = Label::subclass() and

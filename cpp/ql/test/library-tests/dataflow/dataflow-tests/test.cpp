@@ -346,7 +346,7 @@ namespace FlowThroughGlobals {
   void taintAndCall() {
     globalVar = source();
     calledAfterTaint();
-    sink(globalVar); // $ ast ir=333:17 ir=347:17
+    sink(globalVar); // $ ast ir
   }
 }
 
@@ -575,7 +575,7 @@ namespace IndirectFlowThroughGlobals {
   void taintAndCall() {
     globalInt = indirect_source();
     calledAfterTaint();
-    sink(*globalInt); // $ ir=562:17 ir=576:17 MISSING: ast=562:17 ast=576:17
+    sink(*globalInt); // $ ir MISSING: ast=562:17 ast=576:17
   }
 }
 
@@ -1046,8 +1046,89 @@ void memset_test(char* buf) { // $ ast-def=buf ir-def=*buf
 	sink(*buf); // $ ir MISSING: ast
 }
 
+void *realloc(void *, size_t);
+
+void test_realloc() {
+	int *src = indirect_source();
+	int *dest = (int*)realloc(src, sizeof(int));
+	sink(*dest); // $ ir, MISSING: ast
+}
+
+struct MyInt {
+  int i;
+  MyInt();
+  void swap(MyInt &j);
+};
+
+void test_member_swap() {
+	MyInt s1;
+	MyInt s2;
+	s2.i = source();
+	MyInt s3;
+	MyInt s4;
+	s4.i = source();
+
+	sink(s1.i);
+	sink(s2.i); // $ ast,ir
+	sink(s3.i);
+	sink(s4.i); // $ ast,ir
+
+	s1.swap(s2);
+	s4.swap(s3);
+
+	sink(s1.i); // $ ir
+	sink(s2.i); // $ SPURIOUS: ast
+	sink(s3.i); // $ ir
+	sink(s4.i); // $ SPURIOUS: ast
+}
+
 void flow_out_of_address_with_local_flow() {
   MyStruct a;
   a.content = nullptr;
   sink(&a); // $ SPURIOUS: ast
+}
+
+static void static_func_that_reassigns_pointer_before_sink(char** pp) { // $ ast-def=pp ir-def=*pp ir-def=**pp
+    *pp = "";
+    indirect_sink(*pp); // clean
+}
+
+void test_static_func_that_reassigns_pointer_before_sink() {
+    char* p = (char*)indirect_source();
+    static_func_that_reassigns_pointer_before_sink(&p);
+}
+
+void single_object_in_both_cases(bool b, int x, int y) {
+  int* p;
+  if(b) {
+    p = &x;
+  } else {
+    p = &y;
+  }
+  *p = source();
+  *p = 0;
+  sink(*p); // clean
+}
+
+template<typename T>
+void indirect_sink_const_ref(const T&);
+
+void test_temp_with_conversion_from_materialization() {
+  indirect_sink_const_ref(source()); // $ ir MISSING: ast
+}
+
+void reads_input(int x) {
+  sink(x); // $ ir MISSING: ast
+}
+
+void not_does_read_input(int x);
+
+void (*dispatch_table[])(int) = {
+  reads_input,
+  not_does_read_input
+};
+
+void test_dispatch_table(int i) {
+  int x = source();
+  dispatch_table[i](x);
 }

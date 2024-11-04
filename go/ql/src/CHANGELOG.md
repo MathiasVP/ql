@@ -1,3 +1,85 @@
+## 1.1.1
+
+No user-facing changes.
+
+## 1.1.0
+
+### Query Metadata Changes
+
+* The precision of the `go/incorrect-integer-conversion-query` query was decreased from `very-high` to `high`, since there is at least one known class of false positives involving dynamic bounds checking.
+
+## 1.0.8
+
+No user-facing changes.
+
+## 1.0.7
+
+No user-facing changes.
+
+## 1.0.6
+
+No user-facing changes.
+
+## 1.0.5
+
+No user-facing changes.
+
+## 1.0.4
+
+No user-facing changes.
+
+## 1.0.3
+
+No user-facing changes.
+
+## 1.0.2
+
+No user-facing changes.
+
+## 1.0.1
+
+No user-facing changes.
+
+## 1.0.0
+
+### Breaking Changes
+
+* CodeQL package management is now generally available, and all GitHub-produced CodeQL packages have had their version numbers increased to 1.0.0.
+
+### Minor Analysis Improvements
+
+* The query `go/incorrect-integer-conversion` has now been restricted to only use flow through value-preserving steps. This reduces false positives, especially around type switches.
+
+## 0.7.16
+
+No user-facing changes.
+
+## 0.7.15
+
+### Minor Analysis Improvements
+
+* The query `go/incomplete-hostname-regexp` now recognizes more sources involving concatenation of string literals and also follows flow through string concatenation. This may lead to more alerts.
+* Added some more barriers to flow for `go/incorrect-integer-conversion` to reduce false positives, especially around type switches.
+
+## 0.7.14
+
+No user-facing changes.
+
+## 0.7.13
+
+### New Queries
+
+* The query "Slice memory allocation with excessive size value" (`go/uncontrolled-allocation-size`) has been promoted from experimental to the main query pack. Its results will now appear by default. This query was originally [submitted as an experimental query by @Malayke](https://github.com/github/codeql/pull/15130).
+
+### Minor Analysis Improvements
+
+* The query `go/hardcoded-credentials` no longer discards string literals based on "weak password" heuristics.
+* The query `go/sql-injection` now recognizes more sinks in the package `github.com/Masterminds/squirrel`.
+
+## 0.7.12
+
+No user-facing changes.
+
 ## 0.7.11
 
 No user-facing changes.

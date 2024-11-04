@@ -8,8 +8,11 @@
 
 import csharp
 import semmle.code.csharp.commons.Diagnostics
+import DatabaseQuality
 
 predicate compilationInfo(string key, float value) {
+  not key.matches("Compiler diagnostic count for%") and
+  not key.matches("Extractor message count for group%") and
   exists(Compilation c, string infoKey, string infoValue | infoValue = c.getInfo(infoKey) |
     key = infoKey and
     value = infoValue.toFloat()
@@ -18,6 +21,16 @@ predicate compilationInfo(string key, float value) {
     key = infoKey + ": " + infoValue and
     value = 1
   )
+}
+
+predicate compilerDiagnostics(string key, int value) {
+  key.matches("Compiler diagnostic count for%") and
+  strictsum(Compilation c | | c.getInfo(key).toInt()) = value
+}
+
+predicate extractorMessages(string key, int value) {
+  key.matches("Extractor message count for group%") and
+  strictsum(Compilation c | | c.getInfo(key).toInt()) = value
 }
 
 predicate fileCount(string key, int value) {
@@ -86,54 +99,7 @@ predicate extractionIsStandalone(string key, int value) {
     value = 0 and
     not extractionIsStandalone()
   ) and
-  key = "Is buildless extraction"
-}
-
-signature module StatsSig {
-  int getNumberOfOk();
-
-  int getNumberOfNotOk();
-
-  string getOkText();
-
-  string getNotOkText();
-}
-
-module ReportStats<StatsSig Stats> {
-  predicate numberOfOk(string key, int value) {
-    value = Stats::getNumberOfOk() and
-    key = "Number of " + Stats::getOkText()
-  }
-
-  predicate numberOfNotOk(string key, int value) {
-    value = Stats::getNumberOfNotOk() and
-    key = "Number of " + Stats::getNotOkText()
-  }
-
-  predicate percentageOfOk(string key, float value) {
-    value = Stats::getNumberOfOk() * 100.0 / (Stats::getNumberOfOk() + Stats::getNumberOfNotOk()) and
-    key = "Percentage of " + Stats::getOkText()
-  }
-}
-
-module CallTargetStats implements StatsSig {
-  int getNumberOfOk() { result = count(Call c | exists(c.getTarget())) }
-
-  int getNumberOfNotOk() { result = count(Call c | not exists(c.getTarget())) }
-
-  string getOkText() { result = "calls with call target" }
-
-  string getNotOkText() { result = "calls with missing call target" }
-}
-
-module ExprTypeStats implements StatsSig {
-  int getNumberOfOk() { result = count(Expr e | not e.getType() instanceof UnknownType) }
-
-  int getNumberOfNotOk() { result = count(Expr e | e.getType() instanceof UnknownType) }
-
-  string getOkText() { result = "expressions with known type" }
-
-  string getNotOkText() { result = "expressions with unknown type" }
+  key = "Is extracted with build-mode set to 'none'"
 }
 
 module TypeMentionTypeStats implements StatsSig {
@@ -166,10 +132,6 @@ module ExprStats implements StatsSig {
   string getNotOkText() { result = "expressions with unknown kind" }
 }
 
-module CallTargetStatsReport = ReportStats<CallTargetStats>;
-
-module ExprTypeStatsReport = ReportStats<ExprTypeStats>;
-
 module TypeMentionTypeStatsReport = ReportStats<TypeMentionTypeStats>;
 
 module AccessTargetStatsReport = ReportStats<AccessTargetStats>;
@@ -189,6 +151,8 @@ from string key, float value
 where
   (
     compilationInfo(key, value) or
+    compilerDiagnostics(key, value) or
+    extractorMessages(key, value) or
     fileCount(key, value) or
     fileCountByExtension(key, value) or
     totalNumberOfLines(key, value) or

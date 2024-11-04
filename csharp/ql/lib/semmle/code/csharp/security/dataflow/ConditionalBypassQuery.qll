@@ -6,6 +6,7 @@
 import csharp
 private import semmle.code.csharp.controlflow.Guards
 private import semmle.code.csharp.controlflow.BasicBlocks
+private import semmle.code.csharp.security.dataflow.flowsinks.FlowSinks
 private import semmle.code.csharp.security.dataflow.flowsources.FlowSources
 private import semmle.code.csharp.frameworks.System
 private import semmle.code.csharp.frameworks.system.Net
@@ -14,12 +15,12 @@ private import semmle.code.csharp.security.SensitiveActions
 /**
  * A data flow source for user-controlled bypass of sensitive method.
  */
-abstract class Source extends DataFlow::Node { }
+abstract class Source extends ApiSourceNode { }
 
 /**
  * A data flow sink for user-controlled bypass of sensitive method.
  */
-abstract class Sink extends DataFlow::ExprNode {
+abstract class Sink extends ApiSinkExprNode {
   /** Gets the 'MethodCall' which is considered sensitive. */
   abstract MethodCall getSensitiveMethodCall();
 }
@@ -28,21 +29,6 @@ abstract class Sink extends DataFlow::ExprNode {
  * A sanitizer for user-controlled bypass of sensitive method.
  */
 abstract class Sanitizer extends DataFlow::ExprNode { }
-
-/**
- * DEPRECATED: Use `ConditionalBypass` instead.
- *
- * A taint-tracking configuration for user-controlled bypass of sensitive method.
- */
-deprecated class Configuration extends TaintTracking::Configuration {
-  Configuration() { this = "UserControlledBypassOfSensitiveMethodConfiguration" }
-
-  override predicate isSource(DataFlow::Node source) { source instanceof Source }
-
-  override predicate isSink(DataFlow::Node sink) { sink instanceof Sink }
-
-  override predicate isSanitizer(DataFlow::Node node) { node instanceof Sanitizer }
-}
 
 /**
  * A taint-tracking configuration for user-controlled bypass of sensitive method.
@@ -68,7 +54,7 @@ module ConditionalBypass = TaintTracking::Global<ConditionalBypassConfig>;
 deprecated class RemoteSource extends DataFlow::Node instanceof RemoteFlowSource { }
 
 /** A source supported by the current threat model. */
-class ThreatModelSource extends Source instanceof ThreatModelFlowSource { }
+class ThreatModelSource extends Source instanceof ActiveThreatModelSource { }
 
 /** The result of a reverse dns may be user-controlled. */
 class ReverseDnsSource extends Source {

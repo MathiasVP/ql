@@ -128,13 +128,13 @@ private predicate ignoreExprAndDescendants(Expr expr) {
     vaStartExpr.getLastNamedParameter().getFullyConverted() = expr
   )
   or
-  // suppress destructors of temporary variables until proper support is added for them.
-  exists(Expr parent | parent.getAnImplicitDestructorCall() = expr)
+  // The children of C11 _Generic expressions are just surface syntax.
+  exists(C11GenericExpr generic | generic.getAChild() = expr)
   or
-  exists(Stmt parent |
-    parent.getAnImplicitDestructorCall() = expr and
-    expr.(DestructorCall).getQualifier() instanceof ReuseExpr
-  )
+  // Do not translate implicit destructor calls for unnamed temporary variables that are
+  // conditionally constructed (until we have a mechanism for calling these only when the
+  // temporary's constructor was run)
+  isConditionalTemporaryDestructorCall(expr)
 }
 
 /**
@@ -155,11 +155,6 @@ private predicate ignoreExprOnly(Expr expr) {
   or
   not translateFunction(getEnclosingFunction(expr)) and
   not Raw::varHasIRFunc(getEnclosingVariable(expr))
-  or
-  exists(DeleteOrDeleteArrayExpr deleteExpr |
-    // Ignore the destructor call, because the duplicated qualifier breaks control flow.
-    deleteExpr.getDestructorCall() = expr
-  )
 }
 
 /**
@@ -201,6 +196,8 @@ private predicate isInvalidFunction(Function func) {
     expr.getEnclosingFunction() = func and
     not exists(expr.getType())
   )
+  or
+  count(func.getEntryPoint().getLocation()) > 1
 }
 
 /**
@@ -262,6 +259,42 @@ private predicate usedAsCondition(Expr expr) {
   exists(ParenthesisExpr paren |
     paren.getExpr() = expr and
     usedAsCondition(paren)
+  )
+}
+
+private predicate hasThrowingChild(Expr e) {
+  e = any(ThrowExpr throw).getFullyConverted()
+  or
+  exists(Expr child |
+    e = getRealParent(child) and
+    hasThrowingChild(child)
+  )
+}
+
+private predicate isInConditionalEvaluation(Expr e) {
+  exists(ConditionalExpr cond |
+    e = cond.getThen().getFullyConverted() and not cond.isTwoOperand()
+    or
+    e = cond.getElse().getFullyConverted()
+    or
+    // If one of the operands throws then the temporaries constructed in either
+    // branch will also be attached to the ternary expression. We suppress
+    // those destructor calls as well.
+    hasThrowingChild([cond.getThen(), cond.getElse()]) and
+    e = cond.getFullyConverted()
+  )
+  or
+  e = any(LogicalAndExpr lae).getRightOperand().getFullyConverted()
+  or
+  e = any(LogicalOrExpr loe).getRightOperand().getFullyConverted()
+  or
+  isInConditionalEvaluation(getRealParent(e))
+}
+
+private predicate isConditionalTemporaryDestructorCall(DestructorCall dc) {
+  exists(TemporaryObjectExpr temp |
+    temp = dc.getQualifier().(ReuseExpr).getReusedExpr() and
+    isInConditionalEvaluation(temp)
   )
 }
 
@@ -404,6 +437,9 @@ predicate ignoreLoad(Expr expr) {
     // The load is duplicated from the right operand.
     isExtractorFrontendVersion65OrHigher() and expr instanceof CommaExpr
     or
+    // The load is duplicated from the chosen expression.
+    expr instanceof C11GenericExpr
+    or
     expr.(PointerDereferenceExpr).getOperand().getFullyConverted().getType().getUnspecifiedType()
       instanceof FunctionPointerType
     or
@@ -516,8 +552,7 @@ private module IRDeclarationEntries {
    * An entity that represents a declaration entry in the database.
    *
    * This class exists to work around the fact that `DeclStmt`s in some cases
-   * do not have `DeclarationEntry`s. Currently, this is the case for:
-   * - `DeclStmt`s in template instantiations.
+   * do not have `DeclarationEntry`s in older databases.
    *
    * So instead, the IR works with `IRDeclarationEntry`s that synthesize missing
    * `DeclarationEntry`s when there is no result for `DeclStmt::getDeclarationEntry`.
@@ -734,7 +769,10 @@ newtype TTranslatedElement =
   } or
   // A statement
   TTranslatedStmt(Stmt stmt) { translateStmt(stmt) } or
+  // The `__except` block of a `__try __except` statement
   TTranslatedMicrosoftTryExceptHandler(MicrosoftTryExceptStmt stmt) or
+  // The `__finally` block of a `__try __finally` statement
+  TTranslatedMicrosoftTryFinallyHandler(MicrosoftTryFinallyStmt stmt) or
   // A function
   TTranslatedFunction(Function func) { translateFunction(func) } or
   // A constructor init list
@@ -792,6 +830,22 @@ newtype TTranslatedElement =
     not ignoreExpr(expr) and
     not ignoreSideEffects(expr) and
     opcode = getCallSideEffectOpcode(expr)
+  } or
+  // The set of destructors to invoke after a `throw`. These need to be special
+  // cased because the edge kind following a throw is an `ExceptionEdge`, and
+  // we need to make sure that the edge kind is still an `ExceptionEdge` after
+  // all the destructors have run.
+  TTranslatedDestructorsAfterThrow(ThrowExpr throw) {
+    exists(DestructorCall dc |
+      dc = throw.getAnImplicitDestructorCall() and
+      not ignoreExpr(dc)
+    )
+  } or
+  // The set of destructors to invoke after a handler for a `try` statement. These
+  // need to be special cased because the destructors need to run following an
+  // `ExceptionEdge`, but not following a `GotoEdge` edge.
+  TTranslatedDestructorsAfterHandler(Handler handler) {
+    exists(handler.getAnImplicitDestructorCall())
   } or
   // A precise side effect of an argument to a `Call`
   TTranslatedArgumentExprSideEffect(Call call, Expr expr, int n, SideEffectOpcode opcode) {
@@ -876,9 +930,6 @@ abstract class TranslatedElement extends TTranslatedElement {
    * Gets the AST node being translated.
    */
   abstract Locatable getAst();
-
-  /** DEPRECATED: Alias for getAst */
-  deprecated Locatable getAST() { result = this.getAst() }
 
   /** Gets the location of this element. */
   Location getLocation() { result = this.getAst().getLocation() }

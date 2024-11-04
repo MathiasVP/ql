@@ -1,3 +1,74 @@
+## 1.0.10
+
+No user-facing changes.
+
+## 1.0.9
+
+No user-facing changes.
+
+## 1.0.8
+
+No user-facing changes.
+
+## 1.0.7
+
+No user-facing changes.
+
+## 1.0.6
+
+### Minor Analysis Improvements
+
+* False positive results from the `swift/cleartext-transmission` ("Cleartext transmission of sensitive information") query involving `tel:`, `mailto:` and similar URLs have been fixed.
+
+## 1.0.5
+
+### Minor Analysis Improvements
+
+* The `swift/constant-salt` ("Use of constant salts") query now considers string concatenation and interpolation as a barrier. As a result, there will be fewer false positive results from this query involving constructed strings.
+* The `swift/constant-salt` ("Use of constant salts") query message now contains a link to the source node.
+
+## 1.0.4
+
+No user-facing changes.
+
+## 1.0.3
+
+No user-facing changes.
+
+## 1.0.2
+
+No user-facing changes.
+
+## 1.0.1
+
+No user-facing changes.
+
+## 1.0.0
+
+### Breaking Changes
+
+* CodeQL package management is now generally available, and all GitHub-produced CodeQL packages have had their version numbers increased to 1.0.0.
+
+## 0.3.16
+
+No user-facing changes.
+
+## 0.3.15
+
+No user-facing changes.
+
+## 0.3.14
+
+No user-facing changes.
+
+## 0.3.13
+
+No user-facing changes.
+
+## 0.3.12
+
+No user-facing changes.
+
 ## 0.3.11
 
 No user-facing changes.

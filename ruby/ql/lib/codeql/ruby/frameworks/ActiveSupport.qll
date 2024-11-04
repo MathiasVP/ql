@@ -121,16 +121,6 @@ module ActiveSupport {
      * Extensions to the `Hash` class.
      */
     module Hash {
-      private class WithIndifferentAccessSummary extends SimpleSummarizedCallable {
-        WithIndifferentAccessSummary() { this = "with_indifferent_access" }
-
-        override predicate propagatesFlow(string input, string output, boolean preservesValue) {
-          input = "Argument[self].Element[any]" and
-          output = "ReturnValue.Element[any]" and
-          preservesValue = true
-        }
-      }
-
       /**
        * Flow summary for `reverse_merge`, and its alias `with_defaults`.
        */
@@ -167,8 +157,9 @@ module ActiveSupport {
         }
 
         override predicate propagatesFlow(string input, string output, boolean preservesValue) {
-          input = "Argument[self].Element[any]" and
-          output = "ReturnValue.Element[?]" and
+          // keys are considered equal modulo string/symbol in our implementation
+          input = "Argument[self].WithElement[any]" and
+          output = "ReturnValue" and
           preservesValue = true
         }
       }
@@ -475,62 +466,6 @@ module ActiveSupport {
           output = "ReturnValue" and
           preservesValue = false
         }
-      }
-    }
-  }
-
-  /**
-   * Type summaries for extensions to the `Pathname` module.
-   */
-  private class PathnameTypeSummary extends ModelInput::TypeModelCsv {
-    override predicate row(string row) {
-      // type1;type2;path
-      // Pathname#existence : Pathname
-      row = "Pathname;Pathname;Method[existence].ReturnValue"
-    }
-  }
-
-  /** Taint flow summaries for extensions to the `Pathname` module. */
-  private class PathnameTaintSummary extends ModelInput::SummaryModelCsv {
-    override predicate row(string row) {
-      // Pathname#existence
-      row = "Pathname;Method[existence];Argument[self];ReturnValue;taint"
-    }
-  }
-
-  /**
-   * `ActiveSupport::SafeBuffer` wraps a string, providing HTML-safe methods
-   * for concatenation.
-   * It is possible to insert tainted data into `SafeBuffer` that won't get
-   * sanitized, and this taint is then propagated via most of the methods.
-   */
-  private class SafeBufferSummary extends ModelInput::SummaryModelCsv {
-    // TODO: SafeBuffer also reponds to all String methods.
-    // Can we model this without repeating all the existing summaries we have
-    // for String?
-    override predicate row(string row) {
-      row =
-        [
-          // SafeBuffer.new(x) does not sanitize x
-          "ActionView::SafeBuffer!;Method[new];Argument[0];ReturnValue;taint",
-          // SafeBuffer#safe_concat(x) does not sanitize x
-          "ActionView::SafeBuffer;Method[safe_concat];Argument[0];ReturnValue;taint",
-          "ActionView::SafeBuffer;Method[safe_concat];Argument[0];Argument[self];taint",
-          // These methods preserve taint in self
-          "ActionView::SafeBuffer;Method[concat,insert,prepend,to_s,to_param];Argument[self];ReturnValue;taint",
-        ]
-    }
-  }
-
-  /** `ActiveSupport::JSON` */
-  module Json {
-    private class JsonSummary extends ModelInput::SummaryModelCsv {
-      override predicate row(string row) {
-        row =
-          [
-            "ActiveSupport::JSON!;Method[encode,dump];Argument[0];ReturnValue;taint",
-            "ActiveSupport::JSON!;Method[decode,load];Argument[0];ReturnValue;taint",
-          ]
       }
     }
   }

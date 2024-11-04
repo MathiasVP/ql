@@ -28,12 +28,6 @@ class Element extends @element {
   predicate fromLibrary() { this.getFile().fromLibrary() }
 
   /**
-   * Gets the "language" of this program element, as defined by the extension of the filename.
-   * For example, C# has language "cs", and Visual Basic has language "vb".
-   */
-  deprecated final string getLanguage() { result = this.getLocation().getFile().getExtension() }
-
-  /**
    * Gets a comma-separated list of the names of the primary CodeQL classes to which this element belongs.
    *
    * If no primary class can be determined, the result is `"???"`.
@@ -102,25 +96,8 @@ class NamedElement extends Element, @named_element {
   final predicate hasName(string name) { name = this.getName() }
 
   /**
-   * Gets the fully qualified name of this element, for example the
-   * fully qualified name of `M` on line 3 is `N.C.M` in
+   * DEPRECATED: Use `hasFullyQualifiedName` instead.
    *
-   * ```csharp
-   * namespace N {
-   *   class C {
-   *     void M(int i, string s) { }
-   *   }
-   * }
-   * ```
-   */
-  cached
-  deprecated final string getQualifiedName() {
-    exists(string qualifier, string name | this.hasQualifiedName(qualifier, name) |
-      if qualifier = "" then result = name else result = qualifier + "." + name
-    )
-  }
-
-  /**
    * Gets the fully qualified name of this element, for example the
    * fully qualified name of `M` on line 3 is `N.C.M` in
    *
@@ -135,51 +112,45 @@ class NamedElement extends Element, @named_element {
    * Unbound generic types, such as `IList<T>`, are represented as
    * ``System.Collections.Generic.IList`1``.
    */
-  cached
-  final string getFullyQualifiedName() {
+  deprecated final string getFullyQualifiedName() {
     exists(string qualifier, string name | this.hasFullyQualifiedName(qualifier, name) |
       if qualifier = "" then result = name else result = qualifier + "." + name
     )
   }
 
   /**
-   * DEPRECATED: Use `hasFullyQualifiedName` instead.
+   * INTERNAL: Do not use.
    *
-   * Holds if this element has the qualified name `qualifier`.`name`.
+   * This is intended for DEBUG ONLY.
+   * Constructing the fully qualified name for all elements in a large codebase
+   * puts severe stress on the string pool.
+   *
+   * Gets the fully qualified name of this element, for example the
+   * fully qualified name of `M` on line 3 is `N.C.M` in
+   *
+   * ```csharp
+   * namespace N {
+   *   class C {
+   *     void M(int i, string s) { }
+   *   }
+   * }
+   * ```
+   *
+   * Unbound generic types, such as `IList<T>`, are represented as
+   * ``System.Collections.Generic.IList`1``.
    */
-  cached
-  deprecated predicate hasQualifiedName(string qualifier, string name) {
-    qualifier = "" and name = this.getName()
+  bindingset[this]
+  pragma[inline_late]
+  final string getFullyQualifiedNameDebug() {
+    exists(string qualifier, string name | this.hasFullyQualifiedName(qualifier, name) |
+      if qualifier = "" then result = name else result = qualifier + "." + name
+    )
   }
 
   /** Holds if this element has the fully qualified name `qualifier`.`name`. */
   cached
   predicate hasFullyQualifiedName(string qualifier, string name) {
     qualifier = "" and name = this.getName()
-  }
-
-  /** Gets a unique string label for this element. */
-  cached
-  deprecated string getLabel() { none() }
-
-  /** Holds if `other` has the same metadata handle in the same assembly. */
-  deprecated predicate matchesHandle(NamedElement other) {
-    exists(Assembly asm, int handle |
-      metadata_handle(this, asm, handle) and
-      metadata_handle(other, asm, handle)
-    )
-  }
-
-  /**
-   * Holds if this element was compiled from source code that is also present in the
-   * database. That is, this element corresponds to another element from source.
-   */
-  deprecated predicate compiledFromSource() {
-    not this.fromSource() and
-    exists(NamedElement other | other != this |
-      this.matchesHandle(other) and
-      other.fromSource()
-    )
   }
 
   override string toString() { result = this.getName() }

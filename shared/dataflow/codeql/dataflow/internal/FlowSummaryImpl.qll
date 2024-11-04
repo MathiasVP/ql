@@ -4,7 +4,6 @@
 
 private import codeql.dataflow.DataFlow as DF
 private import codeql.util.Location
-private import DataFlowImpl
 private import AccessPathSyntax as AccessPathSyntax
 
 /**
@@ -18,6 +17,17 @@ signature module InputSig<LocationSig Location, DF::InputSig<Location> Lang> {
   class SummarizedCallableBase {
     bindingset[this]
     string toString();
+  }
+
+  /**
+   * Holds if a neutral (MaD) model exists for `c` of kind `kind`
+   * with provenance `provenance` and `isExact` is true if the model
+   * signature matches `c` exactly - otherwise false.
+   */
+  default predicate neutralElement(
+    SummarizedCallableBase c, string kind, string provenance, boolean isExact
+  ) {
+    none()
   }
 
   /** Gets the parameter position representing a callback itself, if any. */
@@ -161,6 +171,7 @@ module Make<
         [
           "ai", // AI (machine learning)
           "df", // Dataflow (model generator)
+          "dfc", // Content dataflow (model generator)
           "tb", // Type based (model generator)
           "hq", // Heuristic query
         ]
@@ -210,9 +221,14 @@ module Make<
        * Holds if data may flow from `input` to `output` through this callable.
        *
        * `preservesValue` indicates whether this is a value-preserving step or a taint-step.
+       *
+       * If `model` is non-empty then it indicates the provenance of the model
+       * defining this flow.
        */
       pragma[nomagic]
-      abstract predicate propagatesFlow(string input, string output, boolean preservesValue);
+      abstract predicate propagatesFlow(
+        string input, string output, boolean preservesValue, string model
+      );
 
       /**
        * Holds if there exists a generated summary that applies to this callable.
@@ -248,45 +264,115 @@ module Make<
        * that has provenance `provenance`.
        */
       predicate hasProvenance(Provenance provenance) { provenance = "manual" }
-    }
-
-    final private class NeutralCallableFinal = NeutralCallable;
-
-    /**
-     * A callable where there is no flow via the callable.
-     */
-    class NeutralSummaryCallable extends NeutralCallableFinal {
-      NeutralSummaryCallable() { this.getKind() = "summary" }
-    }
-
-    /**
-     * A callable that has a neutral model.
-     */
-    abstract class NeutralCallable extends SummarizedCallableBaseFinal {
-      bindingset[this]
-      NeutralCallable() { exists(this) }
 
       /**
-       * Holds if the neutral is auto generated.
+       * Holds if there exists a model for which this callable is an exact
+       * match, that is, no overriding was used to identify this callable from
+       * the model.
        */
-      final predicate hasGeneratedModel() {
-        any(Provenance p | this.hasProvenance(p)).isGenerated()
-      }
+      predicate hasExactModel() { none() }
+    }
 
-      /**
-       * Holds if there exists a manual neutral that applies to this callable.
-       */
-      final predicate hasManualModel() { any(Provenance p | this.hasProvenance(p)).isManual() }
+    private signature predicate hasKindSig(string kind);
 
+    signature class NeutralCallableSig extends SummarizedCallableBaseFinal {
       /**
        * Holds if the neutral has provenance `p`.
        */
-      abstract predicate hasProvenance(Provenance p);
+      predicate hasProvenance(Provenance p);
 
       /**
        * Gets the kind of the neutral.
        */
-      abstract string getKind();
+      string getKind();
+
+      /**
+       * Holds if the neutral is auto generated.
+       */
+      predicate hasGeneratedModel();
+
+      /**
+       * Holds if there exists a manual neutral that applies to this callable.
+       */
+      predicate hasManualModel();
+    }
+
+    /**
+     * A module for constructing classes of neutral callables.
+     */
+    private module MakeNeutralCallable<hasKindSig/1 hasKind> {
+      class NeutralCallable extends SummarizedCallableBaseFinal {
+        private string kind;
+        private string provenance_;
+        private boolean exact;
+
+        NeutralCallable() {
+          hasKind(kind) and
+          neutralElement(this, kind, provenance_, exact)
+        }
+
+        /**
+         * Gets the kind of the neutral.
+         */
+        string getKind() { result = kind }
+
+        /**
+         * Holds if the neutral has provenance `p`.
+         */
+        predicate hasProvenance(Provenance provenance) { provenance = provenance_ }
+
+        /**
+         * Holds if the neutral is auto generated.
+         */
+        final predicate hasGeneratedModel() {
+          any(Provenance p | this.hasProvenance(p)).isGenerated()
+        }
+
+        /**
+         * Holds if there exists a manual neutral that applies to this callable.
+         */
+        final predicate hasManualModel() { any(Provenance p | this.hasProvenance(p)).isManual() }
+
+        /**
+         * Holds if there exists a model for which this callable is an exact
+         * match, that is, no overriding was used to identify this callable from
+         * the model.
+         */
+        predicate hasExactModel() { exact = true }
+      }
+    }
+
+    private predicate neutralSummaryKind(string kind) { kind = "summary" }
+
+    /**
+     * A callable where there exists a MaD neutral summary model that applies to it.
+     */
+    class NeutralSummaryCallable = MakeNeutralCallable<neutralSummaryKind/1>::NeutralCallable;
+
+    private predicate neutralSourceKind(string kind) { kind = "source" }
+
+    /**
+     * A callable where there exists a MaD neutral source model that applies to it.
+     */
+    class NeutralSourceCallable = MakeNeutralCallable<neutralSourceKind/1>::NeutralCallable;
+
+    private predicate neutralSinkKind(string kind) { kind = "sink" }
+
+    /**
+     * A callable where there exists a MaD neutral sink model that applies to it.
+     */
+    class NeutralSinkCallable = MakeNeutralCallable<neutralSinkKind/1>::NeutralCallable;
+
+    /**
+     * A callable where there exist a MaD neutral (summary, source or sink) model
+     * that applies to it.
+     */
+    class NeutralCallable extends SummarizedCallableBaseFinal {
+      NeutralCallable() {
+        this instanceof NeutralSummaryCallable or
+        this instanceof NeutralSourceCallable or
+        this instanceof NeutralSinkCallable
+      }
     }
   }
 
@@ -398,9 +484,9 @@ module Make<
 
     private predicate summarySpec(string spec) {
       exists(SummarizedCallable c |
-        c.propagatesFlow(spec, _, _)
+        c.propagatesFlow(spec, _, _, _)
         or
-        c.propagatesFlow(_, spec, _)
+        c.propagatesFlow(_, spec, _, _)
       )
     }
 
@@ -555,7 +641,7 @@ module Make<
      *
      * ```ql
      * private class CAdapter extends SummarizedCallable instanceof C {
-     *   override predicate propagatesFlow(string input, string output, boolean preservesValue) {
+     *   override predicate propagatesFlow(string input, string output, boolean preservesValue, string model) {
      *     none()
      *   }
      *
@@ -575,6 +661,9 @@ module Make<
        * `preservesValue` indicates whether this is a value-preserving step
        * or a taint-step.
        *
+       * If `model` is non-empty then it indicates the provenance of the model
+       * defining this flow.
+       *
        * Input specifications are restricted to stacks that end with
        * `SummaryComponent::argument(_)`, preceded by zero or more
        * `SummaryComponent::return(_)` or `SummaryComponent::content(_)` components.
@@ -591,7 +680,8 @@ module Make<
        */
       pragma[nomagic]
       abstract predicate propagatesFlow(
-        SummaryComponentStack input, SummaryComponentStack output, boolean preservesValue
+        SummaryComponentStack input, SummaryComponentStack output, boolean preservesValue,
+        string model
       );
 
       /**
@@ -604,19 +694,19 @@ module Make<
     pragma[nomagic]
     private predicate summary(
       SummarizedCallableImpl c, SummaryComponentStack input, SummaryComponentStack output,
-      boolean preservesValue
+      boolean preservesValue, string model
     ) {
-      c.propagatesFlow(input, output, preservesValue)
+      c.propagatesFlow(input, output, preservesValue, model)
       or
       // observe side effects of callbacks on input arguments
-      c.propagatesFlow(output, input, preservesValue) and
+      c.propagatesFlow(output, input, preservesValue, model) and
       preservesValue = true and
       isCallbackParameter(input) and
       isContentOfArgument(output, _)
       or
       // flow from the receiver of a callback into the instance-parameter
       exists(SummaryComponentStack s, SummaryComponentStack callbackRef |
-        c.propagatesFlow(s, _, _) or c.propagatesFlow(_, s, _)
+        c.propagatesFlow(s, _, _, model) or c.propagatesFlow(_, s, _, model)
       |
         callbackRef = s.drop(_) and
         (isCallbackParameter(callbackRef) or callbackRef.head() = TReturnSummaryComponent(_)) and
@@ -626,7 +716,7 @@ module Make<
       )
       or
       exists(SummaryComponentStack arg, SummaryComponentStack return |
-        derivedFluentFlow(c, input, arg, return, preservesValue)
+        derivedFluentFlow(c, input, arg, return, preservesValue, model)
       |
         arg.length() = 1 and
         output = return
@@ -638,13 +728,17 @@ module Make<
       )
       or
       // Chain together summaries where values get passed into callbacks along the way
-      exists(SummaryComponentStack mid, boolean preservesValue1, boolean preservesValue2 |
-        c.propagatesFlow(input, mid, preservesValue1) and
-        c.propagatesFlow(mid, output, preservesValue2) and
+      exists(
+        SummaryComponentStack mid, boolean preservesValue1, boolean preservesValue2, string model1,
+        string model2
+      |
+        c.propagatesFlow(input, mid, preservesValue1, model1) and
+        c.propagatesFlow(mid, output, preservesValue2, model2) and
         mid.drop(mid.length() - 2) =
           SummaryComponentStack::push(TParameterSummaryComponent(_),
             SummaryComponentStack::singleton(TArgumentSummaryComponent(_))) and
-        preservesValue = preservesValue1.booleanAnd(preservesValue2)
+        preservesValue = preservesValue1.booleanAnd(preservesValue2) and
+        model = mergeModels(model1, model2)
       )
     }
 
@@ -665,14 +759,25 @@ module Make<
     pragma[nomagic]
     private predicate derivedFluentFlow(
       SummarizedCallable c, SummaryComponentStack input, SummaryComponentStack arg,
-      SummaryComponentStack return, boolean preservesValue
+      SummaryComponentStack return, boolean preservesValue, string model
     ) {
-      exists(ParameterPosition pos |
-        summary(c, input, arg, preservesValue) and
+      exists(ParameterPosition pos, string model1, string model2 |
+        summary(c, input, arg, preservesValue, model1) and
         isContentOfArgument(arg, pos) and
-        summary(c, SummaryComponentStack::argument(pos), return, true) and
-        return.bottom() = TReturnSummaryComponent(_)
+        summary(c, SummaryComponentStack::argument(pos), return, true, model2) and
+        return.bottom() = TReturnSummaryComponent(_) and
+        model = mergeModels(model1, model2)
       )
+    }
+
+    bindingset[model1, model2]
+    pragma[inline_late]
+    private string mergeModels(string model1, string model2) {
+      model1 = "" and result = model2
+      or
+      model2 = "" and result = model1
+      or
+      model1 != "" and model2 != "" and result = model1 + "+" + model2
     }
 
     pragma[nomagic]
@@ -680,7 +785,7 @@ module Make<
       SummarizedCallable c, SummaryComponentStack input, SummaryComponentStack arg,
       SummaryComponent head, SummaryComponentStack tail, int i
     ) {
-      derivedFluentFlow(c, input, arg, tail, _) and
+      derivedFluentFlow(c, input, arg, tail, _, _) and
       head = arg.drop(i).head() and
       i = arg.length() - 2
       or
@@ -702,7 +807,7 @@ module Make<
     }
 
     private predicate outputState(SummarizedCallable c, SummaryComponentStack s) {
-      summary(c, _, s, _)
+      summary(c, _, s, _, _)
       or
       exists(SummaryComponentStack out |
         outputState(c, out) and
@@ -715,7 +820,7 @@ module Make<
     }
 
     private predicate inputState(SummarizedCallable c, SummaryComponentStack s) {
-      summary(c, s, _, _)
+      summary(c, s, _, _, _)
       or
       exists(SummaryComponentStack inp | inputState(c, inp) and s = inp.tail())
       or
@@ -742,7 +847,7 @@ module Make<
      *
      * ```ql
      * propagatesFlow(
-     *   SummaryComponentStack input, SummaryComponentStack output, boolean preservesValue
+     *   SummaryComponentStack input, SummaryComponentStack output, boolean preservesValue, string model
      * )
      * ```
      *
@@ -952,7 +1057,7 @@ module Make<
      */
     predicate summaryAllowParameterReturnInSelf(SummarizedCallable c, ParameterPosition ppos) {
       exists(SummaryComponentStack inputContents, SummaryComponentStack outputContents |
-        summary(c, inputContents, outputContents, _) and
+        summary(c, inputContents, outputContents, _, _) and
         inputContents.bottom() = pragma[only_bind_into](TArgumentSummaryComponent(ppos)) and
         outputContents.bottom() = pragma[only_bind_into](TArgumentSummaryComponent(ppos))
       )
@@ -1077,25 +1182,28 @@ module Make<
        * Holds if there is a local step from `pred` to `succ`, which is synthesized
        * from a flow summary.
        */
-      predicate summaryLocalStep(SummaryNode pred, SummaryNode succ, boolean preservesValue) {
+      predicate summaryLocalStep(
+        SummaryNode pred, SummaryNode succ, boolean preservesValue, string model
+      ) {
         exists(
           SummarizedCallable c, SummaryComponentStack inputContents,
           SummaryComponentStack outputContents
         |
-          summary(c, inputContents, outputContents, preservesValue) and
+          summary(c, inputContents, outputContents, preservesValue, model) and
           pred = summaryNodeInputState(pragma[only_bind_into](c), inputContents) and
           succ = summaryNodeOutputState(pragma[only_bind_into](c), outputContents)
         |
           preservesValue = true
           or
-          preservesValue = false and not summary(c, inputContents, outputContents, true)
+          preservesValue = false and not summary(c, inputContents, outputContents, true, _)
         )
         or
         exists(SummarizedCallable c, SummaryComponentStack s |
           pred = summaryNodeInputState(c, s.tail()) and
           succ = summaryNodeInputState(c, s) and
           s.head() = [SummaryComponent::withContent(_), SummaryComponent::withoutContent(_)] and
-          preservesValue = true
+          preservesValue = true and
+          model = ""
         )
       }
 
@@ -1202,7 +1310,7 @@ module Make<
         or
         exists(SummaryNode mid, boolean clearsOrExpectsMid |
           paramReachesLocal(p, mid, clearsOrExpectsMid) and
-          summaryLocalStep(mid, n, true) and
+          summaryLocalStep(mid, n, true, _) and
           if
             summaryClearsContent(n, _) or
             summaryExpectsContent(n, _)
@@ -1259,10 +1367,8 @@ module Make<
        * be useful to include in the exposed local data-flow/taint-tracking relations.
        */
       predicate summaryThroughStepValue(ArgNode arg, Node out, SummarizedCallable sc) {
-        exists(ReturnKind rk, SummaryNode ret, DataFlowCall call |
-          summaryLocalStep(summaryArgParam(call, arg, sc), ret, true) and
-          summaryReturnNode(ret, pragma[only_bind_into](rk)) and
-          out = getAnOutNode(call, pragma[only_bind_into](rk))
+        exists(SummaryNode ret |
+          summaryLocalStep(summaryArgParamRetOut(arg, ret, out, sc), ret, true, _)
         )
       }
 
@@ -1275,7 +1381,7 @@ module Make<
        */
       predicate summaryThroughStepTaint(ArgNode arg, Node out, SummarizedCallable sc) {
         exists(SummaryNode ret |
-          summaryLocalStep(summaryArgParamRetOut(arg, ret, out, sc), ret, false)
+          summaryLocalStep(summaryArgParamRetOut(arg, ret, out, sc), ret, false, _)
         )
       }
 
@@ -1289,7 +1395,7 @@ module Make<
       predicate summaryGetterStep(ArgNode arg, ContentSet c, Node out, SummarizedCallable sc) {
         exists(SummaryNode mid, SummaryNode ret |
           summaryReadStep(summaryArgParamRetOut(arg, ret, out, sc), c, mid) and
-          summaryLocalStep(mid, ret, _)
+          summaryLocalStep(mid, ret, _, _)
         )
       }
 
@@ -1302,7 +1408,7 @@ module Make<
        */
       predicate summarySetterStep(ArgNode arg, ContentSet c, Node out, SummarizedCallable sc) {
         exists(SummaryNode mid, SummaryNode ret |
-          summaryLocalStep(summaryArgParamRetOut(arg, ret, out, sc), mid, _) and
+          summaryLocalStep(summaryArgParamRetOut(arg, ret, out, sc), mid, _, _) and
           summaryStoreStep(mid, c, ret)
         )
       }
@@ -1425,10 +1531,11 @@ module Make<
       private class SummarizedCallableImplAdapter extends SummarizedCallableImpl instanceof SummarizedCallable
       {
         override predicate propagatesFlow(
-          SummaryComponentStack input, SummaryComponentStack output, boolean preservesValue
+          SummaryComponentStack input, SummaryComponentStack output, boolean preservesValue,
+          string model
         ) {
           exists(AccessPath inSpec, AccessPath outSpec |
-            SummarizedCallable.super.propagatesFlow(inSpec, outSpec, preservesValue) and
+            SummarizedCallable.super.propagatesFlow(inSpec, outSpec, preservesValue, model) and
             interpretSpec(inSpec, input) and
             interpretSpec(outSpec, output)
           )
@@ -1470,13 +1577,17 @@ module Make<
          * Holds if an external source specification exists for `n` with output specification
          * `output` and kind `kind`.
          */
-        predicate sourceElement(Element n, string output, string kind, Provenance provenance);
+        predicate sourceElement(
+          Element n, string output, string kind, Provenance provenance, string model
+        );
 
         /**
          * Holds if an external sink specification exists for `n` with input specification
          * `input` and kind `kind`.
          */
-        predicate sinkElement(Element n, string input, string kind, Provenance provenance);
+        predicate sinkElement(
+          Element n, string input, string kind, Provenance provenance, string model
+        );
 
         class SourceOrSinkElement extends Element;
 
@@ -1530,8 +1641,8 @@ module Make<
         private import SourceSinkInterpretationInput
 
         private predicate sourceSinkSpec(string spec) {
-          sourceElement(_, spec, _, _) or
-          sinkElement(_, spec, _, _)
+          sourceElement(_, spec, _, _, _) or
+          sinkElement(_, spec, _, _, _)
         }
 
         private module AccessPath = AccessPathSyntax::AccessPath<sourceSinkSpec/1>;
@@ -1560,10 +1671,10 @@ module Make<
         }
 
         private predicate sourceElementRef(
-          InterpretNode ref, SourceSinkAccessPath output, string kind
+          InterpretNode ref, SourceSinkAccessPath output, string kind, string model
         ) {
           exists(SourceOrSinkElement e |
-            sourceElement(e, output, kind, _) and
+            sourceElement(e, output, kind, _, model) and
             if outputNeedsReferenceExt(output.getToken(0))
             then e = ref.getCallTarget()
             else e = ref.asElement()
@@ -1575,9 +1686,11 @@ module Make<
           inputNeedsReference(c)
         }
 
-        private predicate sinkElementRef(InterpretNode ref, SourceSinkAccessPath input, string kind) {
+        private predicate sinkElementRef(
+          InterpretNode ref, SourceSinkAccessPath input, string kind, string model
+        ) {
           exists(SourceOrSinkElement e |
-            sinkElement(e, input, kind, _) and
+            sinkElement(e, input, kind, _, model) and
             if inputNeedsReferenceExt(input.getToken(0))
             then e = ref.getCallTarget()
             else e = ref.asElement()
@@ -1588,7 +1701,7 @@ module Make<
         private predicate interpretOutput(
           SourceSinkAccessPath output, int n, InterpretNode ref, InterpretNode node
         ) {
-          sourceElementRef(ref, output, _) and
+          sourceElementRef(ref, output, _, _) and
           n = 0 and
           (
             if output = ""
@@ -1638,7 +1751,7 @@ module Make<
         private predicate interpretInput(
           SourceSinkAccessPath input, int n, InterpretNode ref, InterpretNode node
         ) {
-          sinkElementRef(ref, input, _) and
+          sinkElementRef(ref, input, _, _) and
           n = 0 and
           (
             if input = ""
@@ -1660,10 +1773,11 @@ module Make<
               )
             )
             or
-            exists(ReturnNodeExt ret |
+            exists(ReturnNode ret, ValueReturnKind kind |
               c = "ReturnValue" and
               ret = node.asNode() and
-              ret.getKind().(ValueReturnKind).getKind() = getStandardReturnValueKind() and
+              kind.getKind() = ret.getKind() and
+              kind.getKind() = getStandardReturnValueKind() and
               mid.asCallable() = getNodeEnclosingCallable(ret)
             )
             or
@@ -1675,9 +1789,9 @@ module Make<
          * Holds if `node` is specified as a source with the given kind in a MaD flow
          * model.
          */
-        predicate isSourceNode(InterpretNode node, string kind) {
+        predicate isSourceNode(InterpretNode node, string kind, string model) {
           exists(InterpretNode ref, SourceSinkAccessPath output |
-            sourceElementRef(ref, output, kind) and
+            sourceElementRef(ref, output, kind, model) and
             interpretOutput(output, output.getNumToken(), ref, node)
           )
         }
@@ -1686,12 +1800,46 @@ module Make<
          * Holds if `node` is specified as a sink with the given kind in a MaD flow
          * model.
          */
-        predicate isSinkNode(InterpretNode node, string kind) {
+        predicate isSinkNode(InterpretNode node, string kind, string model) {
           exists(InterpretNode ref, SourceSinkAccessPath input |
-            sinkElementRef(ref, input, kind) and
+            sinkElementRef(ref, input, kind, model) and
             interpretInput(input, input.getNumToken(), ref, node)
           )
         }
+
+        final private class SourceOrSinkElementFinal = SourceOrSinkElement;
+
+        signature predicate sourceOrSinkElementSig(
+          Element e, string path, string kind, Provenance provenance, string model
+        );
+
+        private module MakeSourceOrSinkCallable<sourceOrSinkElementSig/5 sourceOrSinkElement> {
+          class SourceSinkCallable extends SourceOrSinkElementFinal {
+            private Provenance provenance;
+
+            SourceSinkCallable() { sourceOrSinkElement(this, _, _, provenance, _) }
+
+            /**
+             * Holds if there exists a manual model that applies to this.
+             */
+            predicate hasManualModel() { any(Provenance p | this.hasProvenance(p)).isManual() }
+
+            /**
+             * Holds if this has provenance `p`.
+             */
+            predicate hasProvenance(Provenance p) { provenance = p }
+          }
+        }
+
+        /**
+         * A callable that has a source model.
+         */
+        class SourceModelCallable = MakeSourceOrSinkCallable<sourceElement/5>::SourceSinkCallable;
+
+        /**
+         * A callable that has a sink model.
+         */
+        class SinkModelCallable = MakeSourceOrSinkCallable<sinkElement/5>::SourceSinkCallable;
 
         /** A source or sink relevant for testing. */
         signature class RelevantSourceOrSinkElementSig extends SourceOrSinkElement {
@@ -1711,7 +1859,7 @@ module Make<
            */
           query predicate source(string csv) {
             exists(RelevantSource s, string output, string kind, Provenance provenance |
-              sourceElement(s, output, kind, provenance) and
+              sourceElement(s, output, kind, provenance, _) and
               csv =
                 s.getCallableCsv() // Callable information
                   + output + ";" // output
@@ -1728,7 +1876,7 @@ module Make<
            */
           query predicate sink(string csv) {
             exists(RelevantSink s, string input, string kind, Provenance provenance |
-              sinkElement(s, input, kind, provenance) and
+              sinkElement(s, input, kind, provenance, _) and
               csv =
                 s.getCallableCsv() // Callable information
                   + input + ";" // input
@@ -1789,13 +1937,20 @@ module Make<
     }
 
     /** A summarized callable relevant for testing. */
-    signature class RelevantNeutralCallableSig extends NeutralCallable {
-      /** Gets the string representation of this callable used by `neutral/1`. */
-      string getCallableCsv();
+    signature module RelevantNeutralCallableSig<NeutralCallableSig NeutralCallableInput> {
+      class RelevantNeutralCallable extends NeutralCallableInput {
+        /** Gets the string representation of this callable used by `neutral/1`. */
+        string getCallableCsv();
+      }
     }
 
-    module TestNeutralOutput<RelevantNeutralCallableSig RelevantNeutralCallable> {
-      private string renderProvenance(NeutralCallable c) {
+    module TestNeutralOutput<
+      NeutralCallableSig NeutralCallableInput,
+      RelevantNeutralCallableSig<NeutralCallableInput> RelevantNeutralCallableInput>
+    {
+      class RelevantNeutralCallable = RelevantNeutralCallableInput::RelevantNeutralCallable;
+
+      private string renderProvenance(NeutralCallableInput c) {
         exists(Provenance p | p.isManual() and c.hasProvenance(p) and result = p.toString())
         or
         not c.hasManualModel() and
@@ -1883,7 +2038,7 @@ module Make<
 
       private predicate edgesComponent(NodeOrCall a, NodeOrCall b, string value) {
         exists(boolean preservesValue |
-          PrivateSteps::summaryLocalStep(a.asNode(), b.asNode(), preservesValue) and
+          PrivateSteps::summaryLocalStep(a.asNode(), b.asNode(), preservesValue, _) and
           if preservesValue = true then value = "value" else value = "taint"
         )
         or
