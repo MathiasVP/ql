@@ -86,7 +86,7 @@ module IRTest {
   class TaintInheritingContentTest extends TaintInheritingContent, DataFlow::FieldContent {
     TaintInheritingContentTest() {
       exists(Struct o, Field f |
-        this.getField() = f and
+        this.getAField() = f and
         f = o.getAField() and
         o.hasGlobalName("TaintInheritingContentObject") and
         f.hasName("flowFromObject") and
@@ -126,7 +126,8 @@ module IRTest {
     predicate allowImplicitRead(DataFlow::Node node, DataFlow::ContentSet c) {
       // allow arbitrary reads at sinks
       isSink(node) and
-      c.(DataFlow::FieldContent).getField().getDeclaringType() = node.getType().getUnspecifiedType()
+      c.(DataFlow::FieldContent).getAField().getDeclaringType() =
+        node.getType().getUnspecifiedType()
     }
   }
 

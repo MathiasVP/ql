@@ -33,7 +33,7 @@ module Input implements InputSig<Location, DataFlowImplSpecific::CppDataFlow> {
       cs.isSingleton(c) and
       // FieldContent indices have 0 for the address, 1 for content, so we need to subtract one.
       result = "Field" and
-      arg = repeatStars(c.getIndirectionIndex() - 1) + c.getField().getName()
+      arg = repeatStars(c.getIndirectionIndex() - 1) + c.getCanonicalField().getName()
     )
     or
     exists(ElementContent ec |

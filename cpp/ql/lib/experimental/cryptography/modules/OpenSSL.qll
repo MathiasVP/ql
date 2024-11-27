@@ -123,8 +123,8 @@ module LiteralAlgorithmTracerConfig implements DataFlow::ConfigSig {
     // Assume a read on crypto identifying field for any object of type asn1_object_st (i.e., ASN1_OBJECT)
     exists(Class cls | cls.getName() = "asn1_object_st" |
       node.getType().getUnspecifiedType().stripType() = cls and
-      c.(DataFlow::FieldContent).getField() = cls.getAMember() and
-      c.(DataFlow::FieldContent).getField().getName() in ["nid", "sn", "ln"]
+      c.(DataFlow::FieldContent).getAField() = cls.getAMember() and
+      c.(DataFlow::FieldContent).getAField().getName() in ["nid", "sn", "ln"]
     )
   }
 }

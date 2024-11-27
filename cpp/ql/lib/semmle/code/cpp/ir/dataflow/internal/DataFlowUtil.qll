@@ -2065,12 +2065,77 @@ private Field getAFieldWithSize(Union u, int bytes) {
   bytes = getFieldSize(result)
 }
 
+private predicate isTemplateField(Field f, TemplateClass template, int index) {
+  f.isFromUninstantiatedTemplate(template) and
+  template.getCanonicalMember(index) = f
+}
+
+private Class getAClassInstantiation(TemplateClass template) {
+  result = template.getAnInstantiation()
+  or
+  not exists(template.getAnInstantiation()) and
+  exists(TemplateClass parent, int index, Class inst |
+    parent.getCanonicalMember(index) = template and
+    inst = getAClassInstantiation(template.getDeclaringType()) and
+    result = inst.getCanonicalMember(index)
+  )
+}
+
+private Field getAnInstantiation(Field f) {
+  exists(TemplateClass template, Class inst, int index |
+    isTemplateField(f, template, index) and
+    getAClassInstantiation(template) = inst and
+    inst.getCanonicalMember(index) = result
+  )
+}
+
+private predicate isNonTemplateField(Field f) {
+  not f.isFromUninstantiatedTemplate(_) and
+  not f.isFromTemplateInstantiation(_)
+}
+
+/**
+ * A specific kind of `Field` that we use to define `FieldContent`. This is
+ * either:
+ * 1. A field that is not part of a template, or
+ * 2. The uninstantiated field of a template.
+ *
+ * Note that, in particular, fields arising from template instantiations are
+ * not `CanonicalField`s.
+ */
+private class CanonicalField extends Field {
+  CanonicalField() { isTemplateField(this, _, _) or isNonTemplateField(this) }
+
+  /**
+   * Get a field corresponding to this `CanonicalField`.
+   *
+   * This is either the field itself, or an instantiation of this field
+   * when it's an uninstantiated template.
+   */
+  Field getAField() {
+    result = getAnInstantiation(this)
+    or
+    result = this
+  }
+
+  /**
+   * Same as `getAField`, but never returns a field from an uninstantiated
+   * template.
+   */
+  Field getANonUnInstantiated() {
+    result = getAnInstantiation(this)
+    or
+    isNonTemplateField(this) and result = this
+  }
+}
+
 cached
 private newtype TContent =
-  TFieldContent(Field f, int indirectionIndex) {
+  TFieldContent(CanonicalField f, int indirectionIndex) {
     // the indirection index for field content starts at 1 (because `TFieldContent` is thought of as
     // the address of the field, `FieldAddress` in the IR).
-    indirectionIndex = [1 .. Ssa::getMaxIndirectionsForType(f.getUnspecifiedType())] and
+    indirectionIndex =
+      [1 .. Ssa::getMaxIndirectionsForType(f.getANonUnInstantiated().getUnspecifiedType())] and
     // Reads and writes of union fields are tracked using `UnionContent`.
     not f.getDeclaringType() instanceof Union
   } or
@@ -2136,14 +2201,16 @@ private import ContentStars
 
 /** A reference through a non-union instance field. */
 class FieldContent extends Content, TFieldContent {
-  private Field f;
+  private CanonicalField f;
   private int indirectionIndex;
 
   FieldContent() { this = TFieldContent(f, indirectionIndex) }
 
   override string toString() { result = contentStars(this) + f.toString() }
 
-  Field getField() { result = f }
+  Field getAField() { result = f.getAField() }
+
+  Field getCanonicalField() { result = f }
 
   /** Gets the indirection index of this `FieldContent`. */
   pragma[inline]
@@ -2154,7 +2221,7 @@ class FieldContent extends Content, TFieldContent {
   override predicate impliesClearOf(Content c) {
     exists(FieldContent fc |
       fc = c and
-      fc.getField() = f and
+      fc.getAField() = f and
       // If `this` is `f` then `c` is cleared if it's of the
       // form `*f`, `**f`, etc.
       fc.getIndirectionIndex() >= indirectionIndex
@@ -2176,7 +2243,13 @@ class UnionContent extends Content, TUnionContent {
   Field getAField() { result = u.getAField() and getFieldSize(result) = bytes }
 
   /** Gets the underlying union of this `UnionContent`. */
-  Union getUnion() { result = u }
+  Union getAUnion() {
+    result = u
+    or
+    result.isFromTemplateInstantiation(u)
+  }
+
+  Union getCanonicalUnion() { result = u }
 
   /** Gets the indirection index of this `UnionContent`. */
   pragma[inline]
@@ -2187,7 +2260,7 @@ class UnionContent extends Content, TUnionContent {
   override predicate impliesClearOf(Content c) {
     exists(UnionContent uc |
       uc = c and
-      uc.getUnion() = u and
+      uc.getAUnion() = u and
       // If `this` is `u` then `c` is cleared if it's of the
       // form `*u`, `**u`, etc. (and we ignore `bytes` because
       // we know the entire union is overwritten because it's a

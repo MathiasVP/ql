@@ -839,7 +839,7 @@ predicate storeStepImpl(Node node1, Content c, Node node2, boolean certain) {
       store.getDestinationAddressOperand(), numberOfLoads, certain)
   |
     exists(FieldContent fc | fc = c |
-      fc.getField() = postFieldUpdate.getUpdatedField() and
+      fc.getAField() = postFieldUpdate.getUpdatedField() and
       fc.getIndirectionIndex() = 1 + indirectionIndex1 + numberOfLoads
     )
     or
@@ -930,7 +930,7 @@ predicate readStep(Node node1, ContentSet c, Node node2) {
     numberOfLoadsFromOperand(fa1, operand, numberOfLoads, _)
   |
     exists(FieldContent fc | fc = c |
-      fc.getField() = fa1.getField() and
+      fc.getAField() = fa1.getField() and
       fc.getIndirectionIndex() = indirectionIndex2 + numberOfLoads
     )
     or
@@ -1411,13 +1411,13 @@ pragma[inline]
 ContentApprox getContentApprox(Content c) {
   exists(string prefix, Field f |
     prefix = result.(FieldApproxContent).getPrefix() and
-    f = c.(FieldContent).getField() and
+    f = c.(FieldContent).getCanonicalField() and
     fieldHasApproxName(f, prefix)
   )
   or
   exists(string prefix, Cpp::Union u |
     prefix = result.(UnionApproxContent).getPrefix() and
-    u = c.(UnionContent).getUnion() and
+    u = c.(UnionContent).getCanonicalUnion() and
     unionHasApproxName(u, prefix)
   )
   or

@@ -120,7 +120,7 @@ module FromSensitiveConfig implements DataFlow::ConfigSig {
     // constrain `content` to a field inside the node.
     exists(Type t |
       isSinkImpl(node, _, t) and
-      content.(DataFlow::FieldContent).getField() = getRecField(t.stripType())
+      content.(DataFlow::FieldContent).getAField() = getRecField(t.stripType())
     )
   }
 }
