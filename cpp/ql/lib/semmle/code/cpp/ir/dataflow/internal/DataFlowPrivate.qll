@@ -35,7 +35,18 @@ private module Cached {
       } or
       TSingleUseOperandNode0(Operand op) {
         not Ssa::ignoreOperand(op) and exists(Ssa::getIRRepresentationOfOperand(op))
+      } or
+      TRawIndirectOperand0(DirectNode0 node, int indirectionIndex) {
+        Ssa::hasRawIndirectOperand(node.asOperand(), indirectionIndex)
+      } or
+      TRawIndirectInstruction0(DirectNode0 node, int indirectionIndex) {
+        not exists(node.asOperand()) and
+        Ssa::hasRawIndirectInstruction(node.asInstruction(), indirectionIndex)
       }
+
+    class TDirectNode0 = TInstructionNode0 or TMultipleUseOperandNode0 or TSingleUseOperandNode0;
+
+    class TIndirectNode0 = TRawIndirectOperand0 or TRawIndirectInstruction0;
   }
 
   /**
@@ -70,10 +81,11 @@ private import Nodes0
  */
 module NodeStars {
   private int getNumberOfIndirections(Node n) {
-    result = n.(RawIndirectOperand).getIndirectionIndex()
-    or
-    result = n.(RawIndirectInstruction).getIndirectionIndex()
-    or
+    // TODO
+    // result = n.(RawIndirectOperand).getIndirectionIndex()
+    // or
+    // result = n.(RawIndirectInstruction).getIndirectionIndex()
+    // or
     result = n.(VariableNode).getIndirectionIndex()
     or
     result = n.(PostUpdateNodeImpl).getIndirectionIndex()
@@ -83,11 +95,19 @@ module NodeStars {
     result = n.(BodyLessParameterNodeImpl).getIndirectionIndex()
   }
 
+  private int getNumberOfIndirections2(IndirectNode0 n) {
+    result = n.(RawIndirectOperand).getIndirectionIndex()
+    or
+    result = n.(RawIndirectInstruction).getIndirectionIndex()
+  }
+
   /**
    * Gets the number of stars (i.e., `*`s) needed to produce the `toString`
    * output for `n`.
    */
   string stars(Node n) { result = repeatStars(getNumberOfIndirections(n)) }
+
+  string stars2(IndirectNode0 n) { result = repeatStars(getNumberOfIndirections2(n)) }
 }
 
 import NodeStars
@@ -97,14 +117,14 @@ import NodeStars
  * This can thus be safely used in the SSA computations themselves, as well as
  * in construction of other node classes (`TIRDataFlowNode`).
  */
-class Node0Impl extends TIRDataFlowNode0 {
+abstract class DirectNode0 extends TDirectNode0 {
   /**
    * INTERNAL: Do not use.
    */
-  Declaration getEnclosingCallable() { none() } // overridden in subclasses
+  abstract Declaration getEnclosingCallable();
 
   /** Gets the function to which this node belongs, if any. */
-  Declaration getFunction() { none() } // overridden in subclasses
+  abstract Declaration getFunction();
 
   /**
    * Gets the type of this node.
@@ -112,33 +132,253 @@ class Node0Impl extends TIRDataFlowNode0 {
    * If `isGLValue()` holds, then the type of this node
    * should be thought of as "pointer to `getType()`".
    */
-  DataFlowType getType() { none() } // overridden in subclasses
+  abstract DataFlowType getType();
+
+  /** Gets the location of this node. */
+  final Location getLocation() { result = this.getLocationImpl() }
+
+  /** INTERNAL: Do not use. */
+  abstract Location getLocationImpl();
+
+  /** INTERNAL: Do not use. */
+  abstract string toStringImpl();
+
+  /** Gets a textual representation of this node. */
+  final string toString() { result = this.toStringImpl() }
+
+  /** Holds if the value of this node is a glvalue */
+  abstract predicate isGLValue();
 
   /** Gets the instruction corresponding to this node, if any. */
   Instruction asInstruction() { result = this.(InstructionNode0).getInstruction() }
 
   /** Gets the operands corresponding to this node, if any. */
   Operand asOperand() { result = this.(OperandNode0).getOperand() }
+}
+
+private class DirectNode0Impl extends Node0Impl instanceof DirectNode0 {
+  final override Declaration getEnclosingCallable() {
+    result = DirectNode0.super.getEnclosingCallable()
+  }
+
+  final override Declaration getFunction() { result = DirectNode0.super.getFunction() }
+
+  final override DataFlowType getType() { result = DirectNode0.super.getType() }
+
+  final override Location getLocationImpl() { result = DirectNode0.super.getLocationImpl() }
+
+  final override string toStringImpl() { result = DirectNode0.super.toStringImpl() }
+
+  final override predicate isGLValue() { DirectNode0.super.isGLValue() }
+
+  final override Instruction asInstruction() { result = DirectNode0.super.asInstruction() }
+
+  final override Operand asOperand() { result = DirectNode0.super.asOperand() }
+}
+
+abstract class IndirectNode0 extends TIndirectNode0 {
+  private int indirectionIndex;
+
+  bindingset[indirectionIndex]
+  IndirectNode0() { any() }
+
+  /**
+   * INTERNAL: Do not use.
+   */
+  abstract Declaration getEnclosingCallable();
+
+  /** Gets the function to which this node belongs, if any. */
+  abstract Declaration getFunction();
+
+  /**
+   * Gets the type of this node.
+   *
+   * If `isGLValue()` holds, then the type of this node
+   * should be thought of as "pointer to `getType()`".
+   */
+  abstract DataFlowType getType();
 
   /** Gets the location of this node. */
   final Location getLocation() { result = this.getLocationImpl() }
 
   /** INTERNAL: Do not use. */
-  Location getLocationImpl() {
-    none() // overridden by subclasses
-  }
+  abstract Location getLocationImpl();
 
   /** INTERNAL: Do not use. */
-  string toStringImpl() {
-    none() // overridden by subclasses
-  }
+  abstract string toStringImpl();
 
   /** Gets a textual representation of this node. */
   final string toString() { result = this.toStringImpl() }
 
   /** Holds if the value of this node is a glvalue */
-  predicate isGLValue() { none() } // overridden in subclasses
+  abstract predicate isGLValue();
+
+  final int getIndirectionIndex() { result = indirectionIndex }
 }
+
+private module RawIndirectNodes {
+  /**
+   * INTERNAL: Do not use.
+   *
+   * A node that represents the indirect value of an operand in the IR
+   * after `index` number of loads.
+   */
+  private class RawIndirectOperand0 extends IndirectNode0, TRawIndirectOperand0 {
+    Node0Impl node;
+
+    RawIndirectOperand0() { this = TRawIndirectOperand0(node, indirectionIndex) }
+
+    /** Gets the underlying instruction. */
+    Operand getOperand() { result = node.asOperand() }
+
+    /** Gets the underlying indirection index. */
+    int getIndirectionIndex() { result = indirectionIndex }
+
+    override Declaration getFunction() {
+      result = this.getOperand().getDef().getEnclosingFunction()
+    }
+
+    override Declaration getEnclosingCallable() { result = this.getFunction() }
+
+    override predicate isGLValue() { this.getOperand().isGLValue() }
+
+    override DataFlowType getType() {
+      exists(int sub, DataFlowType type, boolean isGLValue |
+        type = getOperandType(this.getOperand(), isGLValue) and
+        if isGLValue = true then sub = 1 else sub = 0
+      |
+        result = getTypeImpl(type.getUnderlyingType(), indirectionIndex - sub)
+      )
+    }
+
+    final override Location getLocationImpl() {
+      if exists(this.getOperand().getLocation())
+      then result = this.getOperand().getLocation()
+      else result instanceof UnknownDefaultLocation
+    }
+
+    override string toStringImpl() {
+      result = stars2(this) + operandNode(this.getOperand()).toStringImpl()
+    }
+  }
+
+  /**
+   * INTERNAL: Do not use.
+   *
+   * A node that represents the indirect value of an instruction in the IR
+   * after `index` number of loads.
+   */
+  private class RawIndirectInstruction0 extends IndirectNode0, TRawIndirectInstruction0 {
+    Node0Impl node;
+
+    RawIndirectInstruction0() { this = TRawIndirectInstruction0(node, indirectionIndex) }
+
+    /** Gets the underlying instruction. */
+    Instruction getInstruction() { result = node.asInstruction() }
+
+    /** Gets the underlying indirection index. */
+    int getIndirectionIndex() { result = indirectionIndex }
+
+    override Declaration getFunction() { result = this.getInstruction().getEnclosingFunction() }
+
+    override Declaration getEnclosingCallable() { result = this.getFunction() }
+
+    override predicate isGLValue() { this.getInstruction().isGLValue() }
+
+    override DataFlowType getType() {
+      exists(int sub, DataFlowType type, boolean isGLValue |
+        type = getInstructionType(this.getInstruction(), isGLValue) and
+        if isGLValue = true then sub = 1 else sub = 0
+      |
+        result = getTypeImpl(type.getUnderlyingType(), indirectionIndex - sub)
+      )
+    }
+
+    final override Location getLocationImpl() {
+      if exists(this.getInstruction().getLocation())
+      then result = this.getInstruction().getLocation()
+      else result instanceof UnknownDefaultLocation
+    }
+
+    override string toStringImpl() {
+      result = stars2(this) + instructionNode(this.getInstruction()).toStringImpl()
+    }
+  }
+
+  /**
+   * INTERNAL: Do not use.
+   *
+   * A node that represents the indirect value of an operand in the IR
+   * after a number of loads.
+   */
+  class RawIndirectOperand extends IndirectNode0 {
+    Operand operand;
+
+    RawIndirectOperand() {
+      exists(DirectNode0 node | operand = node.asOperand() |
+        this = TRawIndirectOperand0(node, indirectionIndex)
+        or
+        this = TRawIndirectInstruction0(node, indirectionIndex)
+      )
+    }
+
+    /** Gets the operand associated with this node. */
+    Operand getOperand() { result = operand }
+
+    /** Gets the underlying indirection index. */
+    int getIndirectionIndex() { result = indirectionIndex }
+
+    final override Declaration getEnclosingCallable() { none() }
+
+    final override Declaration getFunction() { none() }
+
+    final override DataFlowType getType() { none() }
+
+    final override Location getLocationImpl() { none() }
+
+    final override string toStringImpl() { none() }
+
+    final override predicate isGLValue() { none() }
+  }
+
+  /**
+   * INTERNAL: Do not use.
+   *
+   * A node that represents the indirect value of an instruction in the IR
+   * after a number of loads.
+   */
+  class RawIndirectInstruction extends IndirectNode0 {
+    Instruction instr;
+
+    RawIndirectInstruction() {
+      exists(Node0Impl node | instr = node.asInstruction() |
+        this = TRawIndirectOperand0(node, indirectionIndex)
+        or
+        this = TRawIndirectInstruction0(node, indirectionIndex)
+      )
+    }
+
+    /** Gets the instruction associated with this node. */
+    Instruction getInstruction() { result = instr }
+
+    /** Gets the underlying indirection index. */
+    int getIndirectionIndex() { result = indirectionIndex }
+
+    final override Declaration getEnclosingCallable() { none() }
+
+    final override Declaration getFunction() { none() }
+
+    final override DataFlowType getType() { none() }
+
+    final override Location getLocationImpl() { none() }
+
+    final override string toStringImpl() { none() }
+
+    final override predicate isGLValue() { none() }
+  }
+}
+
+import RawIndirectNodes
 
 /**
  * Gets the type of the operand `op`.
@@ -165,7 +405,7 @@ DataFlowType getInstructionType(Instruction instr, boolean isGLValue) {
 /**
  * An instruction, viewed as a node in a data flow graph.
  */
-abstract class InstructionNode0 extends Node0Impl {
+abstract class InstructionNode0 extends DirectNode0 {
   Instruction instr;
 
   /** Gets the instruction corresponding to this node. */
@@ -210,7 +450,7 @@ private class SingleUseOperandInstructionNode0 extends InstructionNode0, TSingle
 /**
  * An operand, viewed as a node in a data flow graph.
  */
-abstract class OperandNode0 extends Node0Impl {
+abstract class OperandNode0 extends DirectNode0 {
   Operand op;
 
   /** Gets the operand corresponding to this node. */
@@ -247,6 +487,45 @@ private class SingleUseOperandNode0 extends OperandNode0, TSingleUseOperandNode0
   SingleUseOperandNode0() { this = TSingleUseOperandNode0(op) }
 }
 
+abstract class Node0Impl extends TIRDataFlowNode0 {
+  /**
+   * INTERNAL: Do not use.
+   */
+  abstract Declaration getEnclosingCallable();
+
+  /** Gets the function to which this node belongs, if any. */
+  abstract Declaration getFunction();
+
+  /**
+   * Gets the type of this node.
+   *
+   * If `isGLValue()` holds, then the type of this node
+   * should be thought of as "pointer to `getType()`".
+   */
+  abstract DataFlowType getType();
+
+  /** Gets the instruction corresponding to this node, if any. */
+  abstract Instruction asInstruction();
+
+  /** Gets the operands corresponding to this node, if any. */
+  abstract Operand asOperand();
+
+  /** Gets the location of this node. */
+  final Location getLocation() { result = this.getLocationImpl() }
+
+  /** INTERNAL: Do not use. */
+  abstract Location getLocationImpl();
+
+  /** INTERNAL: Do not use. */
+  abstract string toStringImpl();
+
+  /** Gets a textual representation of this node. */
+  final string toString() { result = this.toStringImpl() }
+
+  /** Holds if the value of this node is a glvalue */
+  abstract predicate isGLValue();
+}
+
 private module IndirectOperands {
   /**
    * INTERNAL: Do not use.
@@ -257,7 +536,7 @@ private module IndirectOperands {
    * Note: Unlike `RawIndirectOperand`, a value of type `IndirectOperand` may
    * be an `OperandNode`.
    */
-  abstract class IndirectOperand extends Node {
+  abstract class IndirectOperand extends IndirectNode0 {
     /** Gets the underlying operand and the underlying indirection index. */
     abstract predicate hasOperandAndIndirectionIndex(Operand operand, int indirectionIndex);
   }
@@ -299,7 +578,7 @@ private module IndirectInstructions {
    * Note: Unlike `RawIndirectInstruction`, a value of type `IndirectInstruction` may
    * be an `InstructionNode`.
    */
-  abstract class IndirectInstruction extends Node {
+  abstract class IndirectInstruction extends IndirectNode0 {
     /** Gets the underlying operand and the underlying indirection index. */
     abstract predicate hasInstructionAndIndirectionIndex(Instruction instr, int index);
   }
