@@ -5,6 +5,7 @@
 private import cpp
 private import semmle.code.cpp.ir.IR
 private import DataFlowUtil
+private import Stage0
 private import DataFlowPrivate
 private import semmle.code.cpp.ir.implementation.raw.internal.TranslatedExpr
 private import semmle.code.cpp.ir.implementation.raw.internal.InstructionTag
@@ -32,12 +33,12 @@ private module Cached {
         op = getAUse(instr) and not op = getAnInitializeDynamicAllocationInstructionAddress()
       |
         op
-      ), _, false, false) and
+      ), _, false) and
     result = getConvertedResultExpressionImpl(instr) and
     n = 0
     or
     // If the conversion also has a result then we return multiple results
-    exists(Operand operand | conversionFlow(operand, instr, false, false) |
+    exists(Operand operand | conversionFlow(operand, instr, false) |
       n = 1 and
       result = getConvertedResultExpressionImpl(operand.getDef())
       or
@@ -185,7 +186,7 @@ private module Cached {
 
   /** Holds if `node` should be an `IndirectOperand` that maps `node.asIndirectExpr()` to `e`. */
   private predicate indirectExprNodeShouldBeIndirectOperand(
-    IndirectOperand node, Expr e, int n, int indirectionIndex
+    IndirectOperandNode node, Expr e, int n, int indirectionIndex
   ) {
     exists(Instruction def |
       node.hasOperandAndIndirectionIndex(unique( | | getAUse(def)), indirectionIndex) and
@@ -203,7 +204,7 @@ private module Cached {
    * the `n`'th expression associated with the operand is `e`.
    */
   private predicate isIndirectOperandOfArgument(
-    IndirectOperand node, ArgumentOperand operand, Expr e, int n
+    IndirectOperandNode node, ArgumentOperand operand, Expr e, int n
   ) {
     node.hasOperandAndIndirectionIndex(operand, 1) and
     e = getConvertedResultExpression(operand.getDef(), n)
@@ -215,7 +216,7 @@ private module Cached {
    */
   private predicate isConversionStep(Operand opFrom, Operand opTo) {
     exists(Instruction mid |
-      conversionFlow(opFrom, mid, false, false) and
+      conversionFlow(opFrom, mid, false) and
       opTo = unique( | | getAUse(mid))
     )
   }
@@ -234,7 +235,7 @@ private module Cached {
   }
 
   /** Holds if `node` should be an `IndirectOperand` that maps `node.asExpr()` to `e`. */
-  private predicate exprNodeShouldBeIndirectOperand(IndirectOperand node, Expr e, int n) {
+  private predicate exprNodeShouldBeIndirectOperand(IndirectOperandNode node, Expr e, int n) {
     exists(ArgumentOperand operand |
       // When an argument (qualifier or positional) is a prvalue and the
       // parameter (qualifier or positional) is a (const) reference, IR
@@ -248,7 +249,7 @@ private module Cached {
     )
   }
 
-  private predicate exprNodeShouldBeIndirectOutNode(IndirectArgumentOutNode node, Expr e, int n) {
+  private predicate exprNodeShouldBeIndirectOutNode(ArgumentOutNode node, Expr e, int n) {
     exists(CallInstruction call |
       call.getStaticCallTarget() instanceof Constructor and
       e = getConvertedResultExpression(call, n) and
@@ -266,7 +267,7 @@ private module Cached {
 
   /** Holds if `node` should be an `IndirectInstruction` that maps `node.asIndirectExpr()` to `e`. */
   private predicate indirectExprNodeShouldBeIndirectInstruction(
-    IndirectInstruction node, Expr e, int n, int indirectionIndex
+    IndirectInstructionNode node, Expr e, int n, int indirectionIndex
   ) {
     not indirectExprNodeShouldBeIndirectOperand(_, e, n, indirectionIndex) and
     exists(Instruction instr |
@@ -395,7 +396,7 @@ private module Cached {
   }
 
   private module IndirectOperandIndirectExprNodeImpl implements IndirectNodeToIndirectExprSig {
-    class IndirectNode = IndirectOperand;
+    class IndirectNode = IndirectOperandNode;
 
     predicate indirectNodeHasIndirectExpr = indirectExprNodeShouldBeIndirectOperand/4;
   }
@@ -403,7 +404,7 @@ private module Cached {
   module IndirectOperandToIndirectExpr =
     IndirectNodeToIndirectExpr<IndirectOperandIndirectExprNodeImpl>;
 
-  private class IndirectOperandIndirectExprNode extends IndirectExprNodeBase instanceof IndirectOperand
+  private class IndirectOperandIndirectExprNode extends IndirectExprNodeBase instanceof IndirectOperandNode
   {
     IndirectOperandIndirectExprNode() { IndirectOperandToIndirectExpr::charpred(this) }
 
@@ -413,7 +414,7 @@ private module Cached {
   }
 
   private module IndirectInstructionIndirectExprNodeImpl implements IndirectNodeToIndirectExprSig {
-    class IndirectNode = IndirectInstruction;
+    class IndirectNode = IndirectInstructionNode;
 
     predicate indirectNodeHasIndirectExpr = indirectExprNodeShouldBeIndirectInstruction/4;
   }
@@ -421,7 +422,7 @@ private module Cached {
   module IndirectInstructionToIndirectExpr =
     IndirectNodeToIndirectExpr<IndirectInstructionIndirectExprNodeImpl>;
 
-  private class IndirectInstructionIndirectExprNode extends IndirectExprNodeBase instanceof IndirectInstruction
+  private class IndirectInstructionIndirectExprNode extends IndirectExprNodeBase instanceof IndirectInstructionNode
   {
     IndirectInstructionIndirectExprNode() { IndirectInstructionToIndirectExpr::charpred(this) }
 
@@ -430,13 +431,13 @@ private module Cached {
     }
   }
 
-  private class IndirectArgumentOutExprNode extends ExprNodeBase, IndirectArgumentOutNode {
+  private class IndirectArgumentOutExprNode extends ExprNodeBase, ArgumentOutNode {
     IndirectArgumentOutExprNode() { exprNodeShouldBeIndirectOutNode(this, _, _) }
 
     final override Expr getConvertedExpr(int n) { exprNodeShouldBeIndirectOutNode(this, result, n) }
   }
 
-  private class IndirectOperandExprNode extends ExprNodeBase instanceof IndirectOperand {
+  private class IndirectOperandExprNode extends ExprNodeBase instanceof IndirectOperandNode {
     IndirectOperandExprNode() { exprNodeShouldBeIndirectOperand(this, _, _) }
 
     final override Expr getConvertedExpr(int n) { exprNodeShouldBeIndirectOperand(this, result, n) }

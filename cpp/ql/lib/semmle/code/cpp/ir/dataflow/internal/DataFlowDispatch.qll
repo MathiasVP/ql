@@ -3,6 +3,7 @@ private import semmle.code.cpp.ir.IR
 private import semmle.code.cpp.ir.dataflow.DataFlow
 private import DataFlowPrivate
 private import DataFlowUtil
+private import Stage1
 private import DataFlowImplCommon as DataFlowImplCommon
 
 /**
@@ -79,7 +80,7 @@ private module VirtualDispatch {
         this.flowsFrom(other, allowOtherFromArg)
       |
         // Call argument
-        exists(DataFlowCall call, Position i |
+        exists(DataFlowCall call, Stage1::Position i |
           other
               .(DataFlow::ParameterNode)
               .isParameterOf(pragma[only_bind_into](call).getStaticCallTarget(), i) and

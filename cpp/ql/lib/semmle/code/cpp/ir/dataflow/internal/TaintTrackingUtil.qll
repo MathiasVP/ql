@@ -5,9 +5,11 @@ private import semmle.code.cpp.models.interfaces.DataFlow
 private import semmle.code.cpp.models.interfaces.SideEffect
 private import DataFlowUtil
 private import DataFlowPrivate
-private import SsaInternals as Ssa
 private import semmle.code.cpp.dataflow.internal.FlowSummaryImpl as FlowSummaryImpl
 private import semmle.code.cpp.ir.dataflow.FlowSteps
+private import Stage2
+private import Stage1
+private import Stage0
 
 /**
  * Holds if taint propagates from `nodeFrom` to `nodeTo` in exactly one local
@@ -49,9 +51,6 @@ predicate localAdditionalTaintStep(DataFlow::Node nodeFrom, DataFlow::Node nodeT
   ) and
   model = ""
   or
-  any(Ssa::Indirection ind).isAdditionalTaintStep(nodeFrom, nodeTo) and
-  model = ""
-  or
   // models-as-data summarized flow
   FlowSummaryImpl::Private::Steps::summaryLocalStep(nodeFrom.(FlowSummaryNode).getSummaryNode(),
     nodeTo.(FlowSummaryNode).getSummaryNode(), false, model)
@@ -82,7 +81,7 @@ private predicate operandToInstructionTaintStep(Operand opFrom, Instruction inst
   )
   or
   // Taint flow from an address to its dereference.
-  Ssa::isDereference(instrTo, opFrom, _)
+  Stage0Output::isDereference(instrTo, opFrom, _)
   or
   // Unary instructions tend to preserve enough information in practice that we
   // want taint to flow through.
@@ -200,7 +199,7 @@ predicate modeledTaintStep(DataFlow::Node nodeIn, DataFlow::Node nodeOut, string
     FunctionInput modelIn, FunctionOutput modelOut
   |
     indirectArgument = callInput(call, modelIn) and
-    indirectArgument.hasAddressOperandAndIndirectionIndex(nodeIn.asOperand(), _) and
+    indirectArgument.hasOperandAndIndirectionIndex(nodeIn.asOperand(), _) and
     call.getStaticCallTarget() = func and
     (
       func.(DataFlowFunction).hasDataFlow(modelIn, modelOut) and
@@ -229,11 +228,11 @@ private module SpeculativeTaintFlow {
       not exists(DataFlowDispatch::viableCallable(call)) and
       src.(DataFlowPrivate::ArgumentNode).argumentOf(call, argpos)
     |
-      not argpos.(DirectPosition).getIndex() = -1 and
+      not argpos.getArgumentIndex() = -1 and
       sink.(PostUpdateNode)
           .getPreUpdateNode()
           .(DataFlowPrivate::ArgumentNode)
-          .argumentOf(call, any(DirectPosition qualpos | qualpos.getIndex() = -1))
+          .argumentOf(call, any(Stage2::Position qualpos | qualpos.getArgumentIndex() = -1))
       or
       sink.(DataFlowPrivate::OutNode).getCall() = call
     )

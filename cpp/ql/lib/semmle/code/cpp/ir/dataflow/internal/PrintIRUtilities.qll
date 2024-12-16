@@ -8,12 +8,12 @@ private import semmle.code.cpp.ir.dataflow.internal.DataFlowUtil
 private import semmle.code.cpp.ir.dataflow.internal.DataFlowPrivate
 
 private Instruction getInstruction(Node n, string stars) {
-  result = [n.asInstruction(), n.(RawIndirectInstruction).getInstruction()] and
+  nodeHasInstruction(n, result, _) and
   stars = stars(n)
 }
 
 private Operand getOperand(Node n, string stars) {
-  result = [n.asOperand(), n.(RawIndirectOperand).getOperand()] and
+  nodeHasOperand(n, result, _) and
   stars = stars(n)
 }
 
