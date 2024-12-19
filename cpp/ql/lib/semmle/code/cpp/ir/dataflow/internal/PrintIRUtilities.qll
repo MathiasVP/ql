@@ -7,14 +7,18 @@ private import semmle.code.cpp.ir.IR
 private import semmle.code.cpp.ir.dataflow.internal.DataFlowUtil
 private import semmle.code.cpp.ir.dataflow.internal.DataFlowPrivate
 
-private Instruction getInstruction(Node n, string stars) {
-  result = [n.asInstruction(), n.(RawIndirectInstruction).getInstruction()] and
-  stars = stars(n)
+private Instruction getInstruction(Node node, string stars) {
+  exists(int indirectionIndex |
+    nodeHasInstruction(node, result, indirectionIndex) and
+    stars = repeatStars(indirectionIndex)
+  )
 }
 
 private Operand getOperand(Node n, string stars) {
-  result = [n.asOperand(), n.(RawIndirectOperand).getOperand()] and
-  stars = stars(n)
+  exists(int indirectionIndex |
+    nodeHasOperand(n, result, indirectionIndex) and
+    stars = repeatStars(indirectionIndex)
+  )
 }
 
 /**

@@ -103,6 +103,7 @@ private import internal.FlowSummaryImpl::Private::External
 private import internal.ExternalFlowExtensions as Extensions
 private import codeql.mad.ModelValidation as SharedModelVal
 private import codeql.util.Unit
+private import semmle.code.cpp.ir.dataflow.internal.Stage2
 
 /**
  * A unit class for adding additional source model rows.
@@ -253,7 +254,7 @@ predicate summaryModel(
     summaryModel0(namespace, type, subtypes, name, signature, ext, input0, output0, kind,
       provenance, model) and
     expandInputAndOutput(input0, input, output0, output,
-      [0 .. Private::getMaxElementContentIndirectionIndex() - 1])
+      [0 .. Stage2::getMaxElementContentIndirectionIndex() - 1])
   )
 }
 

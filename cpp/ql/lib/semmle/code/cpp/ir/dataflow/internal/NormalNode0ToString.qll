@@ -23,6 +23,13 @@ private string unconvertedAstToString(Locatable loc) {
   result = loc.toString()
 }
 
+private string stars(Node node) {
+  exists(FinalStage::Node n |
+    node = TStageNode(n) and
+    result = n.stars()
+  )
+}
+
 private class NormalNode0ToString extends Node0ToString {
   NormalNode0ToString() {
     // Silence warning about `this` not being bound.

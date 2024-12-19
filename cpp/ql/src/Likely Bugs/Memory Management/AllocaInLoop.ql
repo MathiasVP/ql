@@ -15,6 +15,7 @@
 import cpp
 import semmle.code.cpp.rangeanalysis.RangeAnalysisUtils
 import semmle.code.cpp.ir.dataflow.DataFlow
+import semmle.code.cpp.ir.IR
 
 /** Gets a loop that contains `e`. */
 Loop getAnEnclosingLoopOfExpr(Expr e) { result = getAnEnclosingLoopOfStmt(e.getEnclosingStmt()) }
@@ -45,9 +46,15 @@ private Expr getExpr(DataFlow::Node node) {
   or
   result = node.asOperand().getUse().getAst()
   or
-  result = node.(DataFlow::RawIndirectInstruction).getInstruction().getAst()
+  exists(Instruction instr |
+    node.(DataFlow::IndirectInstructionNode).hasInstructionAndIndirectionIndex(instr, _) and
+    result = instr.getAst()
+  )
   or
-  result = node.(DataFlow::RawIndirectOperand).getOperand().getUse().getAst()
+  exists(Operand operand |
+    node.(DataFlow::IndirectOperandNode).hasOperandAndIndirectionIndex(operand, _) and
+    result = operand.getUse().getAst()
+  )
 }
 
 /**

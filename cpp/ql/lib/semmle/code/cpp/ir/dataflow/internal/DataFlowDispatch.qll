@@ -79,7 +79,7 @@ private module VirtualDispatch {
         this.flowsFrom(other, allowOtherFromArg)
       |
         // Call argument
-        exists(DataFlowCall call, Position i |
+        exists(DataFlowCall call, ParameterPosition i |
           other
               .(DataFlow::ParameterNode)
               .isParameterOf(pragma[only_bind_into](call).getStaticCallTarget(), i) and

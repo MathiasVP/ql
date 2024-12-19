@@ -2,7 +2,6 @@ private import cpp
 private import semmle.code.cpp.ir.IR
 private import semmle.code.cpp.ir.dataflow.internal.DataFlowUtil
 private import semmle.code.cpp.ir.dataflow.internal.DataFlowPrivate
-private import SsaInternals as Ssa
 private import PrintIRUtilities
 
 /**
@@ -48,15 +47,14 @@ private string getNodeProperty(Node node, string key) {
 class LocalFlowPropertyProvider extends IRPropertyProvider {
   override string getOperandProperty(Operand operand, string key) {
     exists(Node node |
-      operand = [node.asOperand(), node.(RawIndirectOperand).getOperand()] and
+      nodeHasOperand(node, operand, _) and
       result = getNodeProperty(node, key)
     )
   }
 
   override string getInstructionProperty(Instruction instruction, string key) {
     exists(Node node |
-      instruction = [node.asInstruction(), node.(RawIndirectInstruction).getInstruction()]
-    |
+      nodeHasInstruction(node, instruction, _) and
       result = getNodeProperty(node, key)
     )
   }
