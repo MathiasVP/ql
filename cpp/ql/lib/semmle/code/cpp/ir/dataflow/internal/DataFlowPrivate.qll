@@ -12,6 +12,7 @@ private import ModelUtil
 private import semmle.code.cpp.models.interfaces.FunctionInputsAndOutputs as IO
 private import semmle.code.cpp.models.interfaces.DataFlow as DF
 private import semmle.code.cpp.dataflow.ExternalFlow as External
+import DataFlowSplitting
 
 cached
 private module Cached {

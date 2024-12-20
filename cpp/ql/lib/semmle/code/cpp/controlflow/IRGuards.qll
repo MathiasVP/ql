@@ -365,6 +365,26 @@ private predicate nonExcludedIRAndBasicBlock(IRBlock irb, BasicBlock controlled)
   )
 }
 
+predicate unaryComparesEq(ValueNumber test, Operand op, int k, boolean areEqual, AbstractValue value) {
+  unary_compares_eq(test, op, k, areEqual, false, value)
+}
+
+predicate comparesEq(
+  ValueNumber test, Operand left, Operand right, int k, boolean areEqual, AbstractValue value
+) {
+  compares_eq(test, left, right, k, areEqual, value)
+}
+
+predicate unaryComparesLt(ValueNumber test, Operand op, int k, boolean areEqual, AbstractValue value) {
+  compares_lt(test, op, k, areEqual, value)
+}
+
+predicate comparesLt(
+  ValueNumber test, Operand left, Operand right, int k, boolean areEqual, AbstractValue value
+) {
+  compares_lt(test, left, right, k, areEqual, value)
+}
+
 /**
  * A Boolean condition in the IR that guards one or more basic blocks.
  *
