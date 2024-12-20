@@ -10,7 +10,7 @@ use ungrammar::Grammar;
 
 fn project_root() -> PathBuf {
     let dir =
-        env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| env!("CARGO_MANIFEST_DIR").to_owned());
+        env::var("CARGO_MANIFEST_DIR").unwrap().to_owned();
     PathBuf::from(dir).parent().unwrap().to_owned()
 }
 
@@ -21,6 +21,7 @@ fn class_name(type_name: &str) -> String {
         "Fn" => "Function".to_owned(),
         "Literal" => "LiteralExpr".to_owned(),
         "ArrayExpr" => "ArrayExprInternal".to_owned(),
+        "AsmOptions" => "AsmOptionsList".to_owned(),
         _ if type_name.ends_with("Type") => format!("{}Repr", type_name),
         _ => type_name.to_owned(),
     }
@@ -35,6 +36,7 @@ fn property_name(type_name: &str, field_name: &str) -> String {
         (_, "then_branch") => "then",
         (_, "else_branch") => "else_",
         ("ArrayType", "ty") => "element_type_repr",
+        ("SelfParam", "is_amp") => "is_ref",
         (_, "ty") => "type_repr",
         _ => field_name,
     };
@@ -363,6 +365,13 @@ fn get_fields(node: &AstNodeSrc) -> Vec<FieldInfo> {
                 is_many: false,
             });
         }
+        "SelfParam" => {
+            result.push(FieldInfo {
+                name: "is_amp".to_string(),
+                tp: "predicate".to_string(),
+                is_many: false,
+            });
+        }
         _ => {}
     }
 
@@ -582,10 +591,11 @@ impl Translator<'_> {{
 }
 
 fn main() -> std::io::Result<()> {
-    let grammar: Grammar = fs::read_to_string(project_root().join("ast-generator/rust.ungram"))
-        .unwrap()
+    let grammar = PathBuf::from("..").join(env::args().nth(1).expect("grammar file path required"));
+    let grammar: Grammar = fs::read_to_string(&grammar)
+        .expect(&format!("Failed to parse grammar file: {}", grammar.display()))
         .parse()
-        .unwrap();
+        .expect("Failed to parse grammar");
     let mut grammar = codegen::grammar::lower(&grammar);
 
     grammar.enums.retain(|x| x.name != "Adt");

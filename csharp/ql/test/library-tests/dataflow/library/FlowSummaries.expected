@@ -90,6 +90,8 @@ source
 | Dapper;SqlMapper;QuerySingleOrDefaultAsync;(System.Data.IDbConnection,System.Type,System.String,System.Object,System.Data.IDbTransaction,System.Nullable<System.Int32>,System.Nullable<System.Data.CommandType>);ReturnValue;database;manual |
 | Dapper;SqlMapper;QuerySingleOrDefaultAsync<T>;(System.Data.IDbConnection,Dapper.CommandDefinition);ReturnValue;database;manual |
 | Dapper;SqlMapper;QuerySingleOrDefaultAsync<T>;(System.Data.IDbConnection,System.String,System.Object,System.Data.IDbTransaction,System.Nullable<System.Int32>,System.Nullable<System.Data.CommandType>);ReturnValue;database;manual |
+| Microsoft.AspNetCore.Components;NavigationManager;get_BaseUri;();ReturnValue;remote;manual |
+| Microsoft.AspNetCore.Components;NavigationManager;get_Uri;();ReturnValue;remote;manual |
 | Microsoft.Extensions.Configuration.UserSecrets;PathHelper;GetSecretsPathFromSecretsId;(System.String);ReturnValue;environment;df-generated |
 | Microsoft.Extensions.Configuration;EnvironmentVariablesExtensions;AddEnvironmentVariables;(Microsoft.Extensions.Configuration.IConfigurationBuilder);Argument[0];environment;manual |
 | Microsoft.Extensions.Configuration;EnvironmentVariablesExtensions;AddEnvironmentVariables;(Microsoft.Extensions.Configuration.IConfigurationBuilder);ReturnValue;environment;manual |
@@ -250,6 +252,8 @@ sink
 | Dapper;SqlMapper;QuerySingleOrDefaultAsync;(System.Data.IDbConnection,System.String,System.Object,System.Data.IDbTransaction,System.Nullable<System.Int32>,System.Nullable<System.Data.CommandType>);Argument[1];sql-injection;manual |
 | Dapper;SqlMapper;QuerySingleOrDefaultAsync;(System.Data.IDbConnection,System.Type,System.String,System.Object,System.Data.IDbTransaction,System.Nullable<System.Int32>,System.Nullable<System.Data.CommandType>);Argument[2];sql-injection;manual |
 | Dapper;SqlMapper;QuerySingleOrDefaultAsync<T>;(System.Data.IDbConnection,System.String,System.Object,System.Data.IDbTransaction,System.Nullable<System.Int32>,System.Nullable<System.Data.CommandType>);Argument[1];sql-injection;manual |
+| Microsoft.AspNetCore.Components;MarkupString;MarkupString;(System.String);Argument[0];html-injection;manual |
+| Microsoft.AspNetCore.Components;MarkupString;op_Explicit;(System.String);Argument[0];html-injection;manual |
 | Microsoft.EntityFrameworkCore;RelationalDatabaseFacadeExtensions;ExecuteSqlRaw;(Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade,System.String,System.Collections.Generic.IEnumerable<System.Object>);Argument[1];sql-injection;manual |
 | Microsoft.EntityFrameworkCore;RelationalDatabaseFacadeExtensions;ExecuteSqlRaw;(Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade,System.String,System.Object[]);Argument[1];sql-injection;manual |
 | Microsoft.EntityFrameworkCore;RelationalDatabaseFacadeExtensions;ExecuteSqlRawAsync;(Microsoft.EntityFrameworkCore.Infrastructure.DatabaseFacade,System.String,System.Collections.Generic.IEnumerable<System.Object>,System.Threading.CancellationToken);Argument[1];sql-injection;manual |
@@ -951,6 +955,7 @@ summary
 | Microsoft.AspNetCore.Components.CompilerServices;RuntimeHelpers;InvokeAsynchronousDelegate;(System.Action);Argument[0];Argument[0].Parameter[delegate-self];value;hq-generated |
 | Microsoft.AspNetCore.Components.CompilerServices;RuntimeHelpers;InvokeAsynchronousDelegate;(System.Func<System.Threading.Tasks.Task>);Argument[0];Argument[0].Parameter[delegate-self];value;hq-generated |
 | Microsoft.AspNetCore.Components.CompilerServices;RuntimeHelpers;InvokeSynchronousDelegate;(System.Action);Argument[0];Argument[0].Parameter[delegate-self];value;hq-generated |
+| Microsoft.AspNetCore.Components.CompilerServices;RuntimeHelpers;TypeCheck<T>;(T);Argument[0];ReturnValue;value;manual |
 | Microsoft.AspNetCore.Components.Forms.Mapping;FormValueMappingContext;set_MapErrorToContainer;(System.Action<System.String,System.Object>);Argument[0];Argument[0].Parameter[delegate-self];value;hq-generated |
 | Microsoft.AspNetCore.Components.Forms.Mapping;FormValueMappingContext;set_OnError;(System.Action<System.String,System.FormattableString,System.String>);Argument[0];Argument[0].Parameter[delegate-self];value;hq-generated |
 | Microsoft.AspNetCore.Components.Forms;EditContext;GetValidationMessages;(System.Linq.Expressions.Expression<System.Func<System.Object>>);Argument[0];Argument[0].Parameter[delegate-self];value;hq-generated |
@@ -1114,6 +1119,7 @@ summary
 | Microsoft.AspNetCore.Components;LayoutComponentBase;set_Body;(Microsoft.AspNetCore.Components.RenderFragment);Argument[0];Argument[0].Parameter[delegate-self];value;hq-generated |
 | Microsoft.AspNetCore.Components;LayoutView;set_ChildContent;(Microsoft.AspNetCore.Components.RenderFragment);Argument[0];Argument[0].Parameter[delegate-self];value;hq-generated |
 | Microsoft.AspNetCore.Components;NavigationManager;RegisterLocationChangingHandler;(System.Func<Microsoft.AspNetCore.Components.Routing.LocationChangingContext,System.Threading.Tasks.ValueTask>);Argument[0];Argument[0].Parameter[delegate-self];value;hq-generated |
+| Microsoft.AspNetCore.Components;NavigationManager;ToAbsoluteUri;(System.String);Argument[0];ReturnValue;taint;manual |
 | Microsoft.AspNetCore.Components;NavigationManager;add_LocationChanged;(System.EventHandler<Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs>);Argument[0];Argument[0].Parameter[delegate-self];value;hq-generated |
 | Microsoft.AspNetCore.Components;NavigationManager;remove_LocationChanged;(System.EventHandler<Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs>);Argument[0];Argument[0].Parameter[delegate-self];value;hq-generated |
 | Microsoft.AspNetCore.Components;PersistentComponentState;RegisterOnPersisting;(System.Func<System.Threading.Tasks.Task>);Argument[0];Argument[0].Parameter[delegate-self];value;hq-generated |
