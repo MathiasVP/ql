@@ -27,7 +27,7 @@ module DoubleFreeParam implements FlowFromFreeParamSig {
 
   predicate isExcluded = isExcludedMmFreePageFromMdl/2;
 
-  predicate sourceSinkIsRelated = defaultSourceSinkIsRelated/2;
+  // predicate sourceSinkIsRelated = defaultSourceSinkIsRelated/2;
 }
 
 module DoubleFree = FlowFromFree<DoubleFreeParam>;

@@ -96,6 +96,10 @@ module FlowFromFree<FlowFromFreeParamSig P> {
       or
       [n.asExpr(), n.asIndirectExpr()] instanceof ArrayExpr
     }
+
+    DataFlow::FlowFeature getAFeature() {
+      result instanceof DataFlow::FeatureEqualSourceSinkCallContext
+    }
   }
 
   import DataFlow::GlobalWithState<FlowFromFreeConfig>

@@ -23,7 +23,7 @@ module UseAfterFreeParam implements FlowFromFreeParamSig {
 
   predicate isExcluded = isExcludedMmFreePageFromMdl/2;
 
-  predicate sourceSinkIsRelated = defaultSourceSinkIsRelated/2;
+  // predicate sourceSinkIsRelated = defaultSourceSinkIsRelated/2;
 }
 
 import UseAfterFreeParam

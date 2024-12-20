@@ -219,7 +219,7 @@ module Config implements DataFlow::ConfigSig {
 
   predicate isSink(DataFlow::Node sink) { sink.asExpr() = any(UnsafeCast cast).getUnconverted() }
 
-  int fieldFlowBranchLimit() { result = 0 }
+  DataFlow::FlowFeature getAFeature() { result instanceof DataFlow::FeatureEqualSourceSinkCallContext }
 }
 
 module Flow = DataFlow::Global<Config>;
@@ -250,14 +250,6 @@ where
   Flow::flowPath(source, sink) and
   sinkNode = sink.getNode() and
   isSourceImpl(source.getNode(), badSourceType) and
-  isSinkImpl(sinkNode, badSourceType, sinkType, false) and
-  // If there is any flow that would result in a valid cast then we don't
-  // report an alert here. This reduces the number of FPs from infeasible paths
-  // significantly.
-  not exists(DataFlow::Node goodSource, Type goodSourceType |
-    isSourceImpl(goodSource, goodSourceType) and
-    isSinkImpl(sinkNode, goodSourceType, sinkType, true) and
-    Flow::flow(goodSource, sinkNode)
-  )
+  isSinkImpl(sinkNode, badSourceType, sinkType, false)
 select sinkNode, source, sink, "Conversion from $@ to $@ is invalid.", badSourceType,
   badSourceType.toString(), sinkType, sinkType.toString()
