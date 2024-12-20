@@ -625,7 +625,7 @@ module MakeImpl<LocationSig Location, InputSig<Location> Lang> {
       }
 
       // private
-       predicate fwdFlow(NodeEx node) { fwdFlow(node, _) }
+      predicate fwdFlow(NodeEx node) { fwdFlow(node, _) }
 
       pragma[nomagic]
       private predicate fwdFlowReadSet(ContentSet c, NodeEx node, Cc cc) {
@@ -949,10 +949,9 @@ module MakeImpl<LocationSig Location, InputSig<Location> Lang> {
           parameterFlowThroughAllowed(p, kind)
         )
       }
+
       pragma[nomagic]
-      predicate parameterMightNotFlowThrough(ParamNodeEx p) {
-        noThroughFlowNodeCand(p)
-      }
+      predicate parameterMightNotFlowThrough(ParamNodeEx p) { noThroughFlowNodeCand(p) }
 
       pragma[nomagic]
       predicate returnMayFlowThrough(RetNodeEx ret, ReturnKindExt kind) {
@@ -1033,14 +1032,18 @@ module MakeImpl<LocationSig Location, InputSig<Location> Lang> {
 
     // module SplittingInput implements Splitting::SplittingSig<NodeEx> {
     module SplittingInput implements Splitting::SplittingSig<Location> {
-      class Node = NodeEx;
+      class NodeRegion instanceof Lang::NodeRegion {
+        predicate containsEx(NodeEx n) { super.contains(n.asNodeOrImplicitRead()) }
+
+        string toString() { result = super.toString() }
+      }
 
       class SplitKind instanceof Lang::SplitKind {
         string toString() { result = super.toString() }
 
         Location getLocation() { result = super.getLocation() }
 
-        predicate inScope(NodeEx n) { super.inScope(n.asNodeOrImplicitRead()) }
+        predicate inScope(NodeRegion nr) { super.inScope(nr) }
       }
 
       class Split instanceof Lang::Split {
@@ -1050,14 +1053,16 @@ module MakeImpl<LocationSig Location, InputSig<Location> Lang> {
 
         SplitKind getKind() { result = super.getKind() }
 
-        predicate holds(NodeEx n) { super.holds(n.asNodeOrImplicitRead()) }
+        predicate holds(NodeRegion n) { super.holds(n) }
       }
     }
 
-    module Stage1LocalFlow implements Splitting::GraphSig<NodeEx> {
-      predicate entry(NodeEx node) {
-        Stage1::revFlow(node) and
-        (
+    module Stage1LocalFlow implements Splitting::GraphSig<SplittingInput::NodeRegion> {
+      predicate entry(SplittingInput::NodeRegion nr) {
+        exists(NodeEx node |
+          Stage1::revFlow(node) and
+          nr.containsEx(node)
+        |
           sourceNode(node, _)
           or
           exists(NodeEx mid | Stage1::revFlow(mid) |
@@ -1074,10 +1079,12 @@ module MakeImpl<LocationSig Location, InputSig<Location> Lang> {
           )
         )
       }
-      
-      predicate exit(NodeEx node) {
-        Stage1::revFlow(node) and
-        (
+
+      predicate exit(SplittingInput::NodeRegion nr) {
+        exists(NodeEx node |
+          nr.containsEx(node) and
+          Stage1::revFlow(node)
+        |
           sinkNode(node, _)
           or
           exists(NodeEx mid | Stage1::revFlow(mid) |
@@ -1095,18 +1102,23 @@ module MakeImpl<LocationSig Location, InputSig<Location> Lang> {
         )
       }
 
-      predicate step(NodeEx n1, NodeEx n2) {
-        localStepNodeCand1(n1, n2, _, _, _, _)
-        or
-        localStateStepNodeCand1(n1, _, n2, _, _, _, _)
-        or
-        Stage1::storeStepCand(n1, _, n2, _, _)
-        or
-        Stage1::readStepCand(n1, _, n2)
-        or
-        exists(DataFlowCall call, DataFlowCallable c |
-          Stage1::callEdgeArgParam(call, c, n1, _, _) and
-          Stage1::callEdgeReturn(call, c, _, _, n2, _)
+      predicate step(SplittingInput::NodeRegion nr1, SplittingInput::NodeRegion nr2) {
+        exists(NodeEx n1, NodeEx n2 |
+          nr1.containsEx(n1) and
+          nr2.containsEx(n2)
+        |
+          localStepNodeCand1(n1, n2, _, _, _, _)
+          or
+          localStateStepNodeCand1(n1, _, n2, _, _, _, _)
+          or
+          Stage1::storeStepCand(n1, _, n2, _, _)
+          or
+          Stage1::readStepCand(n1, _, n2)
+          or
+          exists(DataFlowCall call, DataFlowCallable c |
+            Stage1::callEdgeArgParam(call, c, n1, _, _) and
+            Stage1::callEdgeReturn(call, c, _, _, n2, _)
+          )
         )
       }
     }
@@ -1115,21 +1127,18 @@ module MakeImpl<LocationSig Location, InputSig<Location> Lang> {
     //   PostStage1Splitting::revReach(n, _) and
     //   n.getEnclosingCallable() = c
     // }
-    
     // predicate testReach2(DataFlowCallable c, NodeEx n, int line) {
     //   testReach1(c, _) and
     //   n.getEnclosingCallable() = c and
     //   Stage1::revFlow(n) and
     //   n.getLocation().getStartLine() = line
     // }
-
     // predicate testReach3(DataFlowCallable c, NodeEx n, int line) {
     //   testReach1(c, _) and
     //   n.getEnclosingCallable() = c and
     //   Stage1::fwdFlow(n) and
     //   n.getLocation().getStartLine() = line
     // }
-    
     // predicate testEntryFwd(DataFlowCallable c, int line, NodeEx n) {
     //   // Stage1::viableReturnPosOutNodeCandFwd1(_, _, n) and
     //   // flowOutOfCallNodeCand1(_,_,_,n)and
@@ -1143,13 +1152,11 @@ module MakeImpl<LocationSig Location, InputSig<Location> Lang> {
     //   testReach1(c, _) and
     //   n.getEnclosingCallable() = c and
     //   n.getLocation().getStartLine() = line
-
     // }
-    
     // module PostStage1Splitting = Splitting::Splitting<NodeEx, SplittingInput, Stage1LocalFlow>;
     module PostStage1Splitting = Splitting::Splitting<Location, SplittingInput, Stage1LocalFlow>;
 
-    predicate splitBarrier(NodeEx n1, NodeEx n2, string v) {
+    predicate splitBarrierRegion(NodeRegion n1, NodeRegion n2, string v) {
       v = "v1" and PostStage1Splitting::barrier1(n1, n2)
       or
       v = "v2" and PostStage1Splitting::barrier2(n1, n2)
@@ -3859,6 +3866,26 @@ module MakeImpl<LocationSig Location, InputSig<Location> Lang> {
       import CachedCallContextSensitivity
       import NoLocalCallContext
 
+      private predicate splitBarrier(NodeEx node1, NodeEx node2) {
+        localStepNodeCand1(node1, node2, _, _, _, _) and
+        exists(NodeRegion nr1, NodeRegion nr2 |
+          nr1.contains(node1.asNodeOrImplicitRead()) and
+          nr2.contains(node2.asNodeOrImplicitRead()) and
+          splitBarrierRegion(nr1, nr2, _)
+        )
+      }
+
+      bindingset[node1]
+      bindingset[node2]
+      private predicate splitBarrierState(NodeEx node1, NodeEx node2) {
+        localStateStepNodeCand1(node1, _, node2, _, _, _, _) and
+        exists(NodeRegion nr1, NodeRegion nr2 |
+          nr1.contains(node1.asNodeOrImplicitRead()) and
+          nr2.contains(node2.asNodeOrImplicitRead()) and
+          splitBarrierRegion(nr1, nr2, _)
+        )
+      }
+
       bindingset[node1, state1]
       bindingset[node2, state2]
       predicate localStep(
@@ -3867,11 +3894,11 @@ module MakeImpl<LocationSig Location, InputSig<Location> Lang> {
       ) {
         (
           localStepNodeCand1(node1, node2, preservesValue, _, _, label) and
-          not splitBarrier(node1, node2, _) and
+          not splitBarrier(node1, node2) and
           state1 = state2
           or
           localStateStepNodeCand1(node1, state1, node2, state2, _, _, label) and
-          not splitBarrier(node1, node2, _) and
+          not splitBarrierState(node1, node2) and
           preservesValue = false
         ) and
         exists(t) and

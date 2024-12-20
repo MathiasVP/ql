@@ -4,19 +4,17 @@ signature class NodeSig {
   string toString();
 }
 
-signature module SplittingSig<LocationSig Location> {
-  class Node {
-    string toString();
+signature class NodeRegionSig;
 
-    Location getLocation();
-  }
+signature module SplittingSig<LocationSig Location> {
+  class NodeRegion;
 
   class SplitKind {
     string toString();
 
     Location getLocation();
 
-    predicate inScope(Node n);
+    predicate inScope(NodeRegion n);
   }
 
   class Split {
@@ -26,69 +24,69 @@ signature module SplittingSig<LocationSig Location> {
 
     SplitKind getKind();
 
-    predicate holds(Node n);
+    predicate holds(NodeRegion n);
   }
 }
 
-signature module GraphSig<NodeSig Node> {
-  predicate entry(Node n);
+signature module GraphSig<NodeRegionSig NodeRegion> {
+  predicate entry(NodeRegion n);
 
-  predicate exit(Node n);
+  predicate exit(NodeRegion n);
 
-  predicate step(Node n1, Node n2);
+  predicate step(NodeRegion n1, NodeRegion n2);
 }
 
-module Splitting<LocationSig Location, SplittingSig<Location> S, GraphSig<S::Node> G> {
+module Splitting<LocationSig Location, SplittingSig<Location> S, GraphSig<S::NodeRegion> G> {
   private import S
   private import G
 
   pragma[nomagic]
-  private predicate splitHolds(Split s, SplitKind k, Node n) {
-    s.holds(n) and
+  private predicate splitHolds(Split s, SplitKind k, NodeRegion nr) {
+    s.holds(nr) and
     s.getKind() = k
   }
 
   // k is in scope at n, but no specific Split holds at n
-  private predicate noInfoNode(Node n, SplitKind k) {
-    k.inScope(n) and
-    not splitHolds(_, k, n)
+  private predicate noInfoNode(NodeRegion nr, SplitKind k) {
+    k.inScope(nr) and
+    not splitHolds(_, k, nr)
   }
 
   // k is in scope at n, and n is not dominated by a Split of kind k
-  private predicate noSplitFwd(Node n, SplitKind k) {
-    noInfoNode(n, k) and
+  private predicate noSplitFwd(NodeRegion nr, SplitKind k) {
+    noInfoNode(nr, k) and
     (
-      entry(n)
+      entry(nr)
       or
-      exists(Node pred |
-        step(pred, n) and
+      exists(NodeRegion pred |
+        step(pred, nr) and
         not k.inScope(pred) and
         not splitHolds(_, k, pred)
       )
     )
     or
-    exists(Node mid |
-      step(mid, n) and
-      noInfoNode(n, k) and
+    exists(NodeRegion mid |
+      step(mid, nr) and
+      noInfoNode(nr, k) and
       noSplitFwd(mid, k)
     )
   }
 
-  private predicate noSplitRev(Node n, SplitKind k) {
-    noInfoNode(n, k) and
+  private predicate noSplitRev(NodeRegion nr, SplitKind k) {
+    noInfoNode(nr, k) and
     (
-      exit(n)
+      exit(nr)
       or
-      exists(Node succ |
-        step(n, succ) and
+      exists(NodeRegion succ |
+        step(nr, succ) and
         not k.inScope(succ) and
         not splitHolds(_, k, succ)
       )
     )
     or
-    exists(Node mid |
-      step(n, mid) and
-      noInfoNode(n, k) and
+    exists(NodeRegion mid |
+      step(nr, mid) and
+      noInfoNode(nr, k) and
       noSplitRev(mid, k)
     )
   }
@@ -102,52 +100,52 @@ module Splitting<LocationSig Location, SplittingSig<Location> S, GraphSig<S::Nod
   //   )
   // }
   // n is dominated by one or more Splits of kind k, but no specific Split of kind k holds at n
-  private predicate canHaveSplitFwd(Node n, SplitKind k) {
+  private predicate canHaveSplitFwd(NodeRegion n, SplitKind k) {
     noInfoNode(n, k) and
     not noSplitFwd(n, k)
   }
 
-  private predicate canHaveSplitRev(Node n, SplitKind k) {
+  private predicate canHaveSplitRev(NodeRegion n, SplitKind k) {
     noInfoNode(n, k) and
     not noSplitRev(n, k)
   }
 
-  private predicate splitEntryStep(Node n1, Node n2, Split s, SplitKind k) {
+  private predicate splitEntryStep(NodeRegion n1, NodeRegion n2, Split s, SplitKind k) {
     step(n1, n2) and
     splitHolds(s, k, n1) and
     noInfoNode(n2, k)
   }
 
-  private predicate splitExitStep(Node n1, Node n2, Split s, SplitKind k) {
+  private predicate splitExitStep(NodeRegion n1, NodeRegion n2, Split s, SplitKind k) {
     step(n1, n2) and
     splitHolds(s, k, n2) and
     noInfoNode(n1, k)
   }
 
-  private predicate hasSplitFwd(Node n, Split s, SplitKind k) {
+  private predicate hasSplitFwd(NodeRegion n, Split s, SplitKind k) {
     splitEntryStep(_, n, s, k) and
     canHaveSplitFwd(n, k)
     or
-    exists(Node mid |
+    exists(NodeRegion mid |
       hasSplitFwd(mid, s, k) and
       step(mid, n) and
       canHaveSplitFwd(n, k)
     )
   }
 
-  private predicate hasSplitRev(Node n, Split s, SplitKind k) {
+  private predicate hasSplitRev(NodeRegion n, Split s, SplitKind k) {
     splitExitStep(n, _, s, k) and
     canHaveSplitRev(n, k) and
     s.getKind() = k
     or
-    exists(Node mid |
+    exists(NodeRegion mid |
       hasSplitRev(mid, s, k) and
       step(n, mid) and
       canHaveSplitRev(n, k)
     )
   }
 
-  predicate barrier1(Node n1, Node n2) {
+  predicate barrier1(NodeRegion n1, NodeRegion n2) {
     exists(Split s1, Split s2, SplitKind k |
       step(n1, n2) and
       splitHolds(s1, pragma[only_bind_into](k), n1) and
@@ -156,7 +154,7 @@ module Splitting<LocationSig Location, SplittingSig<Location> S, GraphSig<S::Nod
     )
   }
 
-  predicate barrier2(Node n1, Node n2) {
+  predicate barrier2(NodeRegion n1, NodeRegion n2) {
     exists(Split s1, Split s2, SplitKind k |
       splitExitStep(n1, n2, s1, k) and
       hasSplitFwd(n1, s2, k) and
@@ -165,7 +163,7 @@ module Splitting<LocationSig Location, SplittingSig<Location> S, GraphSig<S::Nod
     )
   }
 
-  predicate barrier3(Node n1, Node n2) {
+  predicate barrier3(NodeRegion n1, NodeRegion n2) {
     exists(Split s1, Split s2, SplitKind k |
       splitEntryStep(n1, n2, s1, k) and
       hasSplitRev(n2, s2, k) and

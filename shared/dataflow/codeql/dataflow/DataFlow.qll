@@ -258,6 +258,8 @@ signature module InputSig<LocationSig Location> {
   class NodeRegion {
     /** Holds if this region contains `n`. */
     predicate contains(Node n);
+
+    string toString();
   }
 
   /**
@@ -350,7 +352,7 @@ signature module InputSig<LocationSig Location> {
 
     Location getLocation();
 
-    predicate inScope(Node n);
+    predicate inScope(NodeRegion nr);
   }
 
   class Split {
@@ -360,7 +362,7 @@ signature module InputSig<LocationSig Location> {
 
     SplitKind getKind();
 
-    predicate holds(Node n);
+    predicate holds(NodeRegion n);
   }
 }
 
