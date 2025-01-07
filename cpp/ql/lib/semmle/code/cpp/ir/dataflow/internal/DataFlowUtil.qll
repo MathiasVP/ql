@@ -1090,6 +1090,10 @@ class SsaPhiInputNode extends StageNode {
   SsaPhiInputNode() { node = FinalStage::inject(Stage2::ssaPhiInputNode(_, _)) }
 }
 
+private SsaPhiInputNode ssaPhiInputNode(Stage2::PhiNode phi, IRBlock block) {
+  result = TStageNode(FinalStage::inject(Stage2::ssaPhiInputNode(phi, block)))
+}
+
 /**
  * Provides a set of barrier nodes for a guard that validates an expression.
  *
@@ -1153,7 +1157,7 @@ module BarrierGuard<guardChecksSig/3 guardChecks> {
       guardChecks(g, def.getARead().asOperand().getDef().getConvertedResultExpression(), branch) and
       guardControlsPhiInput(g, branch, def, pragma[only_bind_into](input),
         pragma[only_bind_into](phi)) and
-      result = TStageNode(FinalStage::inject(Stage2::ssaPhiInputNode(phi, input)))
+      result = ssaPhiInputNode(phi, input)
     )
   }
 
@@ -1254,7 +1258,7 @@ module BarrierGuard<guardChecksSig/3 guardChecks> {
         branch) and
       guardControlsPhiInput(g, branch, def, pragma[only_bind_into](input),
         pragma[only_bind_into](phi)) and
-      result = TStageNode(FinalStage::inject(Stage2::ssaPhiInputNode(phi, input)))
+      result = ssaPhiInputNode(phi, input)
     )
   }
 }
@@ -1303,7 +1307,7 @@ module InstructionBarrierGuard<instructionGuardChecksSig/3 instructionGuardCheck
       instructionGuardChecks(g, def.getARead().asOperand().getDef(), branch) and
       guardControlsPhiInput(g, branch, def, pragma[only_bind_into](input),
         pragma[only_bind_into](phi)) and
-      result = TStageNode(FinalStage::inject(Stage2::ssaPhiInputNode(phi, input)))
+      result = ssaPhiInputNode(phi, input)
     )
   }
 
@@ -1334,7 +1338,7 @@ module InstructionBarrierGuard<instructionGuardChecksSig/3 instructionGuardCheck
       instructionGuardChecks(g, def.getARead().asIndirectOperand(indirectionIndex).getDef(), branch) and
       guardControlsPhiInput(g, branch, def, pragma[only_bind_into](input),
         pragma[only_bind_into](phi)) and
-      result = TStageNode(FinalStage::inject(Stage2::ssaPhiInputNode(phi, input)))
+      result = ssaPhiInputNode(phi, input)
     )
   }
 }

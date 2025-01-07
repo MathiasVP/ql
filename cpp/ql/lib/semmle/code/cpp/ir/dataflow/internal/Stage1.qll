@@ -307,17 +307,33 @@ module Stage1 implements StageSig {
   private predicate simpleOperandLocalFlowStep(Instruction instr, Operand operand) {
     exists(Stage0::Node nInstr, Stage0::Node nOperand |
       nInstr.asInstruction() = instr and
-      nOperand.asOperand() = operand and
+      nOperand.asOperand() = operand
+    |
       Stage0::localFlowStep(nInstr, nOperand)
+      or
+      // It may be that the same `Stage0::Node` represents both the
+      // instruction and the operand. When that happens there is no local flow
+      // step. However, we still want to represent that there's flow from the
+      // instruction to the operand.
+      nInstr = nOperand
     )
   }
 
   private predicate simpleInstructionLocalFlowStep(Operand operand, Instruction instr) {
     exists(Stage0::Node nInstr, Stage0::Node nOperand |
       nInstr.asInstruction() = instr and
-      nOperand.asOperand() = operand and
+      nOperand.asOperand() = operand
+    |
       Stage0::localFlowStep(nOperand, nInstr)
+      or
+      // It may be that the same `Stage0::Node` represents both the
+      // instruction and the operand. When that happens there is no local flow
+      // step. However, we still want to represent that there's flow from the
+      // operand to the instruction.
+      nInstr = nOperand
     )
+    or
+    any(Stage0Output::Indirection ind).isAdditionalConversionFlow(operand, instr)
   }
 
   private predicate indirectionOperandFlow(RawIndirectOperandNode nodeFrom, Node nodeTo) {
@@ -387,6 +403,9 @@ module Stage1 implements StageSig {
       nodeTo = TNode0(nTo) and
       Stage0::localFlowStep(nFrom, nTo)
     )
+    or
+    any(Stage0Output::Indirection ind)
+        .isAdditionalConversionFlow(nodeFrom.asOperand(), nodeTo.asInstruction())
     or
     // Indirect operand -> (indirect) instruction flow
     indirectionOperandFlow(nodeFrom, nodeTo)
