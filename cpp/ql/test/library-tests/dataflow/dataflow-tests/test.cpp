@@ -1139,3 +1139,11 @@ void test_uncertain_array(int n1, int n2) {
   *data = 0;
   sink(*(data + 1)); // $ ast=1138:17 ast=1137:7 ir
 }
+
+void test_alias() {
+  int x;
+  int* p = &x;
+
+  x = source();
+  sink(*p); // $ ir
+}
