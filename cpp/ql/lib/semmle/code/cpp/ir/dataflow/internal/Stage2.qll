@@ -2348,6 +2348,15 @@ module Stage2 implements StageSig {
         use.getIndirectionIndex() = indirectionIndex and
         use.getArgumentIndex() = argumentIndex
       )
+      or
+      // derive a possible return argument from the AST
+      indirectionIndex =
+        [0 .. max(Cpp::Function f |
+            not exists(f.getBlock())
+          |
+            Stage0Output::getMaxIndirectionsForType(f.getParameter(argumentIndex)
+                      .getUnspecifiedType()) - 1 // -1 because an argument is a prvalue not a glvalue
+          )]
     }
 
   abstract class ReturnKind extends TReturnKind {

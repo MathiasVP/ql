@@ -513,7 +513,6 @@ class ArgumentOutNode extends StageNode {
 private class PostIndirectReturnOutNode extends PostUpdateNode instanceof CallOutNode {
   PostIndirectReturnOutNode() {
     exists(Operand operand, int indirectionIndex |
-      indirectionIndex > 0 and
       any(StoreInstruction store).getDestinationAddressOperand() = operand and
       this.(IndirectOperandNode).hasOperandAndIndirectionIndex(operand, indirectionIndex)
     )

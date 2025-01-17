@@ -35,7 +35,7 @@ DataFlow::Node callInput(CallInstruction call, FunctionInput input, int d) {
   )
 }
 
-private CallOutNode getIndirectReturnOutNode(CallInstruction call, int d) {
+private SourceOutNode getIndirectReturnOutNode(CallInstruction call, int d) {
   d > 0 and
   result.getReturnKind().isReturnValue(d) and
   result.getCall().asCallInstruction() = call

@@ -174,7 +174,7 @@ abstract private class OutNodeImpl extends Node {
 
 final class OutNode = OutNodeImpl;
 
-class CallOutNode extends OutNodeImpl, StageNode {
+class SourceOutNode extends OutNodeImpl, StageNode {
   override FinalStage::OutNode node;
 
   override DataFlowCall getCall() { result.asCallInstruction() = node.getCall() }
@@ -182,6 +182,12 @@ class CallOutNode extends OutNodeImpl, StageNode {
   int getIndirectionIndex() { result = node.getReturnKind().getIndirectionIndex() }
 
   override ReturnKind getReturnKind() { result = node.getReturnKind() }
+}
+
+class CallOutNode extends SourceOutNode, StageNode {
+  CallOutNode() {
+    this.getReturnKind().isReturnValue(_)
+  }
 }
 
 /**
