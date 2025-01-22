@@ -7,6 +7,25 @@ private import DataFlowUtil
 private import DataFlowDispatch
 private import FlowVar
 private import codeql.util.Unit
+private import codeql.util.Void
+
+class SplitKind extends Void {
+  string toString() { none() }
+
+  Location getLocation() { none() }
+
+  predicate inScope(NodeRegion nr) { none() }
+}
+
+class Split extends Void {
+  string toString() { none() }
+
+  Location getLocation() { none() }
+
+  SplitKind getKind() { none() }
+
+  predicate holds(NodeRegion n) { none() }
+}
 
 /** Gets the callable in which this node occurs. */
 DataFlowCallable nodeGetEnclosingCallable(Node n) { result = n.getEnclosingCallable() }
