@@ -134,19 +134,12 @@ private module Cached {
   cached
   IRBlock getNewBlock(OldBlock oldBlock) {
     exists(Instruction newEnd, OldIR::Instruction oldEnd |
-      (
-        result.getLastInstruction() = newEnd and
-        not newEnd instanceof ChiInstruction
-        or
-        newEnd = result.getLastInstruction().(ChiInstruction).getAPredecessor() // does this work?
-      ) and
-      (
-        oldBlock.getLastInstruction() = oldEnd and
-        not oldEnd instanceof OldIR::ChiInstruction
-        or
-        oldEnd = oldBlock.getLastInstruction().(OldIR::ChiInstruction).getAPredecessor() // does this work?
-      ) and
-      oldEnd = getNewInstruction(newEnd)
+      newEnd = getNewInstruction(oldEnd) and oldBlock.getLastInstruction() = oldEnd
+    |
+      result.getLastInstruction() = newEnd and
+      not newEnd instanceof ChiInstruction
+      or
+      newEnd = result.getLastInstruction().(ChiInstruction).getAPredecessor()
     )
   }
 
