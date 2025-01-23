@@ -134,13 +134,24 @@ private module Cached {
   cached
   IRBlock getNewBlock(OldBlock oldBlock) {
     exists(Instruction newEnd, OldIR::Instruction oldEnd |
-      newEnd = getNewInstruction(oldEnd) and oldBlock.getLastInstruction() = oldEnd
+      newEnd = getNewEnd(oldEnd) and oldBlock.getLastInstruction() = oldEnd
     |
       result.getLastInstruction() = newEnd and
       not newEnd instanceof ChiInstruction
       or
       newEnd = result.getLastInstruction().(ChiInstruction).getAPredecessor()
     )
+  }
+
+  private Instruction getNewEnd(OldIR::Instruction oldEnd) {
+    result = getNewInstruction(oldEnd)
+    or
+    // There is not a new instruction when it has been pruned away as part of
+    // the construction of the aliased IR. This may happen to write side
+    // effects when we can determine (using only the unaliased IR) that a call
+    // only reads and writes from unaliased memory.
+    not exists(getNewInstruction(oldEnd)) and
+    result = getNewEnd(oldEnd.getAPredecessor())
   }
 
   /**
