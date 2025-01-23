@@ -3671,7 +3671,7 @@ ir.c:
 #-----|   Goto -> Block 1
 
 #  116|   Block 1
-#  116|     m116_1(int)        = Phi                : from 1:m116_6
+#  116|     m116_1(int)        = Phi                : from 0:m111_6, from 1:m116_6
 #  116|     r116_2(glval<int>) = VariableAddress[n] : 
 #  116|     r116_3(int)        = Load[n]            : &:r116_2, m116_1
 #  116|     r116_4(int)        = Constant[1]        : 
