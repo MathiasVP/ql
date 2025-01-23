@@ -510,7 +510,7 @@ class ArgumentOutNode extends StageNode {
  * sink(mi.i);
  * ```
  */
-private class PostIndirectReturnOutNode extends PostUpdateNode instanceof CallOutNode {
+private class PostIndirectReturnOutNode extends PostUpdateNode instanceof IndirectCallOutNode {
   PostIndirectReturnOutNode() {
     exists(Operand operand, int indirectionIndex |
       any(StoreInstruction store).getDestinationAddressOperand() = operand and
@@ -803,7 +803,7 @@ private module Cached {
     out.getIndirectionIndex() = indirectionIndex
   }
 
-  private predicate reverseFlowOperand(Node nodeFrom, CallOutNode nodeTo) {
+  private predicate reverseFlowOperand(Node nodeFrom, IndirectCallOutNode nodeTo) {
     exists(Operand address, int indirectionIndex |
       nodeHasOperand(nodeTo, address, indirectionIndex)
     |
@@ -819,7 +819,7 @@ private module Cached {
     )
   }
 
-  private predicate reverseFlowInstruction(Node nodeFrom, CallOutNode nodeTo) {
+  private predicate reverseFlowInstruction(Node nodeFrom, IndirectCallOutNode nodeTo) {
     exists(Instruction address, int indirectionIndex |
       nodeHasInstruction(nodeTo, address, indirectionIndex)
     |

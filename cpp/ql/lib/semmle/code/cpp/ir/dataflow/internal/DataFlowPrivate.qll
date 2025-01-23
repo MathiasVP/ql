@@ -190,6 +190,12 @@ class CallOutNode extends SourceOutNode, StageNode {
   }
 }
 
+class IndirectCallOutNode extends CallOutNode {
+  IndirectCallOutNode() {
+    this.getIndirectionIndex() > 0
+  }
+}
+
 /**
  * An output node that is part of a summary. An output node is needed when the
  * model contains a synthesized call (`SummaryCall`) and the return value of
