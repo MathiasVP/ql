@@ -3442,6 +3442,48 @@ ir.c:
 #   84|     v84_9(void)  = AliasedUse   : ~m?
 #   84|     v84_10(void) = ExitFunction : 
 
+#  106| void no_global_side_effects()
+#  106|   Block 0
+#  106|     v106_1(void)     = EnterFunction      : 
+#  106|     mu106_2(unknown) = AliasedDefinition  : 
+#  106|     mu106_3(unknown) = InitializeNonLocal : 
+#  109|     v109_1(void)     = NoOp               : 
+#  106|     v106_4(void)     = ReturnVoid         : 
+#  106|     v106_5(void)     = AliasedUse         : ~m?
+#  106|     v106_6(void)     = ExitFunction       : 
+
+#  111| void decrement_and_no_global_side_effects(int)
+#  111|   Block 0
+#  111|     v111_1(void)           = EnterFunction                           : 
+#  111|     mu111_2(unknown)       = AliasedDefinition                       : 
+#  111|     mu111_3(unknown)       = InitializeNonLocal                      : 
+#  111|     r111_4(glval<int>)     = VariableAddress[n]                      : 
+#  111|     mu111_5(int)           = InitializeParameter[n]                  : &:r111_4
+#  113|     r113_1(glval<unknown>) = FunctionAddress[no_global_side_effects] : 
+#  113|     v113_2(void)           = Call[no_global_side_effects]            : func:r113_1
+#  113|     mu113_3(unknown)       = ^CallSideEffect                         : ~m?
+#-----|   Goto -> Block 1
+
+#  116|   Block 1
+#  116|     r116_1(glval<int>) = VariableAddress[n] : 
+#  116|     r116_2(int)        = Load[n]            : &:r116_1, ~m?
+#  116|     r116_3(int)        = Constant[1]        : 
+#  116|     r116_4(int)        = Sub                : r116_2, r116_3
+#  116|     mu116_5(int)       = Store[n]           : &:r116_1, r116_4
+#  117|     r117_1(glval<int>) = VariableAddress[n] : 
+#  117|     r117_2(int)        = Load[n]            : &:r117_1, ~m?
+#  117|     r117_3(int)        = Constant[0]        : 
+#  117|     r117_4(bool)       = CompareGT          : r117_2, r117_3
+#  117|     v117_5(void)       = ConditionalBranch  : r117_4
+#-----|   False -> Block 2
+#-----|   True (back edge) -> Block 1
+
+#  118|   Block 2
+#  118|     v118_1(void) = NoOp         : 
+#  111|     v111_6(void) = ReturnVoid   : 
+#  111|     v111_7(void) = AliasedUse   : ~m?
+#  111|     v111_8(void) = ExitFunction : 
+
 ir.cpp:
 #    1| void Constants()
 #    1|   Block 0

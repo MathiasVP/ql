@@ -3647,6 +3647,52 @@ ir.c:
 #   84|     v84_10(void) = AliasedUse   : m84_3
 #   84|     v84_11(void) = ExitFunction : 
 
+#  106| void no_global_side_effects()
+#  106|   Block 0
+#  106|     v106_1(void)    = EnterFunction      : 
+#  106|     m106_2(unknown) = AliasedDefinition  : 
+#  106|     m106_3(unknown) = InitializeNonLocal : 
+#  106|     m106_4(unknown) = Chi                : total:m106_2, partial:m106_3
+#  109|     v109_1(void)    = NoOp               : 
+#  106|     v106_5(void)    = ReturnVoid         : 
+#  106|     v106_6(void)    = AliasedUse         : m106_3
+#  106|     v106_7(void)    = ExitFunction       : 
+
+#  111| void decrement_and_no_global_side_effects(int)
+#  111|   Block 0
+#  111|     v111_1(void)           = EnterFunction                           : 
+#  111|     m111_2(unknown)        = AliasedDefinition                       : 
+#  111|     m111_3(unknown)        = InitializeNonLocal                      : 
+#  111|     m111_4(unknown)        = Chi                                     : total:m111_2, partial:m111_3
+#  111|     r111_5(glval<int>)     = VariableAddress[n]                      : 
+#  111|     m111_6(int)            = InitializeParameter[n]                  : &:r111_5
+#  113|     r113_1(glval<unknown>) = FunctionAddress[no_global_side_effects] : 
+#  113|     v113_2(void)           = Call[no_global_side_effects]            : func:r113_1
+#  113|     m113_3(unknown)        = ^CallSideEffect                         : ~m111_4
+#  113|     m113_4(unknown)        = Chi                                     : total:m111_4, partial:m113_3
+#-----|   Goto -> Block 1
+
+#  116|   Block 1
+#  116|     m116_1(int)        = Phi                : from 0:m111_6, from 1:m116_6
+#  116|     r116_2(glval<int>) = VariableAddress[n] : 
+#  116|     r116_3(int)        = Load[n]            : &:r116_2, m116_1
+#  116|     r116_4(int)        = Constant[1]        : 
+#  116|     r116_5(int)        = Sub                : r116_3, r116_4
+#  116|     m116_6(int)        = Store[n]           : &:r116_2, r116_5
+#  117|     r117_1(glval<int>) = VariableAddress[n] : 
+#  117|     r117_2(int)        = Load[n]            : &:r117_1, m116_6
+#  117|     r117_3(int)        = Constant[0]        : 
+#  117|     r117_4(bool)       = CompareGT          : r117_2, r117_3
+#  117|     v117_5(void)       = ConditionalBranch  : r117_4
+#-----|   False -> Block 2
+#-----|   True (back edge) -> Block 1
+
+#  118|   Block 2
+#  118|     v118_1(void) = NoOp         : 
+#  111|     v111_7(void) = ReturnVoid   : 
+#  111|     v111_8(void) = AliasedUse   : ~m113_4
+#  111|     v111_9(void) = ExitFunction : 
+
 ir.cpp:
 #    1| void Constants()
 #    1|   Block 0

@@ -4816,6 +4816,39 @@ ir.c:
 #  103|             ValueCategory = prvalue(load)
 #  103|       getThen(): [BlockStmt] { ... }
 #  104|     getStmt(16): [ReturnStmt] return ...
+#  106| [TopLevelFunction] void no_global_side_effects()
+#  106|   <params>: 
+#  107|   getEntryPoint(): [BlockStmt] { ... }
+#  109|     getStmt(0): [ReturnStmt] return ...
+#  111| [TopLevelFunction] void decrement_and_no_global_side_effects(int)
+#  111|   <params>: 
+#  111|     getParameter(0): [Parameter] n
+#  111|         Type = [IntType] int
+#  112|   getEntryPoint(): [BlockStmt] { ... }
+#  113|     getStmt(0): [ExprStmt] ExprStmt
+#  113|       getExpr(): [FunctionCall] call to no_global_side_effects
+#  113|           Type = [VoidType] void
+#  113|           ValueCategory = prvalue
+#  114|     getStmt(1): [DoStmt] do (...) ...
+#  117|       getCondition(): [GTExpr] ... > ...
+#  117|           Type = [IntType] int
+#  117|           ValueCategory = prvalue
+#  117|         getGreaterOperand(): [VariableAccess] n
+#  117|             Type = [IntType] int
+#  117|             ValueCategory = prvalue(load)
+#  117|         getLesserOperand(): [Literal] 0
+#  117|             Type = [IntType] int
+#  117|             Value = [Literal] 0
+#  117|             ValueCategory = prvalue
+#  115|       getStmt(): [BlockStmt] { ... }
+#  116|         getStmt(0): [ExprStmt] ExprStmt
+#  116|           getExpr(): [PrefixDecrExpr] -- ...
+#  116|               Type = [IntType] int
+#  116|               ValueCategory = prvalue
+#  116|             getOperand(): [VariableAccess] n
+#  116|                 Type = [IntType] int
+#  116|                 ValueCategory = lvalue
+#  118|     getStmt(2): [ReturnStmt] return ...
 ir.cpp:
 #    1| [TopLevelFunction] void Constants()
 #    1|   <params>: 

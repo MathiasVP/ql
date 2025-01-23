@@ -103,4 +103,18 @@ void branch_on_integral_in_c(int x1, int x2) {
   if(!x_1_and_2) {}
 }
 
+void no_global_side_effects(void)
+{
+  
+}
+
+void decrement_and_no_global_side_effects(int n)
+{
+  no_global_side_effects();
+  do
+  {
+    --n;
+  } while (n > 0);
+}
+
 // semmle-extractor-options: --microsoft
