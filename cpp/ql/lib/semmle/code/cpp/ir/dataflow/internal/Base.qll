@@ -2,6 +2,7 @@ private import cpp
 private import semmle.code.cpp.ir.IR
 private import semmle.code.cpp.ir.internal.IRCppLanguage as Lang
 private import semmle.code.cpp.controlflow.IRGuards
+private import semmle.code.cpp.dataflow.internal.FlowSummaryImpl as FlowSummaryImpl
 
 class DataFlowExpr = Expr;
 
@@ -62,7 +63,9 @@ predicate ignoreInstruction(Instruction instr) {
   instr instanceof AliasedUseInstruction or
   instr instanceof InitializeNonLocalInstruction or
   instr instanceof ReturnIndirectionInstruction or
-  instr instanceof UninitializedGroupInstruction
+  instr instanceof UninitializedGroupInstruction or
+  // We exclude instruction belonging to functions that have a summary.
+  instr.getEnclosingFunction() instanceof FlowSummaryImpl::Public::SummarizedCallable
 }
 
 /**

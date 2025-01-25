@@ -2231,9 +2231,7 @@ module Stage2 implements StageSig {
   class ParameterNode extends Node1 {
     override Stage1::ParameterNode n;
 
-    predicate isParameterOf(DataFlowCallable callable, Position pos) {
-      n.isParameterOf(callable, pos)
-    }
+    predicate isParameterOf(Function callable, Position pos) { n.isParameterOf(callable, pos) }
 
     Parameter getParameter(int indirectionIndex) { result = n.getParameter(indirectionIndex) }
   }

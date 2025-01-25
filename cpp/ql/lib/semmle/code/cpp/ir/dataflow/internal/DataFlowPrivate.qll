@@ -185,15 +185,11 @@ class SourceOutNode extends OutNodeImpl, StageNode {
 }
 
 class CallOutNode extends SourceOutNode, StageNode {
-  CallOutNode() {
-    this.getReturnKind().isReturnValue(_)
-  }
+  CallOutNode() { this.getReturnKind().isReturnValue(_) }
 }
 
 class IndirectCallOutNode extends CallOutNode {
-  IndirectCallOutNode() {
-    this.getIndirectionIndex() > 0
-  }
+  IndirectCallOutNode() { this.getIndirectionIndex() > 0 }
 }
 
 /**
@@ -457,14 +453,36 @@ DataFlowCallable nodeGetEnclosingCallable(Node n) {
 }
 
 abstract class AbstractParameterNode extends Node {
-  abstract predicate isParameterOf(DataFlowCallable f, ParameterPosition pos);
+  predicate isSourceParameterOf(Function f, ParameterPosition pos) { none() }
+
+  predicate isSummaryParameterOf(
+    FlowSummaryImpl::Public::SummarizedCallable f, ParameterPosition pos
+  ) {
+    none()
+  }
+
+  /**
+   * Holds if this node is the parameter of `c` at the specified position. The
+   * implicit `this` parameter is considered to have position `-1`, and
+   * pointer-indirection parameters are at further negative positions.
+   */
+  final predicate isParameterOf(DataFlowCallable c, ParameterPosition pos) {
+    this.isSummaryParameterOf(c.asSummarizedCallable(), pos)
+    or
+    exists(Function f | this.isSourceParameterOf(f, pos) |
+      not exists(TSummarizedCallable(f)) and
+      c.asSourceCallable() = f
+      or
+      c.asSummarizedCallable() = f
+    )
+  }
 }
 
 class StageParameterNode extends AbstractParameterNode, StageNode {
   override FinalStage::ParameterNode node;
 
-  final override predicate isParameterOf(DataFlowCallable callable, ParameterPosition pos) {
-    node.isParameterOf(callable.asSourceCallable(), pos)
+  final override predicate isSourceParameterOf(Function callable, ParameterPosition pos) {
+    node.isParameterOf(callable, pos)
   }
 
   Parameter getParameter(int indirectionIndex) { result = node.getParameter(indirectionIndex) }

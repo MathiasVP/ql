@@ -157,9 +157,7 @@ module Stage3 implements StageSig {
   class ParameterNode extends Node2 {
     override Stage2::ParameterNode n;
 
-    predicate isParameterOf(DataFlowCallable callable, Position pos) {
-      n.isParameterOf(callable, pos)
-    }
+    predicate isParameterOf(Cpp::Function callable, Position pos) { n.isParameterOf(callable, pos) }
 
     Cpp::Parameter getParameter(int indirectionIndex) { result = n.getParameter(indirectionIndex) }
   }

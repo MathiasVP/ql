@@ -69,7 +69,7 @@ signature module StageSig {
   }
 
   class ParameterNode instanceof Node {
-    predicate isParameterOf(DataFlowCallable f, Position pos);
+    predicate isParameterOf(Function f, Position pos);
 
     Parameter getParameter(int indirectionIndex);
   }

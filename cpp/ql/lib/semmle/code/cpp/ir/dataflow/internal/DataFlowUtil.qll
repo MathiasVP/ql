@@ -555,8 +555,10 @@ class SummaryParameterNode extends AbstractParameterNode, FlowSummaryNode {
     FlowSummaryImpl::Private::summaryParameterNode(this.getSummaryNode(), result)
   }
 
-  override predicate isParameterOf(DataFlowCallable c, ParameterPosition p) {
-    c.asSummarizedCallable() = this.getSummarizedCallable() and
+  override predicate isSummaryParameterOf(
+    FlowSummaryImpl::Public::SummarizedCallable c, ParameterPosition p
+  ) {
+    c = this.getSummarizedCallable() and
     p = this.getPosition()
   }
 }

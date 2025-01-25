@@ -519,7 +519,7 @@ module Stage1 implements StageSig {
   }
 
   abstract private class ParameterNodeImpl extends Node {
-    abstract predicate isParameterOf(DataFlowCallable f, Position pos);
+    abstract predicate isParameterOf(Function f, Position pos);
 
     abstract Parameter getParameter(int indirectionIndex);
   }
@@ -531,7 +531,7 @@ module Stage1 implements StageSig {
 
     Stage0ParameterNode() { this = TNode0(n) }
 
-    final override predicate isParameterOf(DataFlowCallable f, Position pos) {
+    final override predicate isParameterOf(Function f, Position pos) {
       exists(Stage0::Position p |
         p.getArgumentIndex() = pos.getArgumentIndex() and
         pos.getIndirectionIndex() = 0 and
@@ -559,7 +559,7 @@ module Stage1 implements StageSig {
       result = node.getParameter() and indirectionIndex_ = indirectionIndex
     }
 
-    final override predicate isParameterOf(DataFlowCallable f, Position pos) {
+    final override predicate isParameterOf(Function f, Position pos) {
       exists(Stage0::Position p |
         p.getArgumentIndex() = pos.getArgumentIndex() and
         pos.getIndirectionIndex() = indirectionIndex and
@@ -599,7 +599,7 @@ module Stage1 implements StageSig {
       indirectionIndex_ = indirectionIndex
     }
 
-    final override predicate isParameterOf(DataFlowCallable f, Position pos) {
+    final override predicate isParameterOf(Function f, Position pos) {
       exists(Stage0::Position p |
         p.getArgumentIndex() = pos.getArgumentIndex() and
         pos.getIndirectionIndex() = indirectionIndex and

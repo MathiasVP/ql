@@ -5,6 +5,7 @@ private import Node0ToString
 private import StageSig
 private import semmle.code.cpp.ir.internal.CppType
 private import codeql.dataflow.internal.AccessPathSyntax as AccessPath
+private import semmle.code.cpp.dataflow.internal.FlowSummaryImpl as FlowSummaryImpl
 
 module Stage0 implements StageSig {
   private newtype TNode =
@@ -24,6 +25,7 @@ module Stage0 implements StageSig {
       not ignoreOperand(op) and exists(getIRRepresentationOfOperand(op))
     } or
     TBodyLessParameterNodeImpl(Parameter p) {
+      not p.getFunction() instanceof FlowSummaryImpl::Public::SummarizedCallable and
       // Rule out parameters of catch blocks.
       not exists(p.getCatchBlock()) and
       not any(InitializeParameterInstruction init).getParameter() = p
@@ -274,7 +276,7 @@ module Stage0 implements StageSig {
   }
 
   abstract private class ParameterNodeImpl extends NodeImpl {
-    abstract predicate isParameterOf(DataFlowCallable f, Position pos);
+    abstract predicate isParameterOf(Function f, Position pos);
 
     final Parameter getParameter(int indirectionIndex) {
       indirectionIndex = 0 and
@@ -284,9 +286,7 @@ module Stage0 implements StageSig {
     abstract Parameter getParameter();
 
     predicate isBodyless() { none() }
-
     // abstract string toString();
-
     // Type getType() { result = super.getType() }
   }
 
@@ -317,9 +317,8 @@ module Stage0 implements StageSig {
   private class ExplicitParameterInstructionNode extends InstructionDirectParameterNodeImpl {
     ExplicitParameterInstructionNode() { exists(instr.getParameter()) }
 
-    override predicate isParameterOf(DataFlowCallable f, Position pos) {
-      f.getUnderlyingCallable().(Function).getParameter(pos.getArgumentIndex()) =
-        instr.getParameter()
+    override predicate isParameterOf(Function f, Position pos) {
+      f.getParameter(pos.getArgumentIndex()) = instr.getParameter()
     }
 
     final override Parameter getParameter() { result = instr.getParameter() }
@@ -331,9 +330,9 @@ module Stage0 implements StageSig {
   private class ThisParameterInstructionNode extends InstructionDirectParameterNode {
     ThisParameterInstructionNode() { instr.getIRVariable() instanceof IRThisVariable }
 
-    override predicate isParameterOf(DataFlowCallable f, Position pos) {
+    override predicate isParameterOf(Function f, Position pos) {
       pos.getArgumentIndex() = -1 and
-      instr.getEnclosingFunction() = f.getUnderlyingCallable()
+      instr.getEnclosingFunction() = f
     }
 
     final override Parameter getParameter() { none() }
@@ -368,7 +367,7 @@ module Stage0 implements StageSig {
 
     final override Parameter getParameter() { result = p }
 
-    final override predicate isParameterOf(DataFlowCallable callable, Position pos) {
+    final override predicate isParameterOf(Function callable, Position pos) {
       p.getFunction() = callable and
       pos.getArgumentIndex() = p.getIndex()
     }
