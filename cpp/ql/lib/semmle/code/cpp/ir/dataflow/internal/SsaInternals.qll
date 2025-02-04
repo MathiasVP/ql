@@ -809,7 +809,6 @@ private predicate modeledFlowBarrier(Node n) {
   |
     n = callInput(call, input) and
     inOut(input, output) and
-    exists(callOutput(call, output)) and
     partialFlowFunc = call.getStaticCallTarget() and
     not partialFlowFunc.isPartialWrite(output)
   |
