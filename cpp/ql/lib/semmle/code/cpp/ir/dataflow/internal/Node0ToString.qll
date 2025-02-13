@@ -60,7 +60,10 @@ abstract class Node0ToString extends Unit {
  * Gets the string that should be used by `OperandNode.toString` to print the
  * dataflow node whose underlying operand is `op.`
  */
-string operandToString(Operand op) { result = any(Node0ToString s).operandToString(op) }
+string operandToString(Operand op) {
+  not any(InstructionNode n).asOperand() = op and
+  result = any(Node0ToString s).operandToString(op)
+}
 
 /**
  * Gets the string that should be used by `InstructionNode.toString` to print

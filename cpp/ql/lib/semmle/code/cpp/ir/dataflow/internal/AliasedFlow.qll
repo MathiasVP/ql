@@ -180,7 +180,10 @@ private module SsaInput implements SsaImplCommon::InputSig<Cpp::Location> {
       nodeHasInstruction1(vai, vaiInstr, index) and
       nodeHasOperand1(dest, storeInstr.getDestinationAddressOperand(), index - k) and
       sv.getIRVariable() = vaiInstr.getIRVariable() and
-      lower = getMinIndirectionsForType(vaiInstr.getResultType()) and
+      lower =
+        pragma[only_bind_out](getMinIndirectionsForType(storeInstr
+              .getDestinationAddress()
+              .getResultType())) and
       sv.getIndirection() = index + lower and
       nodeHasInstruction1(store, storeInstr, index - k) and
       def.getNode() = store and
@@ -284,14 +287,16 @@ private predicate step(SsaInput::SourceVariable sv, IRBlock bb1, int i1, Aliased
   )
 }
 
-private predicate access(SsaInput::SourceVariable sv, IRBlock bb, int i, AliasedNode node1) {
+private predicate access(
+  SsaInput::SourceVariable sv, IRBlock bb, int i, AliasedNode node1, boolean isWrite
+) {
   exists(Node1Impl n | node1 = TNode1(n) |
-    SsaInput::variableWrite(bb, i, sv, _, n)
+    SsaInput::variableWrite(bb, i, sv, _, n) and isWrite = true
     or
-    SsaInput::variableRead(bb, i, sv, _, n)
+    SsaInput::variableRead(bb, i, sv, _, n) and isWrite = false
   )
   or
-  node1.(PhiNode).getPhi().definesAt(sv, bb, i, _)
+  node1.(PhiNode).getPhi().definesAt(sv, bb, i, _) and isWrite = false
 }
 
 private predicate stepToPhi(SsaInput::SourceVariable sv, IRBlock bb, int i, PhiNode node) {
@@ -325,17 +330,32 @@ predicate out(TPhiNode node1, Public::Node node2) {
   )
 }
 
-private predicate aliasedFlow(AliasedNode node1, AliasedNode node2) {
+private predicate aliasedFlow(
+  AliasedNode node1, AliasedNode node2, SsaInput::SourceVariable sv, boolean isWrite
+) {
   node1 != node2 and
   (
-    exists(IRBlock bb, int i, SsaInput::SourceVariable sv |
-      access(sv, bb, i, node1) and
+    exists(IRBlock bb, int i |
+      access(sv, bb, i, node1, isWrite) and
       step(sv, bb, i, node2)
     )
     or
-    exists(IRBlock bb, int i, SsaInput::SourceVariable sv |
-      access(sv, bb, i, node1) and
+    exists(IRBlock bb, int i |
+      access(sv, bb, i, node1, isWrite) and
       stepToPhi(sv, bb, i, node2)
     )
   )
+}
+
+private predicate alreadyModeled(Node1 node1, Node1 node2, SsaInput::SourceVariable sv) {
+  Ssa::ssaFlowImpl(_, _, sv, node1.getImpl(), node2.getImpl(), _)
+}
+
+private predicate foo(Node1 node1, SsaInput::SourceVariable sv, Node1 node2) {
+  aliasedFlow(node1, node2, sv, true) and
+  not alreadyModeled(node1, node2, sv)
+}
+
+private predicate aliasedFlow(AliasedNode node1, AliasedNode node2) {
+  aliasedFlow(node1, node2, _, _)
 }

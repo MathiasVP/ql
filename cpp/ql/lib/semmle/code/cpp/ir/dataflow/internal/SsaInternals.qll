@@ -783,7 +783,7 @@ private predicate phiToNode0(SsaPhiInputNode0 node, SourceVariable sv, IRBlock b
  * `uncertain` is `true` if `(bb1, i1)` is a definition, and that definition
  * is _not_ guaranteed to overwrite the entire allocation.
  */
-private predicate ssaFlowImpl(
+predicate ssaFlowImpl(
   IRBlock bb1, int i1, SourceVariable sv, Node1Impl nodeFrom, Node1Impl nodeTo, boolean uncertain
 ) {
   nodeToDefOrUse(nodeFrom, sv, bb1, i1, uncertain) and

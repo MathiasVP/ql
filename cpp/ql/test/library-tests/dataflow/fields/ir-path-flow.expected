@@ -45,12 +45,14 @@ edges
 | A.cpp:73:25:73:32 | new | A.cpp:78:27:78:27 | c | provenance |  |
 | A.cpp:75:10:75:11 | *b2 [c] | A.cpp:75:10:75:14 | c | provenance |  |
 | A.cpp:78:27:78:27 | c | A.cpp:81:21:81:21 | c | provenance |  |
+| A.cpp:81:5:81:22 | *... = ... [c] | A.cpp:78:6:78:15 | **setOnBWrap [c] | provenance |  |
 | A.cpp:81:5:81:22 | *... = ... [c] | A.cpp:82:12:82:24 | *... ? ... : ... [c] | provenance |  |
 | A.cpp:81:10:81:15 | *call to setOnB [c] | A.cpp:81:5:81:22 | *... = ... [c] | provenance |  |
 | A.cpp:81:21:81:21 | c | A.cpp:81:10:81:15 | *call to setOnB [c] | provenance |  |
 | A.cpp:81:21:81:21 | c | A.cpp:85:26:85:26 | c | provenance |  |
 | A.cpp:82:12:82:24 | *... ? ... : ... [c] | A.cpp:78:6:78:15 | **setOnBWrap [c] | provenance |  |
 | A.cpp:85:26:85:26 | c | A.cpp:90:15:90:15 | c | provenance |  |
+| A.cpp:90:7:90:8 | set output argument [c] | A.cpp:85:9:85:14 | **setOnB [c] | provenance |  |
 | A.cpp:90:7:90:8 | set output argument [c] | A.cpp:91:14:91:15 | *b2 [c] | provenance |  |
 | A.cpp:90:15:90:15 | c | A.cpp:27:17:27:17 | c | provenance |  |
 | A.cpp:90:15:90:15 | c | A.cpp:90:7:90:8 | set output argument [c] | provenance |  |
@@ -62,10 +64,16 @@ edges
 | A.cpp:101:8:101:9 | *c1 [a] | A.cpp:103:14:103:14 | *c [a] | provenance |  |
 | A.cpp:103:14:103:14 | *c [a] | A.cpp:105:18:105:38 | *c [a] | provenance |  |
 | A.cpp:103:14:103:14 | *c [a] | A.cpp:110:18:110:38 | *c [a] | provenance |  |
+| A.cpp:103:14:103:14 | *c [a] | A.cpp:112:7:112:13 | *... = ... [a] | provenance |  |
+| A.cpp:103:14:103:14 | *c [a] | A.cpp:118:18:118:39 | *cc [a] | provenance |  |
+| A.cpp:103:14:103:14 | *c [a] | A.cpp:120:12:120:13 | *c1 [a] | provenance |  |
 | A.cpp:105:18:105:38 | *c [a] | A.cpp:107:12:107:13 | *c1 [a] | provenance |  |
 | A.cpp:107:12:107:13 | *c1 [a] | A.cpp:107:12:107:16 | a | provenance |  |
 | A.cpp:110:18:110:38 | *c [a] | A.cpp:112:7:112:13 | *... = ... [a] | provenance |  |
+| A.cpp:110:18:110:38 | *c [a] | A.cpp:118:18:118:39 | *cc [a] | provenance |  |
+| A.cpp:110:18:110:38 | *c [a] | A.cpp:120:12:120:13 | *c1 [a] | provenance |  |
 | A.cpp:112:7:112:13 | *... = ... [a] | A.cpp:118:18:118:39 | *cc [a] | provenance |  |
+| A.cpp:112:7:112:13 | *... = ... [a] | A.cpp:120:12:120:13 | *c1 [a] | provenance |  |
 | A.cpp:118:18:118:39 | *cc [a] | A.cpp:120:12:120:13 | *c1 [a] | provenance |  |
 | A.cpp:120:12:120:13 | *c1 [a] | A.cpp:120:12:120:16 | a | provenance |  |
 | A.cpp:124:14:124:14 | *b [Return] [c] | A.cpp:131:8:131:8 | f7 output argument [c] | provenance |  |
@@ -127,6 +135,7 @@ edges
 | A.cpp:161:38:161:39 | *l1 [head] | A.cpp:181:32:181:35 | *next [head] | provenance |  |
 | A.cpp:162:18:162:40 | *new [*next, *next, head] | A.cpp:165:10:165:11 | *l3 [*next, *next, head] | provenance |  |
 | A.cpp:162:18:162:40 | *new [*next, *next, head] | A.cpp:167:22:167:23 | *l3 [*next, *next, head] | provenance |  |
+| A.cpp:162:18:162:40 | *new [*next, *next, head] | A.cpp:167:44:167:44 | *l [*next, *next, head] | provenance |  |
 | A.cpp:162:18:162:40 | call to MyList [*next, *next, head] | A.cpp:162:18:162:40 | *new [*next, *next, head] | provenance |  |
 | A.cpp:162:38:162:39 | *l2 [*next, head] | A.cpp:162:18:162:40 | call to MyList [*next, *next, head] | provenance |  |
 | A.cpp:162:38:162:39 | *l2 [*next, head] | A.cpp:181:32:181:35 | *next [*next, head] | provenance |  |

@@ -3,3 +3,5 @@ WARNING: module 'DataFlow' has been deprecated and may be removed in future (tai
 WARNING: module 'DataFlow' has been deprecated and may be removed in future (taint.ql:61,22-30)
 WARNING: module 'DataFlow' has been deprecated and may be removed in future (taint.ql:68,25-33)
 WARNING: module 'TaintTracking' has been deprecated and may be removed in future (taint.ql:73,20-33)
+| taint.cpp:137:7:137:9 | * ... | Unexpected result: ir |
+| taint.cpp:654:7:654:7 | c | Unexpected result: ir |
