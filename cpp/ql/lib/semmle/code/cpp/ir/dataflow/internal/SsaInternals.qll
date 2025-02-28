@@ -295,6 +295,11 @@ abstract class UseImpl extends TUseImpl {
     )
   }
 
+  final predicate hasNodeAndSourceVariable(Node n, SourceVariable sv) {
+    sv = this.getSourceVariable() and
+    n = this.getNode()
+  }
+
   /**
    * Holds if this use is guaranteed to read the
    * associated variable.
@@ -711,6 +716,14 @@ predicate defToNode(
   if def.isCertain() then uncertain = false else uncertain = true
 }
 
+private predicate defToNode(Node node, Definition def) {
+  nodeHasOperand(node, def.getValue().asOperand(), def.getIndirectionIndex())
+  or
+  nodeHasInstruction(node, def.getValue().asInstruction(), def.getIndirectionIndex())
+  or
+  node.(InitialGlobalValue).getGlobalDef() = def
+}
+
 /**
  * INTERNAL: Do not use.
  *
@@ -725,6 +738,30 @@ predicate nodeToDefOrUse(Node node, SourceVariable sv, IRBlock bb, int i, boolea
   // Node -> Use
   useToNode(bb, i, sv, node) and
   uncertain = false
+}
+
+predicate hasUseStepOut1(Node n) {
+  exists(SourceVariable sv, IRBlock bb2, int i2 |
+    useToNode(bb2, i2, sv, n) and
+    adjacentDefRead(bb2, i2, sv, _, _)
+  )
+}
+
+predicate hasUseStepOut2(Node n) { newStep0(n, _, _) }
+
+predicate cmpUseStepOut(int overlap, int n1, int n2) {
+  overlap = count(Node n | hasUseStepOut1(n) and hasUseStepOut2(n) and relevantForUseStepOut(n)) and
+  n1 = count(Node n | hasUseStepOut1(n) and relevantForUseStepOut(n)) and
+  n2 = count(Node n | hasUseStepOut2(n) and relevantForUseStepOut(n))
+}
+
+predicate relevantForUseStepOut(Node nTo) {
+  exists(Operand op1, Operand op2, int indirectionIndex, Instruction instr |
+    hasOperandAndIndex(_, op1, pragma[only_bind_into](indirectionIndex)) and
+    hasOperandAndIndex(nTo, op2, pragma[only_bind_into](indirectionIndex)) and
+    instr = op2.getDef() and
+    conversionFlow(op1, instr, _, _)
+  )
 }
 
 /**
@@ -743,6 +780,20 @@ private predicate indirectConversionFlowStep(Node nFrom, Node nTo) {
     conversionFlow(op1, instr, _, _)
   )
 }
+private predicate indirectConversionFlowStep2(Node nFrom, Node nTo) {
+  not newStep0(nTo, _, _) and
+  // not exists(SourceVariable sv, IRBlock bb2, int i2 |
+  //   useToNode(bb2, i2, sv, nTo) and
+  //   adjacentDefRead(bb2, i2, sv, _, _)
+  // ) and
+  exists(Operand op1, Operand op2, int indirectionIndex, Instruction instr |
+    hasOperandAndIndex(nFrom, op1, pragma[only_bind_into](indirectionIndex)) and
+    hasOperandAndIndex(nTo, op2, pragma[only_bind_into](indirectionIndex)) and
+    instr = op2.getDef() and
+    conversionFlow(op1, instr, _, _)
+  )
+}
+
 
 /**
  * Holds if `node` is a phi input node that should receive flow from the
@@ -778,6 +829,26 @@ private predicate ssaFlowImpl(
   ) and
   nodeFrom != nodeTo
 }
+
+predicate cmp52(int new) {
+  new =
+    count(Node nodeFrom, Node nodeTo |
+      newStep(nodeFrom, nodeTo, true, 5, 2) and not ssaFlowImpl(_, _, _, nodeFrom, nodeTo, _)
+    )
+}
+
+// predicate cmp52(
+//   Node nodeFrom, Node nodeTo,
+//   // IRBlock bb1, int i1,
+//   SourceVariable sv1, SourceVariable sv2
+// ) {
+//   newStep(nodeFrom, nodeTo, true, 5, 2) and
+//   not ssaFlowImpl(_, _, _, nodeFrom, nodeTo, _) and
+//   nodeToDefOrUse(nodeFrom, _, _, _, _) and
+//   //  useToNode(bb1, i1, sv, nodeFrom)
+//   useToNode(_, _, sv1, nodeFrom) and
+//   phiToNode(nodeTo, sv2, _, _)
+// }
 
 /** Gets a node that represents the prior definition of `node`. */
 private Node getAPriorDefinition(DefinitionExt next) {
@@ -917,6 +988,33 @@ private predicate postUpdateNodeToFirstUse(PostUpdateNode pun, Node n) {
     phiToNode(n, sv, bb1, i1)
   )
 }
+private predicate postUpdateNodeToFirstUse2(PostUpdateNode pun, Node n) {
+  // We cannot mark a `PointerArithmeticInstruction` that computes an offset
+  // based on some SSA
+  // variable `x` as a use of `x` since this creates taint-flow in the
+  // following example:
+  // ```c
+  // int x = array[source]
+  // sink(*array)
+  // ```
+  // This is because `source` would flow from the operand of `PointerArithmetic`
+  // instruction to the result of the instruction, and into the `IndirectOperand`
+  // that represents the value of `*array`. Then, via use-use flow, flow will
+  // arrive at `*array` in `sink(*array)`.
+  // So this predicate recurses back along conversions and `PointerArithmetic`
+  // instructions to find the first use that has provides use-use flow, and
+  // uses that target as the target of the `nodeFrom`.
+  exists(Node adjusted |
+    indirectConversionFlowStep2*(adjusted, pun.getPreUpdateNode()) and
+    newStep0(adjusted, n, _)
+  )
+}
+predicate cmppunfirst(int rem, int new) {
+  rem = count(PostUpdateNode pun, Node n |
+    postUpdateNodeToFirstUse(pun, n) and not postUpdateNodeToFirstUse2(pun, n)) and
+  new = count(PostUpdateNode pun, Node n |
+    postUpdateNodeToFirstUse2(pun, n) and not postUpdateNodeToFirstUse(pun, n))
+}
 
 private predicate stepUntilNotInCall(DataFlowCall call, Node n1, Node n2) {
   isArgumentOfCallable(call, n1) and
@@ -927,6 +1025,23 @@ private predicate stepUntilNotInCall(DataFlowCall call, Node n1, Node n2) {
     not isArgumentOfCallable(call, mid) and
     mid = n2
   )
+}
+
+private predicate stepUntilNotInCall2(DataFlowCall call, Node n1, Node n2) {
+  isArgumentOfCallable(call, n1) and
+  exists(Node mid | newStep0(n1, mid, _) |
+    isArgumentOfCallable(call, mid) and
+    stepUntilNotInCall2(call, mid, n2)
+    or
+    not isArgumentOfCallable(call, mid) and
+    mid = n2
+  )
+}
+
+predicate cmpStepUntil(int overlap, int rem, int new) {
+  overlap = count(DataFlowCall call, Node n1, Node n2 | stepUntilNotInCall(call, n1, n2) and stepUntilNotInCall2(call, n1, n2)) and
+  rem = count(DataFlowCall call, Node n1, Node n2 | stepUntilNotInCall(call, n1, n2) and not stepUntilNotInCall2(call, n1, n2)) and
+  new = count(DataFlowCall call, Node n1, Node n2 | stepUntilNotInCall2(call, n1, n2) and not stepUntilNotInCall(call, n1, n2))
 }
 
 bindingset[n1, n2]
@@ -960,6 +1075,21 @@ predicate postUpdateFlow(PostUpdateNode pun, Node nodeTo) {
     exists(DataFlowCall call |
       isArgumentOfSameCall(call, preUpdate, mid) and
       stepUntilNotInCall(call, mid, nodeTo)
+    )
+    or
+    not isArgumentOfSameCall(_, preUpdate, mid) and
+    nodeTo = mid
+  )
+}
+
+predicate postUpdateFlow2(PostUpdateNode pun, Node nodeTo) {
+  exists(Node preUpdate, Node mid |
+    preUpdate = pun.getPreUpdateNode() and
+    postUpdateNodeToFirstUse2(pun, mid)
+  |
+    exists(DataFlowCall call |
+      isArgumentOfSameCall(call, preUpdate, mid) and
+      stepUntilNotInCall2(call, mid, nodeTo)
     )
     or
     not isArgumentOfSameCall(_, preUpdate, mid) and
@@ -1095,6 +1225,129 @@ class GlobalDef extends Definition {
 }
 
 private module SsaImpl = SsaImplCommon::Make<Location, SsaInput>;
+
+private module DataFlowIntegrationInput implements SsaImpl::DataFlowIntegrationInputSig {
+  private import codeql.util.Void
+
+  final private class UseImplFinal = UseImpl;
+
+  class Expr extends UseImplFinal {
+    predicate hasCfgNode(SsaInput::BasicBlock bb, int i) { this.hasIndexInBlock(bb, i) }
+  }
+
+  predicate ssaDefAssigns(SsaImpl::WriteDefinition def, Expr value) { none() }
+
+  class Parameter extends Void {
+    Location getLocation() { none() }
+  }
+
+  predicate ssaDefInitializesParam(SsaImpl::WriteDefinition def, Parameter p) { none() }
+
+  predicate allowFlowIntoUncertainDef(SsaImpl::UncertainWriteDefinition def) { any() }
+
+  class Guard extends Void {
+    predicate hasCfgNode(SsaInput::BasicBlock bb, int i) { none() }
+  }
+
+  predicate guardControlsBlock(Guard guard, SsaInput::BasicBlock bb, boolean branch) { none() }
+
+  SsaInput::BasicBlock getAConditionalBasicBlockSuccessor(SsaInput::BasicBlock bb, boolean branch) {
+    none()
+  }
+}
+
+private module DataFlowIntegrationImpl = SsaImpl::DataFlowIntegration<DataFlowIntegrationInput>;
+
+class UseUseNode extends DataFlowIntegrationImpl::SsaNode {
+  UseUseNode() { not this.asDefinition() instanceof SsaImpl::WriteDefinition }
+
+  deprecated Node asOldNode() {
+    result.(SsaPhiNode).getPhiNode() =
+      this.(DataFlowIntegrationImpl::SsaDefinitionExtNode).getDefinitionExt()
+    or
+    exists(SsaPhiInputNode phiinput | phiinput = result |
+      this.(DataFlowIntegrationImpl::SsaInputNode)
+          .isInputInto(phiinput.getPhiNode(), phiinput.getBlock())
+    )
+  }
+}
+
+predicate usePosHist(int usepos, int uses) {
+  usepos =
+    strictcount(IRBlock bb, int i, SourceVariable v |
+      uses = strictcount(UseImpl use | use.hasIndexInBlock(bb, i, v))
+    )
+}
+
+// DataFlowIntegrationImpl::Node fromDfNode(Node n) {
+//   // result = fromDfNode(n, _, _)
+//   result.(UseUseNode).asOldNode() = n
+//   or
+//   result.(DataFlowIntegrationImpl::ExprNode).getExpr().getNode() = n
+//   or
+//   result.(DataFlowIntegrationImpl::ExprPostUpdateNode).getExpr().getNode() = n.(PostUpdateNode).getPreUpdateNode()
+//   or
+//   defToNode(n, result.(DataFlowIntegrationImpl::SsaDefinitionNode).getDefinition())
+// }
+bindingset[result, v]
+pragma[inline_late]
+DataFlowIntegrationImpl::Node fromDfNode(Node n, SourceVariable v) { result = fromDfNode(n, v, _) }
+
+bindingset[result, v]
+pragma[inline_late]
+DataFlowIntegrationImpl::Node fromDfNode(Node n, SourceVariable v, int case) {
+  case = 1 and
+  result.(UseUseNode).asOldNode() = n
+  or
+  case = 2 and
+  result.(DataFlowIntegrationImpl::ExprNode).getExpr().hasNodeAndSourceVariable(n, v)
+  or
+  // case = 3 and
+  // result
+  //     .(DataFlowIntegrationImpl::ExprPostUpdateNode)
+  //     .getExpr()
+  //     .hasNodeAndSourceVariable(n.(PostUpdateNode).getPreUpdateNode(), v)
+  // or
+  case = 4 and
+  defToNode(n, result.(DataFlowIntegrationImpl::SsaDefinitionNode).getDefinition())
+}
+
+// predicate testEqStep(DataFlowIntegrationImpl::Node n1, DataFlowIntegrationImpl::Node n2, Node n, int case) {
+//   DataFlowIntegrationImpl::localFlowStep(_, n1, n2, _, case) and
+//   n1 = fromDfNode(n) and
+//   n2 = fromDfNode(n)
+// }
+predicate newStep0(Node nodeFrom, Node nodeTo, int case) {
+  exists(SourceVariable v |
+    nodeFrom != nodeTo and
+    DataFlowIntegrationImpl::localFlowStep(v, fromDfNode(nodeFrom, v), fromDfNode(nodeTo, v), _,
+      case)
+      and
+    not modeledFlowBarrier(nodeFrom)
+  )
+}
+
+predicate newStep(Node nodeFrom, Node nodeTo, int case) {
+  postUpdateFlow2(nodeFrom, nodeTo) and case = -1 or
+  exists(SourceVariable v |
+    nodeFrom != nodeTo and
+    DataFlowIntegrationImpl::localFlowStep(v, fromDfNode(nodeFrom, v), fromDfNode(nodeTo, v), _,
+      case)
+       and
+    not modeledFlowBarrier(nodeFrom)
+  )
+}
+
+predicate newStep(Node nodeFrom, Node nodeTo, boolean isuseuse, int case, int fromcase) {
+  postUpdateFlow2(nodeFrom, nodeTo) and case = -1 and isuseuse = true and fromcase = -1 or
+  exists(SourceVariable v |
+    nodeFrom != nodeTo and
+    DataFlowIntegrationImpl::localFlowStep(v, fromDfNode(nodeFrom, v, fromcase),
+      fromDfNode(nodeTo, v), isuseuse, case)
+      and
+    not modeledFlowBarrier(nodeFrom)
+  )
+}
 
 /**
  * An static single assignment (SSA) phi node.
