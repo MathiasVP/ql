@@ -748,7 +748,7 @@ predicate hasUseStepOut1(Node n) {
   )
 }
 
-predicate hasUseStepOut2(Node n) { newStep0(n, _, _) }
+predicate hasUseStepOut2(Node n) { newStep0(n, _, _, false) }
 
 predicate cmpUseStepOut(int overlap, int n1, int n2) {
   overlap = count(Node n | hasUseStepOut1(n) and hasUseStepOut2(n) and relevantForUseStepOut(n)) and
@@ -783,7 +783,7 @@ private predicate indirectConversionFlowStep(Node nFrom, Node nTo) {
 }
 
 private predicate indirectConversionFlowStep2(Node nFrom, Node nTo) {
-  not newStep0(nTo, _, _) and
+  not newStep0(nTo, _, _, _) and
   // not exists(SourceVariable sv, IRBlock bb2, int i2 |
   //   useToNode(bb2, i2, sv, nTo) and
   //   adjacentDefRead(bb2, i2, sv, _, _)
@@ -1007,7 +1007,7 @@ private predicate postUpdateNodeToFirstUse2(PostUpdateNode pun, Node n) {
   // uses that target as the target of the `nodeFrom`.
   exists(Node adjusted |
     indirectConversionFlowStep2*(adjusted, pun.getPreUpdateNode()) and
-    newStep0(adjusted, n, _)
+    newStep0(adjusted, n, _, _)
   )
 }
 
@@ -1035,7 +1035,7 @@ private predicate stepUntilNotInCall(DataFlowCall call, Node n1, Node n2) {
 
 private predicate stepUntilNotInCall2(DataFlowCall call, Node n1, Node n2) {
   isArgumentOfCallable(call, n1) and
-  exists(Node mid | newStep0(n1, mid, _) |
+  exists(Node mid | newStep0(n1, mid, _, false) |
     isArgumentOfCallable(call, mid) and
     stepUntilNotInCall2(call, mid, n2)
     or
@@ -1384,12 +1384,15 @@ DataFlowIntegrationImpl::Node fromDfNode(Node n, SourceVariable v, int case) {
 //   n1 = fromDfNode(n) and
 //   n2 = fromDfNode(n)
 // }
-predicate newStep0(Node nodeFrom, Node nodeTo, int case) {
+predicate newStep0(Node nodeFrom, Node nodeTo, int case, boolean isModeledFlowBarrier) {
   exists(SourceVariable v |
     nodeFrom != nodeTo and
     DataFlowIntegrationImpl::localFlowStep(v, fromDfNode(nodeFrom, v), fromDfNode(nodeTo, v), _,
-      case) and
-    not modeledFlowBarrier(nodeFrom)
+      case)
+  |
+    if modeledFlowBarrier(nodeFrom)
+    then isModeledFlowBarrier = true
+    else isModeledFlowBarrier = false
   )
 }
 
