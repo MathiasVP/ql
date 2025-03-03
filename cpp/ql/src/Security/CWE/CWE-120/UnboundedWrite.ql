@@ -124,6 +124,19 @@ module Config implements DataFlow::ConfigSig {
     // Block flow if the node is guarded by any <, <= or = operations.
     node = DataFlow::BarrierGuard<lessThanOrEqual/3>::getABarrierNode()
   }
+
+  predicate cmp(int rem, int new) {
+    rem =
+      count(DataFlow::Node n |
+        DataFlow::BarrierGuard<lessThanOrEqual/3>::getABarrierNode() = n and
+        not DataFlow::BarrierGuard<lessThanOrEqual/3>::getABarrierNode2() = n
+      ) and
+    new =
+      count(DataFlow::Node n |
+        DataFlow::BarrierGuard<lessThanOrEqual/3>::getABarrierNode2() = n and
+        not DataFlow::BarrierGuard<lessThanOrEqual/3>::getABarrierNode() = n
+      )
+  }
 }
 
 module Flow = TaintTracking::Global<Config>;

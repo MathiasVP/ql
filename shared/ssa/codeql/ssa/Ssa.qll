@@ -1436,6 +1436,12 @@ module Make<LocationSig Location, InputSig<Location> Input> {
 
       /** Holds if the `i`th node of basic block `bb` evaluates this guard. */
       predicate hasCfgNode(BasicBlock bb, int i);
+
+      /**
+       * Holds if the evaluation of this guard to `branch` corresponds to the edge
+       * from `bb1` to `bb2`.
+       */
+      predicate hasBranchEdge(BasicBlock bb1, BasicBlock bb2, boolean branch);
     }
 
     /** Holds if `guard` controls block `bb` upon evaluating to `branch`. */
@@ -1736,7 +1742,10 @@ module Make<LocationSig Location, InputSig<Location> Input> {
     predicate localFlowStep(SourceVariable v, Node nodeFrom, Node nodeTo, boolean isUseStep) {
       localFlowStep(v, nodeFrom, nodeTo, isUseStep, _)
     }
-    predicate localFlowStep(SourceVariable v, Node nodeFrom, Node nodeTo, boolean isUseStep, int case) {
+
+    predicate localFlowStep(
+      SourceVariable v, Node nodeFrom, Node nodeTo, boolean isUseStep, int case
+    ) {
       exists(Definition def |
         // Flow from assignment into SSA definition
         case = 1 and
@@ -1751,7 +1760,7 @@ module Make<LocationSig Location, InputSig<Location> Input> {
         isUseStep = false
       )
       or
-        case = 3 and
+      case = 3 and
       // Flow from definition/read to next read
       exists(BasicBlock bb1, int i1, BasicBlock bb2, int i2 |
         flowOutOf(nodeFrom, v, bb1, i1, isUseStep) and
@@ -1759,7 +1768,7 @@ module Make<LocationSig Location, InputSig<Location> Input> {
         nodeTo.(ReadNode).readsAt(bb2, i2, v)
       )
       or
-        case = 4 and
+      case = 4 and
       // Flow from definition/read to next uncertain write
       exists(BasicBlock bb1, int i1, BasicBlock bb2, int i2 |
         flowOutOf(nodeFrom, v, bb1, i1, isUseStep) and
@@ -1771,7 +1780,7 @@ module Make<LocationSig Location, InputSig<Location> Input> {
         )
       )
       or
-        case = 5 and
+      case = 5 and
       // Flow from definition/read to phi input
       exists(BasicBlock bb, int i, BasicBlock input, BasicBlock bbPhi, DefinitionExt phi |
         flowOutOf(nodeFrom, v, bb, i, isUseStep) and
@@ -1780,7 +1789,7 @@ module Make<LocationSig Location, InputSig<Location> Input> {
         phi.definesAt(v, bbPhi, -1, _)
       )
       or
-        case = 6 and
+      case = 6 and
       // Flow from input node to def
       exists(DefinitionExt def |
         nodeTo.(SsaDefinitionExtNodeImpl).getDefExt() = def and
@@ -1905,6 +1914,8 @@ module Make<LocationSig Location, InputSig<Location> Input> {
               g.hasCfgNode(bb, last) and
               DfInput::getAConditionalBasicBlockSuccessor(bb, branch) = phi.getBasicBlock()
             )
+            or
+            g.hasBranchEdge(bb, phi.getBasicBlock(), branch)
           )
         )
       }

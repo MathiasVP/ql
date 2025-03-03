@@ -2,6 +2,7 @@ private import codeql.ssa.Ssa as SsaImplCommon
 private import semmle.code.cpp.ir.IR
 private import DataFlowUtil
 private import DataFlowImplCommon as DataFlowImplCommon
+private import semmle.code.cpp.controlflow.IRGuards as IRGuards
 private import semmle.code.cpp.models.interfaces.Allocation as Alloc
 private import semmle.code.cpp.models.interfaces.DataFlow as DataFlow
 private import semmle.code.cpp.models.interfaces.Taint as Taint
@@ -780,6 +781,7 @@ private predicate indirectConversionFlowStep(Node nFrom, Node nTo) {
     conversionFlow(op1, instr, _, _)
   )
 }
+
 private predicate indirectConversionFlowStep2(Node nFrom, Node nTo) {
   not newStep0(nTo, _, _) and
   // not exists(SourceVariable sv, IRBlock bb2, int i2 |
@@ -793,7 +795,6 @@ private predicate indirectConversionFlowStep2(Node nFrom, Node nTo) {
     conversionFlow(op1, instr, _, _)
   )
 }
-
 
 /**
  * Holds if `node` is a phi input node that should receive flow from the
@@ -849,7 +850,6 @@ predicate cmp52(int new) {
 //   useToNode(_, _, sv1, nodeFrom) and
 //   phiToNode(nodeTo, sv2, _, _)
 // }
-
 /** Gets a node that represents the prior definition of `node`. */
 private Node getAPriorDefinition(DefinitionExt next) {
   exists(IRBlock bb, int i, SourceVariable sv |
@@ -988,6 +988,7 @@ private predicate postUpdateNodeToFirstUse(PostUpdateNode pun, Node n) {
     phiToNode(n, sv, bb1, i1)
   )
 }
+
 private predicate postUpdateNodeToFirstUse2(PostUpdateNode pun, Node n) {
   // We cannot mark a `PointerArithmeticInstruction` that computes an offset
   // based on some SSA
@@ -1009,11 +1010,16 @@ private predicate postUpdateNodeToFirstUse2(PostUpdateNode pun, Node n) {
     newStep0(adjusted, n, _)
   )
 }
+
 predicate cmppunfirst(int rem, int new) {
-  rem = count(PostUpdateNode pun, Node n |
-    postUpdateNodeToFirstUse(pun, n) and not postUpdateNodeToFirstUse2(pun, n)) and
-  new = count(PostUpdateNode pun, Node n |
-    postUpdateNodeToFirstUse2(pun, n) and not postUpdateNodeToFirstUse(pun, n))
+  rem =
+    count(PostUpdateNode pun, Node n |
+      postUpdateNodeToFirstUse(pun, n) and not postUpdateNodeToFirstUse2(pun, n)
+    ) and
+  new =
+    count(PostUpdateNode pun, Node n |
+      postUpdateNodeToFirstUse2(pun, n) and not postUpdateNodeToFirstUse(pun, n)
+    )
 }
 
 private predicate stepUntilNotInCall(DataFlowCall call, Node n1, Node n2) {
@@ -1039,9 +1045,18 @@ private predicate stepUntilNotInCall2(DataFlowCall call, Node n1, Node n2) {
 }
 
 predicate cmpStepUntil(int overlap, int rem, int new) {
-  overlap = count(DataFlowCall call, Node n1, Node n2 | stepUntilNotInCall(call, n1, n2) and stepUntilNotInCall2(call, n1, n2)) and
-  rem = count(DataFlowCall call, Node n1, Node n2 | stepUntilNotInCall(call, n1, n2) and not stepUntilNotInCall2(call, n1, n2)) and
-  new = count(DataFlowCall call, Node n1, Node n2 | stepUntilNotInCall2(call, n1, n2) and not stepUntilNotInCall(call, n1, n2))
+  overlap =
+    count(DataFlowCall call, Node n1, Node n2 |
+      stepUntilNotInCall(call, n1, n2) and stepUntilNotInCall2(call, n1, n2)
+    ) and
+  rem =
+    count(DataFlowCall call, Node n1, Node n2 |
+      stepUntilNotInCall(call, n1, n2) and not stepUntilNotInCall2(call, n1, n2)
+    ) and
+  new =
+    count(DataFlowCall call, Node n1, Node n2 |
+      stepUntilNotInCall2(call, n1, n2) and not stepUntilNotInCall(call, n1, n2)
+    )
 }
 
 bindingset[n1, n2]
@@ -1199,6 +1214,11 @@ module SsaCached {
     SsaImpl::ssaDefReachesReadExt(v, def, bb, i)
   }
 
+  cached
+  predicate ssaDefReachesRead(SourceVariable v, Definition def, IRBlock bb, int i) {
+    SsaImpl::ssaDefReachesRead(v, def, bb, i)
+  }
+
   predicate variableRead = SsaInput::variableRead/4;
 
   predicate variableWrite = SsaInput::variableWrite/4;
@@ -1235,6 +1255,14 @@ private module DataFlowIntegrationInput implements SsaImpl::DataFlowIntegrationI
     predicate hasCfgNode(SsaInput::BasicBlock bb, int i) { this.hasIndexInBlock(bb, i) }
   }
 
+  Expr getARead(SsaImpl::Definition def) {
+    exists(SourceVariable v, IRBlock bb, int i |
+      ssaDefReachesRead(v, def, bb, i) and
+      variableRead(bb, i, v, true) and
+      result.hasIndexInBlock(bb, i, v)
+    )
+  }
+
   predicate ssaDefAssigns(SsaImpl::WriteDefinition def, Expr value) { none() }
 
   class Parameter extends Void {
@@ -1245,11 +1273,31 @@ private module DataFlowIntegrationInput implements SsaImpl::DataFlowIntegrationI
 
   predicate allowFlowIntoUncertainDef(SsaImpl::UncertainWriteDefinition def) { any() }
 
-  class Guard extends Void {
-    predicate hasCfgNode(SsaInput::BasicBlock bb, int i) { none() }
+  private EdgeKind getConditionalEdge(boolean branch) {
+    branch = true and
+    result instanceof TrueEdge
+    or
+    branch = false and
+    result instanceof FalseEdge
   }
 
-  predicate guardControlsBlock(Guard guard, SsaInput::BasicBlock bb, boolean branch) { none() }
+  class Guard instanceof IRGuards::IRGuardCondition {
+    string toString() { result = super.toString() }
+
+    predicate hasCfgNode(SsaInput::BasicBlock bb, int i) { none() }
+
+    predicate hasBranchEdge(SsaInput::BasicBlock bb1, SsaInput::BasicBlock bb2, boolean branch) {
+      exists(EdgeKind kind |
+        super.getBlock() = bb1 and
+        kind = getConditionalEdge(branch) and
+        bb1.getSuccessor(kind) = bb2
+      )
+    }
+  }
+
+  predicate guardControlsBlock(Guard guard, SsaInput::BasicBlock bb, boolean branch) {
+    guard.(IRGuards::IRGuardCondition).controls(bb, branch)
+  }
 
   SsaInput::BasicBlock getAConditionalBasicBlockSuccessor(SsaInput::BasicBlock bb, boolean branch) {
     none()
@@ -1268,6 +1316,25 @@ class UseUseNode extends DataFlowIntegrationImpl::SsaNode {
     exists(SsaPhiInputNode phiinput | phiinput = result |
       this.(DataFlowIntegrationImpl::SsaInputNode)
           .isInputInto(phiinput.getPhiNode(), phiinput.getBlock())
+    )
+  }
+}
+
+signature predicate guardChecksNodeSig(IRGuards::IRGuardCondition g, Node e, boolean branch);
+
+module BarrierGuard<guardChecksNodeSig/3 guardChecksNode> {
+  private predicate guardChecks(
+    DataFlowIntegrationInput::Guard g, DataFlowIntegrationInput::Expr e, boolean branch
+  ) {
+    guardChecksNode(g, e.getNode(), branch)
+  }
+
+  Node getABarrierNode() {
+    exists(DataFlowIntegrationImpl::Node n |
+      DataFlowIntegrationImpl::BarrierGuard<guardChecks/3>::getABarrierNode() = n
+    |
+      n.(UseUseNode).asOldNode() = result or
+      n.(DataFlowIntegrationImpl::ExprNode).getExpr().getNode() = result
     )
   }
 }
@@ -1321,30 +1388,29 @@ predicate newStep0(Node nodeFrom, Node nodeTo, int case) {
   exists(SourceVariable v |
     nodeFrom != nodeTo and
     DataFlowIntegrationImpl::localFlowStep(v, fromDfNode(nodeFrom, v), fromDfNode(nodeTo, v), _,
-      case)
-      and
+      case) and
     not modeledFlowBarrier(nodeFrom)
   )
 }
 
 predicate newStep(Node nodeFrom, Node nodeTo, int case) {
-  postUpdateFlow2(nodeFrom, nodeTo) and case = -1 or
+  postUpdateFlow2(nodeFrom, nodeTo) and case = -1
+  or
   exists(SourceVariable v |
     nodeFrom != nodeTo and
     DataFlowIntegrationImpl::localFlowStep(v, fromDfNode(nodeFrom, v), fromDfNode(nodeTo, v), _,
-      case)
-       and
+      case) and
     not modeledFlowBarrier(nodeFrom)
   )
 }
 
 predicate newStep(Node nodeFrom, Node nodeTo, boolean isuseuse, int case, int fromcase) {
-  postUpdateFlow2(nodeFrom, nodeTo) and case = -1 and isuseuse = true and fromcase = -1 or
+  postUpdateFlow2(nodeFrom, nodeTo) and case = -1 and isuseuse = true and fromcase = -1
+  or
   exists(SourceVariable v |
     nodeFrom != nodeTo and
     DataFlowIntegrationImpl::localFlowStep(v, fromDfNode(nodeFrom, v, fromcase),
-      fromDfNode(nodeTo, v), isuseuse, case)
-      and
+      fromDfNode(nodeTo, v), isuseuse, case) and
     not modeledFlowBarrier(nodeFrom)
   )
 }

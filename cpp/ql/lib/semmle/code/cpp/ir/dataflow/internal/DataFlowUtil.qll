@@ -1814,101 +1814,131 @@ private module Cached {
 
   private predicate teststep(Node nodeFrom, Node nodeTo) {
     simpleLocalFlowStep(nodeFrom, nodeTo, _) and
-    nodeTo instanceof SsaPhiInputNode
-    and not
-      (
+    nodeTo instanceof SsaPhiInputNode and
+    not (
       Ssa::fromPhiNode(nodeFrom, nodeTo)
       or
       Ssa::postUpdateFlow(nodeFrom, nodeTo)
       or
       Ssa::ssaFlow(nodeFrom, nodeTo)
-      )
+    )
   }
-  
-  private predicate  orig(Node nodeFrom, Node nodeTo, int case) {
+
+  private predicate orig(Node nodeFrom, Node nodeTo, int case) {
     // partially covered, missing adjustment for conversion plus stepinsamecall
     // missing 24.7k
     case = 1 and
-      Ssa::postUpdateFlow(nodeFrom, nodeTo)
-      or
+    Ssa::postUpdateFlow(nodeFrom, nodeTo)
+    or
     // missing 3.7k
     // missing 6.7k
     case = 2 and
-      Ssa::ssaFlow(nodeFrom, nodeTo)
-      or
+    Ssa::ssaFlow(nodeFrom, nodeTo)
+    or
     // covered ok
     case = 3 and
-      nodeFrom.(SsaPhiInputNode).getPhiNode() = nodeTo.(SsaPhiNode).getPhiNode()
-      or
+    nodeFrom.(SsaPhiInputNode).getPhiNode() = nodeTo.(SsaPhiNode).getPhiNode()
+    or
     // covered ok
     case = 4 and
-      Ssa::fromPhiNode(nodeFrom, nodeTo)
+    Ssa::fromPhiNode(nodeFrom, nodeTo)
   }
-  
-  private
-  predicate origLocalX2(Node n1, Node n2, Node n3) {
+
+  private predicate origLocalX2(Node n1, Node n2, Node n3) {
     simpleLocalFlowStep(n1, n2, _) and
     simpleLocalFlowStep(n2, n3, _)
   }
-  
+
   private predicate cmpCover(int case, int overlap, int missing) {
-    case = [1..4] and
-    overlap = count(Node nodeFrom, Node nodeTo | orig(nodeFrom, nodeTo, case) and Ssa::newStep(nodeFrom, nodeTo, _)) and
-    missing = count(Node nodeFrom, Node nodeTo | orig(nodeFrom, nodeTo, case) and not Ssa::newStep(nodeFrom, nodeTo, _))
+    case = [1 .. 4] and
+    overlap =
+      count(Node nodeFrom, Node nodeTo |
+        orig(nodeFrom, nodeTo, case) and Ssa::newStep(nodeFrom, nodeTo, _)
+      ) and
+    missing =
+      count(Node nodeFrom, Node nodeTo |
+        orig(nodeFrom, nodeTo, case) and not Ssa::newStep(nodeFrom, nodeTo, _)
+      )
   }
+
   private predicate testdiffloc(int case, Node nodeFrom, Node nodeTo) {
-     orig(nodeFrom, nodeTo, case) and not Ssa::newStep(nodeFrom, nodeTo, _) and
-     nodeFrom.getLocation() != nodeTo.getLocation()
+    orig(nodeFrom, nodeTo, case) and
+    not Ssa::newStep(nodeFrom, nodeTo, _) and
+    nodeFrom.getLocation() != nodeTo.getLocation()
   }
-  private
-  predicate cmp1(int overlap, int new) {
-    overlap = count(Node nodeFrom, Node nodeTo |
-      simpleLocalFlowStep(nodeFrom, nodeTo, _) and Ssa::newStep(nodeFrom, nodeTo, _))
-      and
-    new = count(Node nodeFrom, Node nodeTo | Ssa::newStep(nodeFrom, nodeTo, _) and not simpleLocalFlowStep(nodeFrom, nodeTo, _))
+
+  private predicate cmp1(int overlap, int new) {
+    overlap =
+      count(Node nodeFrom, Node nodeTo |
+        simpleLocalFlowStep(nodeFrom, nodeTo, _) and Ssa::newStep(nodeFrom, nodeTo, _)
+      ) and
+    new =
+      count(Node nodeFrom, Node nodeTo |
+        Ssa::newStep(nodeFrom, nodeTo, _) and not simpleLocalFlowStep(nodeFrom, nodeTo, _)
+      )
   }
-  
+
   private predicate cmpNew(int case, int case2, int new, int orignext, int origfrom) {
-    case2 = [1..4] and
-    new = strictcount(Node nodeFrom, Node nodeTo | Ssa::newStep(nodeFrom, nodeTo, case) and not simpleLocalFlowStep(nodeFrom, nodeTo, _)
-      and
-      // orignext = count(Node next | simpleLocalFlowStep(nodeFrom, next, _) and not Ssa::newStep(nodeFrom, next, _))
-      orignext = count(Node next | orig(nodeFrom, next, case2) and not Ssa::newStep(nodeFrom, next, _))
-      and
-      origfrom = count(Node n | orig(n, nodeTo, case2) and not Ssa::newStep(n, nodeTo, _))
-    )
+    case2 = [1 .. 4] and
+    new =
+      strictcount(Node nodeFrom, Node nodeTo |
+        Ssa::newStep(nodeFrom, nodeTo, case) and
+        not simpleLocalFlowStep(nodeFrom, nodeTo, _) and
+        // orignext = count(Node next | simpleLocalFlowStep(nodeFrom, next, _) and not Ssa::newStep(nodeFrom, next, _))
+        orignext =
+          count(Node next | orig(nodeFrom, next, case2) and not Ssa::newStep(nodeFrom, next, _)) and
+        origfrom = count(Node n | orig(n, nodeTo, case2) and not Ssa::newStep(n, nodeTo, _))
+      )
   }
+
   private predicate cmpNew2(int case, int new, int split) {
-    new = strictcount(Node nodeFrom, Node nodeTo | Ssa::newStep(nodeFrom, nodeTo, case) and not simpleLocalFlowStep(nodeFrom, nodeTo, _))
-    and
-    split = count(Node nodeFrom, Node nodeTo |
-      exists(Node mid | Ssa::newStep(nodeFrom, nodeTo, case) and not simpleLocalFlowStep(nodeFrom, nodeTo, _) and origLocalX2(nodeFrom, mid, nodeTo)))
+    new =
+      strictcount(Node nodeFrom, Node nodeTo |
+        Ssa::newStep(nodeFrom, nodeTo, case) and not simpleLocalFlowStep(nodeFrom, nodeTo, _)
+      ) and
+    split =
+      count(Node nodeFrom, Node nodeTo |
+        exists(Node mid |
+          Ssa::newStep(nodeFrom, nodeTo, case) and
+          not simpleLocalFlowStep(nodeFrom, nodeTo, _) and
+          origLocalX2(nodeFrom, mid, nodeTo)
+        )
+      )
   }
 
   private predicate cmpNew3(int case, int new, int split, boolean isuseuse, int fc) {
-    new = strictcount(Node nodeFrom, Node nodeTo | Ssa::newStep(nodeFrom, nodeTo, isuseuse, case, fc) and not orig(nodeFrom, nodeTo, _))
-    and
-    split = count(Node nodeFrom, Node nodeTo |
-      exists(Node mid | Ssa::newStep(nodeFrom, nodeTo, isuseuse, case, fc) and not simpleLocalFlowStep(nodeFrom, nodeTo, _) and origLocalX2(nodeFrom, mid, nodeTo)))
+    new =
+      strictcount(Node nodeFrom, Node nodeTo |
+        Ssa::newStep(nodeFrom, nodeTo, isuseuse, case, fc) and not orig(nodeFrom, nodeTo, _)
+      ) and
+    split =
+      count(Node nodeFrom, Node nodeTo |
+        exists(Node mid |
+          Ssa::newStep(nodeFrom, nodeTo, isuseuse, case, fc) and
+          not simpleLocalFlowStep(nodeFrom, nodeTo, _) and
+          origLocalX2(nodeFrom, mid, nodeTo)
+        )
+      )
   }
 
   /*
-    nodeFrom instanceof SsaPhiNode and
-      Ssa::fromPhiNode(nodeFrom, nodeTo)
-    nodeTo instanceof SsaPhiNode
-      nodeFrom.(SsaPhiInputNode).getPhiNode() = nodeTo.(SsaPhiNode).getPhiNode()
-    
-    nodeFrom instanceof SsaPhiInputNode
-      nodeFrom.(SsaPhiInputNode).getPhiNode() = nodeTo.(SsaPhiNode).getPhiNode()
-    nodeTo instanceof SsaPhiInputNode
-      (
-      Ssa::fromPhiNode(nodeFrom, nodeTo)
-      or
-      Ssa::postUpdateFlow(nodeFrom, nodeTo)
-      or
-      Ssa::ssaFlow(nodeFrom, nodeTo)
-      )
-  */
+   *    nodeFrom instanceof SsaPhiNode and
+   *      Ssa::fromPhiNode(nodeFrom, nodeTo)
+   *    nodeTo instanceof SsaPhiNode
+   *      nodeFrom.(SsaPhiInputNode).getPhiNode() = nodeTo.(SsaPhiNode).getPhiNode()
+   *
+   *    nodeFrom instanceof SsaPhiInputNode
+   *      nodeFrom.(SsaPhiInputNode).getPhiNode() = nodeTo.(SsaPhiNode).getPhiNode()
+   *    nodeTo instanceof SsaPhiInputNode
+   *      (
+   *      Ssa::fromPhiNode(nodeFrom, nodeTo)
+   *      or
+   *      Ssa::postUpdateFlow(nodeFrom, nodeTo)
+   *      or
+   *      Ssa::ssaFlow(nodeFrom, nodeTo)
+   *      )
+   */
+
   /**
    * INTERNAL: do not use.
    *
@@ -2433,6 +2463,25 @@ module BarrierGuard<guardChecksSig/3 guardChecks> {
       e = value.getAnInstruction().getConvertedResultExpression() and
       n.asConvertedExpr() = e
     )
+  }
+
+  private predicate guardChecksNode(IRGuardCondition g, Node n, boolean branch) {
+    guardChecks(g, n.asOperand().getDef().getConvertedResultExpression(), branch)
+  }
+
+  // default version
+  Node getABarrierNode2() { Ssa::BarrierGuard<guardChecksNode/3>::getABarrierNode() = result }
+
+  // conservative version (relative to current main)
+  Node getABarrierNode2withValuenumberBasedGuards() {
+    exists(IRGuardCondition g, ValueNumber value, boolean edge |
+      convertedExprHasValueNumber(value, result) and
+      guardChecks(g,
+        pragma[only_bind_into](value.getAnInstruction().getConvertedResultExpression()), edge) and
+      controls(g, result, edge)
+    )
+    or
+    Ssa::BarrierGuard<guardChecksNode/3>::getABarrierNode() = result
   }
 
   /**
