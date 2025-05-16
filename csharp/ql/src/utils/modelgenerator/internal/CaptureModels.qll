@@ -169,17 +169,18 @@ module ModelGeneratorCommonInput implements ModelGeneratorCommonInputSig<Locatio
   predicate containerContent(DataFlow::ContentSet c) { c.isElement() }
 
   string partialModelRow(Callable api, int i) {
-    i = 0 and ExternalFlow::partialModel(api, result, _, _, _, _) // package
+    exists(string package, string type |
+      ExternalFlow::partialModel(api, package, _, _, _, _) and
+      ExternalFlow::partialModel(api, _, type, _, _, _) and
+      i = 0 and
+      result = package.toLowerCase() + "." + type.toLowerCase()
+    )
     or
-    i = 1 and ExternalFlow::partialModel(api, _, result, _, _, _) // type
-    or
-    i = 2 and ExternalFlow::partialModel(api, _, _, result, _, _) // extensible
-    or
-    i = 3 and ExternalFlow::partialModel(api, _, _, _, result, _) // name
-    or
-    i = 4 and ExternalFlow::partialModel(api, _, _, _, _, result) // parameters
-    or
-    i = 5 and result = "" and exists(api) // ext
+    exists(string name |
+      i = 1 and
+      ExternalFlow::partialModel(api, _, _, _, name, _) and
+      result = "Method[" + name.toLowerCase() + "]"
+    )
   }
 
   string partialNeutralModelRow(Callable api, int i) {
@@ -264,7 +265,7 @@ module SummaryModelGeneratorInput implements SummaryModelGeneratorInputSig {
   private string getFullyQualifiedName(Declaration d) {
     exists(string qualifier, string name |
       d.hasFullyQualifiedName(qualifier, name) and
-      result = QualifiedName::getQualifiedName(qualifier, name)
+      result = QualifiedName::getQualifiedName(qualifier, name).toLowerCase()
     )
   }
 
@@ -302,7 +303,7 @@ module SummaryModelGeneratorInput implements SummaryModelGeneratorInputSig {
     exists(CS::Property p, string name | name = getFullyQualifiedName(p) |
       c.isProperty(p) and
       p.isEffectivelyPublic() and
-      result = "Property[" + name + "]"
+      result = "Field[" + name + "]"
     )
     or
     result = "SyntheticField[" + getSyntheticName(c) + "]"

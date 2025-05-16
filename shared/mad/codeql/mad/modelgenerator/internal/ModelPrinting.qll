@@ -73,8 +73,7 @@ module ModelPrintingImpl<ModelPrintingLangSig Lang> {
         result =
           asPartialModel(c) + input + ";" //
             + output + ";" //
-            + kind + ";" //
-            + Printing::getProvenance()
+            + kind
       )
     }
 
