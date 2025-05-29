@@ -1,7 +1,23 @@
 {
   "strategy": "dca",
   "targets": [
+      { "name": "gnulib" },
+      { "name": "glibc" },
+      { "name": "libffi" },
+      { "name": "llhttp" },
+      { "name": "zlib" },
+      { "name": "nettle" },
+      { "name": "libm" },
+      { "name": "c-ares" },
+      { "name": "wolfssl" },
+      { "name": "libtasn1" },
+      { "name": "brotli" },
       { "name": "openssl" },
+      { "name": "p11-kit" },
+      { "name": "openldap" },
+      { "name": "gnutls" },
+      { "name": "nghttp2" },
+      { "name": "curl" },
       { "name": "sqlite" }
   ],
   "destination": "cpp/ql/lib/ext/generated"
