@@ -126,8 +126,8 @@ namespace virtual_inheritance {
     // get flow from a `Middle` value to the call qualifier.
     Top *topPtr = bottomPtr, &topRef = bottomRef;
 
-    sink(topPtr->isSource()); // $ MISSING: ast,ir
-    sink(topRef.isSource()); // $ MISSING: ast,ir
+    sink(topPtr->isSource()); // $ ir MISSING: ast
+    sink(topRef.isSource()); // $ ir MISSING: ast
   }
 }
 
