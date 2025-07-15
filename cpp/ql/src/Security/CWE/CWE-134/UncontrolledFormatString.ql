@@ -15,7 +15,7 @@
 
 import cpp
 import semmle.code.cpp.security.Security
-import semmle.code.cpp.security.FunctionWithWrappers
+import semmle.code.cpp.security.PrintfLike
 import semmle.code.cpp.security.FlowSources
 import semmle.code.cpp.ir.dataflow.TaintTracking
 import semmle.code.cpp.ir.IR
@@ -23,14 +23,18 @@ import Flow::PathGraph
 
 predicate isSource(FlowSource source, string sourceType) { sourceType = source.getSourceType() }
 
+predicate isSink(DataFlow::Node sink, Function f) {
+  exists(Call call, int i |
+    printfLikeFunction(f, i) and
+    call.getTarget() = f and
+    call.getArgument(i) = [sink.asExpr(), sink.asIndirectExpr()]
+  )
+}
+
 module Config implements DataFlow::ConfigSig {
   predicate isSource(DataFlow::Node node) { isSource(node, _) }
 
-  predicate isSink(DataFlow::Node node) {
-    exists(PrintfLikeFunction printf |
-      printf.outermostWrapperFunctionCall([node.asExpr(), node.asIndirectExpr()], _)
-    )
-  }
+  predicate isSink(DataFlow::Node node) { isSink(node, _) }
 
   private predicate isArithmeticNonCharType(ArithmeticType type) {
     not type instanceof CharType and
@@ -51,13 +55,13 @@ module Config implements DataFlow::ConfigSig {
 module Flow = TaintTracking::Global<Config>;
 
 from
-  PrintfLikeFunction printf, string printfFunction, string sourceType, DataFlow::Node source,
-  DataFlow::Node sink, Flow::PathNode sourceNode, Flow::PathNode sinkNode
+  string sourceType, DataFlow::Node source, DataFlow::Node sink, Flow::PathNode sourceNode,
+  Flow::PathNode sinkNode, Function printfFunction
 where
   source = sourceNode.getNode() and
   sink = sinkNode.getNode() and
   isSource(source, sourceType) and
-  printf.outermostWrapperFunctionCall([sink.asExpr(), sink.asIndirectExpr()], printfFunction) and
+  isSink(sink, printfFunction) and
   Flow::flowPath(sourceNode, sinkNode)
 select sink, sourceNode, sinkNode,
   "The value of this argument may come from $@ and is being used as a formatting argument to " +

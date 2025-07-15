@@ -1,25 +1,9 @@
 /** Provides definitions related to execution of commands */
 
 import cpp
-import semmle.code.cpp.security.FunctionWithWrappers
 import semmle.code.cpp.models.interfaces.SideEffect
 import semmle.code.cpp.models.interfaces.Alias
 import semmle.code.cpp.models.interfaces.CommandExecution
-
-/**
- * A function for running a command using a command interpreter.
- */
-class SystemFunction extends FunctionWithWrappers instanceof CommandExecutionFunction {
-  override predicate interestingArg(int arg) {
-    exists(FunctionInput input |
-      this.(CommandExecutionFunction).hasCommandArgument(input) and
-      (
-        input.isParameterDerefOrQualifierObject(arg) or
-        input.isParameterOrQualifierAddress(arg)
-      )
-    )
-  }
-}
 
 /**
  * A function for running a command via varargs. Note that, at the time
@@ -129,8 +113,14 @@ predicate shellCommandPreface(string cmd, string flag) {
  */
 predicate shellCommand(Expr command, string callChain) {
   // A call to a function like system()
-  exists(SystemFunction systemFunction |
-    systemFunction.outermostWrapperFunctionCall(command, callChain)
+  exists(CommandExecutionFunction systemFunction, Call call, FunctionInput input, int arg |
+    systemFunction.hasCommandArgument(input) and
+    call.getTarget() = systemFunction and
+    call.getArgument(arg) = command and
+    callChain = call.getTarget().getName()
+  |
+    input.isParameterDerefOrQualifierObject(arg) or
+    input.isParameterOrQualifierAddress(arg)
   )
   or
   // A call to a function like execl(), passing "sh", then "-c", and then a command.

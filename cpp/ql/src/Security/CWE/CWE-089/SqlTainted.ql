@@ -15,16 +15,9 @@
 import cpp
 import semmle.code.cpp.security.Security
 import semmle.code.cpp.security.FlowSources
-import semmle.code.cpp.security.FunctionWithWrappers
 import semmle.code.cpp.ir.IR
 import semmle.code.cpp.ir.dataflow.TaintTracking
 import SqlTainted::PathGraph
-
-class SqlLikeFunction extends FunctionWithWrappers {
-  SqlLikeFunction() { sqlArgument(this.getName(), _) }
-
-  override predicate interestingArg(int arg) { sqlArgument(this.getName(), arg) }
-}
 
 Expr asSinkExpr(DataFlow::Node node) {
   result = node.asIndirectArgument()
@@ -37,7 +30,11 @@ module SqlTaintedConfig implements DataFlow::ConfigSig {
   predicate isSource(DataFlow::Node node) { node instanceof FlowSource }
 
   predicate isSink(DataFlow::Node node) {
-    exists(SqlLikeFunction runSql | runSql.outermostWrapperFunctionCall(asSinkExpr(node), _))
+    exists(Function f, Call call, int i |
+      call.getTarget() = f and
+      sqlArgument(f.getName(), i) and
+      call.getArgument(i) = asSinkExpr(node)
+    )
     or
     // sink defined using models-as-data
     sinkNode(node, "sql-injection")
@@ -58,22 +55,10 @@ module SqlTaintedConfig implements DataFlow::ConfigSig {
 
 module SqlTainted = TaintTracking::Global<SqlTaintedConfig>;
 
-from
-  Expr taintedArg, FlowSource taintSource, SqlTainted::PathNode sourceNode,
-  SqlTainted::PathNode sinkNode, string extraText
+from FlowSource taintSource, SqlTainted::PathNode sourceNode, SqlTainted::PathNode sinkNode
 where
-  (
-    exists(SqlLikeFunction runSql, string callChain |
-      runSql.outermostWrapperFunctionCall(taintedArg, callChain) and
-      extraText = " and then passed to " + callChain
-    )
-    or
-    sinkNode(sinkNode.getNode(), "sql-injection") and
-    extraText = ""
-  ) and
   SqlTainted::flowPath(sourceNode, sinkNode) and
-  taintedArg = asSinkExpr(sinkNode.getNode()) and
   taintSource = sourceNode.getNode()
-select taintedArg, sourceNode, sinkNode,
-  "This argument to a SQL query function is derived from $@" + extraText + ".", taintSource,
+select sinkNode.getNode(), sourceNode, sinkNode,
+  "This argument to a SQL query function is derived from $@.", taintSource,
   "user input (" + taintSource.getSourceType() + ")"
