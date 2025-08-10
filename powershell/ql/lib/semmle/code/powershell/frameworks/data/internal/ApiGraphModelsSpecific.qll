@@ -26,6 +26,7 @@ private import codeql.dataflow.internal.AccessPathSyntax
 import semmle.code.powershell.ApiGraphs
 import semmle.code.powershell.dataflow.DataFlow::DataFlow as DataFlow
 private import FlowSummaryImpl::Public
+private import semmle.code.powershell.controlflow.Cfg
 private import semmle.code.powershell.dataflow.internal.DataFlowDispatch as DataFlowDispatch
 
 bindingset[rawType]
