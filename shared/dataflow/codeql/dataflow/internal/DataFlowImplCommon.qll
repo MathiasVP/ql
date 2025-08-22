@@ -6,7 +6,6 @@ private import codeql.typetracking.TypeTracking as Tt
 private import codeql.util.Location
 private import codeql.util.Option
 private import codeql.util.Unit
-private import codeql.util.Option
 
 module MakeImplCommon<LocationSig Location, InputSig<Location> Lang> {
   private import Lang
@@ -199,6 +198,8 @@ module MakeImplCommon<LocationSig Location, InputSig<Location> Lang> {
     )
   }
 
+  private class ContentOption = Option<Content>::Option;
+
   /**
    * Provides a simple data-flow analysis for resolving lambda calls. The analysis
    * currently excludes read-steps, store-steps, and flow-through.
@@ -294,10 +295,10 @@ module MakeImplCommon<LocationSig Location, InputSig<Location> Lang> {
     overlay[global]
     pragma[nomagic]
     predicate revLambdaFlow(
-      Call lambdaCall, LambdaCallKind kind, Node node, Type t, boolean toReturn, boolean toJump,
-      CallOption lastCall
+      Call lambdaCall, LambdaCallKind kind, Node node, Type t, ContentOption c, boolean toReturn,
+      boolean toJump, CallOption lastCall
     ) {
-      revLambdaFlow0(lambdaCall, kind, node, t, toReturn, toJump, lastCall) and
+      revLambdaFlow0(lambdaCall, kind, node, t, c, toReturn, toJump, lastCall) and
       not expectsContent(node, _) and
       if node instanceof CastNode or node instanceof ArgNode or node instanceof ReturnNode
       then compatibleTypesFilter(t, getNodeDataFlowType(node))
@@ -306,18 +307,19 @@ module MakeImplCommon<LocationSig Location, InputSig<Location> Lang> {
 
     pragma[nomagic]
     predicate revLambdaFlow0(
-      Call lambdaCall, LambdaCallKind kind, Node node, Type t, boolean toReturn, boolean toJump,
-      CallOption lastCall
+      Call lambdaCall, LambdaCallKind kind, Node node, Type t, ContentOption c, boolean toReturn,
+      boolean toJump, CallOption lastCall
     ) {
       lambdaCall(lambdaCall, kind, node) and
       t = getNodeDataFlowType(node) and
       toReturn = false and
       toJump = false and
-      lastCall = TCallNone()
+      lastCall = TCallNone() and
+      c.isNone()
       or
       // local flow
       exists(Node mid, Type t0 |
-        revLambdaFlow(lambdaCall, kind, mid, t0, toReturn, toJump, lastCall)
+        revLambdaFlow(lambdaCall, kind, mid, t0, c, toReturn, toJump, lastCall)
       |
         simpleLocalFlowStep(node, mid, _) and
         t = t0
@@ -327,7 +329,8 @@ module MakeImplCommon<LocationSig Location, InputSig<Location> Lang> {
           getNodeEnclosingCallable(node) = getNodeEnclosingCallable(mid)
         |
           preservesValue = false and
-          t = getNodeDataFlowType(node)
+          t = getNodeDataFlowType(node) and
+          c.isNone()
           or
           preservesValue = true and
           t = t0
@@ -336,7 +339,7 @@ module MakeImplCommon<LocationSig Location, InputSig<Location> Lang> {
       or
       // jump step
       exists(Node mid, Type t0 |
-        revLambdaFlow(lambdaCall, kind, mid, t0, _, _, lastCall) and
+        revLambdaFlow(lambdaCall, kind, mid, t0, c, _, _, lastCall) and
         toReturn = false and
         toJump = true
       |
@@ -348,7 +351,8 @@ module MakeImplCommon<LocationSig Location, InputSig<Location> Lang> {
           getNodeEnclosingCallable(node) != getNodeEnclosingCallable(mid)
         |
           preservesValue = false and
-          t = getNodeDataFlowType(node)
+          t = getNodeDataFlowType(node) and
+          c.isNone()
           or
           preservesValue = true and
           t = t0
@@ -357,7 +361,7 @@ module MakeImplCommon<LocationSig Location, InputSig<Location> Lang> {
       or
       // flow into a callable
       exists(ParamNode p, CallOption lastCall0, Call call |
-        revLambdaFlowIn(lambdaCall, kind, p, t, toJump, lastCall0) and
+        revLambdaFlowIn(lambdaCall, kind, p, t, c, toJump, lastCall0) and
         (
           if lastCall0 = TCallNone() and toJump = false
           then lastCall = TCallSome(call)
@@ -372,18 +376,35 @@ module MakeImplCommon<LocationSig Location, InputSig<Location> Lang> {
       or
       // flow out of a callable
       exists(TReturnPositionSimple pos |
-        revLambdaFlowOut(lambdaCall, kind, pos, t, toJump, lastCall) and
+        revLambdaFlowOut(lambdaCall, kind, pos, t, c, toJump, lastCall) and
         pos = getReturnPositionSimple(node) and
         toReturn = true
+      )
+      or
+      // store step
+      exists(Node mid, ContentSet cs |
+        c.isNone() and
+        revLambdaFlow(lambdaCall, kind, mid, _, Option<Content>::some(cs.getAStoreContent()),
+          toReturn, toJump, lastCall) and
+        storeStep(node, cs, mid) and
+        t = getNodeDataFlowType(node)
+      )
+      or
+      // read step
+      exists(Node mid, ContentSet cs |
+        revLambdaFlow(lambdaCall, kind, mid, t, any(Option<Content>::None c0), toReturn, toJump,
+          lastCall) and
+        c.asSome() = cs.getAReadContent() and
+        readStep(node, cs, mid)
       )
     }
 
     pragma[nomagic]
     predicate revLambdaFlowOutLambdaCall(
-      Call lambdaCall, LambdaCallKind kind, OutNode out, Type t, boolean toJump, Call call,
-      CallOption lastCall
+      Call lambdaCall, LambdaCallKind kind, OutNode out, Type t, ContentOption c, boolean toJump,
+      Call call, CallOption lastCall
     ) {
-      revLambdaFlow(lambdaCall, kind, out, t, _, toJump, lastCall) and
+      revLambdaFlow(lambdaCall, kind, out, t, c, _, toJump, lastCall) and
       exists(ReturnKindExt rk |
         out = getAnOutNodeExt(call, rk) and
         lambdaCall(call, _, _)
@@ -392,24 +413,25 @@ module MakeImplCommon<LocationSig Location, InputSig<Location> Lang> {
 
     pragma[nomagic]
     predicate revLambdaFlowOut(
-      Call lambdaCall, LambdaCallKind kind, TReturnPositionSimple pos, Type t, boolean toJump,
-      CallOption lastCall
+      Call lambdaCall, LambdaCallKind kind, TReturnPositionSimple pos, Type t, ContentOption c,
+      boolean toJump, CallOption lastCall
     ) {
       exists(Call call, OutNode out |
-        revLambdaFlow(lambdaCall, kind, out, t, _, toJump, lastCall) and
+        revLambdaFlow(lambdaCall, kind, out, t, c, _, toJump, lastCall) and
         viableReturnPosOutNonLambda(call, pos, out)
         or
         // non-linear recursion
-        revLambdaFlowOutLambdaCall(lambdaCall, kind, out, t, toJump, call, lastCall) and
+        revLambdaFlowOutLambdaCall(lambdaCall, kind, out, t, c, toJump, call, lastCall) and
         viableReturnPosOutLambda(call, pos, out)
       )
     }
 
     pragma[nomagic]
     predicate revLambdaFlowIn(
-      Call lambdaCall, LambdaCallKind kind, ParamNode p, Type t, boolean toJump, CallOption lastCall
+      Call lambdaCall, LambdaCallKind kind, ParamNode p, Type t, ContentOption c, boolean toJump,
+      CallOption lastCall
     ) {
-      revLambdaFlow(lambdaCall, kind, p, t, false, toJump, lastCall)
+      revLambdaFlow(lambdaCall, kind, p, t, c, false, toJump, lastCall)
     }
   }
 
@@ -1094,7 +1116,8 @@ module MakeImplCommon<LocationSig Location, InputSig<Location> Lang> {
     cached
     Callable viableCallableLambda(Call call, CallOption lastCall) {
       exists(Node creation, LambdaCallKind kind |
-        LambdaFlow::revLambdaFlow(call, kind, creation, _, _, _, lastCall) and
+        LambdaFlow::revLambdaFlow(call, kind, creation, _, any(ContentOption c | c.isNone()), _, _,
+          lastCall) and
         lambdaCreation(creation, kind, result)
       )
     }
