@@ -320,7 +320,7 @@ module TypeTrackingInput implements Shared::TypeTrackingInput<Location> {
 
   predicate hasFeatureBacktrackStoreTarget() { any() }
 
-  predicate nonStandardFlowsTo(LocalSourceNode localSource, Node dst) { localSource.flowsTo(dst) }
+  predicate nonStandardFlowsFrom(Node dst, LocalSourceNode localSource) { localSource.flowsTo(dst) }
 }
 
 import SharedImpl::TypeTracking<Location, TypeTrackingInput>

@@ -125,7 +125,7 @@ signature module TypeTrackingInput<LocationSig Location> {
    * Holds if a non-standard `flowsTo` predicate is needed, i.e., one that is not
    * simply `simpleLocalSmallStep*(localSource, dst)`.
    */
-  default predicate nonStandardFlowsTo(LocalSourceNode localSource, Node dst) { none() }
+  default predicate nonStandardFlowsFrom(Node dst, LocalSourceNode localSource) { none() }
 }
 
 private import internal.TypeTrackingImpl as Impl

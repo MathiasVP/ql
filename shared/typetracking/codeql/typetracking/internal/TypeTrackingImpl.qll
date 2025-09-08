@@ -48,7 +48,7 @@ module TypeTracking<LocationSig Location, TypeTrackingInput<Location> I> {
       not ConsistencyChecksInput::unreachableNodeExclude(n) and
       exists(string kind |
         stepEntry(n, kind) and
-        not flowsTo(_, n) and
+        not flowsFrom(n, _) and
         msg = "Unreachable node in step of kind " + kind + "."
       )
     }
@@ -71,7 +71,7 @@ module TypeTracking<LocationSig Location, TypeTrackingInput<Location> I> {
   private class ContentOption = ContentOption::Option;
 
   private predicate isLocalSourceNode(LocalSourceNode n) {
-    not nonStandardFlowsTo(_, _) and exists(n)
+    not nonStandardFlowsFrom(_, _) and exists(n)
   }
 
   cached
@@ -253,28 +253,33 @@ module TypeTracking<LocationSig Location, TypeTrackingInput<Location> I> {
       returnStep(nodeFrom, nodeTo) and summary = ReturnStep()
     }
 
+    private predicate swappedSimpleLocalSmallStepRefl(Node nodeTo, Node nodeFrom) {
+      isLocalSourceNode(nodeFrom) and
+      nodeFrom = nodeTo
+      or
+      simpleLocalSmallStep(nodeFrom, nodeTo)
+    }
+
+    /**
+     * The reflexive, transitive closure of `simpleLocalSmallStep` starting
+     * at `LocalSourceNode`s.
+     *
+     * Note that this relation is reflexive because the step relation
+     * (`simpleLocalSmallStepRefl`) is reflexive.
+     */
     cached
-    predicate simpleLocalSmallStepPlus(Node localSource, Node dst) =
-      sourceBoundedFastTC(simpleLocalSmallStep/2, isLocalSourceNode/1)(localSource, dst)
+    predicate standardFlowsFrom(Node dst, Node localSource) =
+      sinkBoundedFastTC(swappedSimpleLocalSmallStepRefl/2, isLocalSourceNode/1)(dst, localSource)
 
     cached
     predicate stepNoCall(LocalSourceNode nodeFrom, LocalSourceNode nodeTo, StepSummary summary) {
-      exists(Node mid | flowsTo(nodeFrom, mid) and smallStepNoCall(mid, nodeTo, summary))
+      exists(Node mid | flowsFrom(mid, nodeFrom) and smallStepNoCall(mid, nodeTo, summary))
     }
 
     cached
     predicate stepCall(LocalSourceNode nodeFrom, LocalSourceNode nodeTo, StepSummary summary) {
-      exists(Node mid | flowsTo(nodeFrom, mid) and smallStepCall(mid, nodeTo, summary))
+      exists(Node mid | flowsFrom(mid, nodeFrom) and smallStepCall(mid, nodeTo, summary))
     }
-  }
-
-  pragma[inline]
-  predicate standardFlowsTo(Node localSource, Node dst) {
-    // explicit type check in base case to avoid repeated type tests in recursive case
-    isLocalSourceNode(localSource) and
-    dst = localSource
-    or
-    simpleLocalSmallStepPlus(localSource, dst)
   }
 
   import Cached
@@ -283,10 +288,12 @@ module TypeTracking<LocationSig Location, TypeTrackingInput<Location> I> {
    * Holds if there is flow from `localSource` to `dst` using zero or more
    * `simpleLocalSmallStep`s.
    */
-  predicate flowsTo(LocalSourceNode localSource, Node dst) {
-    nonStandardFlowsTo(localSource, dst)
+  bindingset[dst]
+  pragma[inline_late]
+  predicate flowsFrom(Node dst, LocalSourceNode localSource) {
+    nonStandardFlowsFrom(dst, localSource)
     or
-    standardFlowsTo(localSource, dst)
+    standardFlowsFrom(dst, localSource)
   }
 
   /**
@@ -339,7 +346,7 @@ module TypeTracking<LocationSig Location, TypeTrackingInput<Location> I> {
     if hasFeatureBacktrackStoreTarget()
     then
       exists(Node obj |
-        flowsTo(nodeTo, obj) and
+        flowsFrom(obj, nodeTo) and
         storeStep(nodeFrom, obj, c)
       )
     else storeStep(nodeFrom, nodeTo, c)
@@ -352,7 +359,7 @@ module TypeTracking<LocationSig Location, TypeTrackingInput<Location> I> {
     if hasFeatureBacktrackStoreTarget()
     then
       exists(Node obj |
-        flowsTo(nodeTo, obj) and
+        flowsFrom(obj, nodeTo) and
         loadStoreStep(nodeFrom, obj, c1, c2)
       )
     else loadStoreStep(nodeFrom, nodeTo, c1, c2)
@@ -735,7 +742,7 @@ module TypeTracking<LocationSig Location, TypeTrackingInput<Location> I> {
      * Holds if a source flows to `n`.
      */
     predicate flowsTo(Node n) {
-      flowsTo(flow(TypeTracker::end()), n) or sourceSimpleLocalSmallSteps(_, n)
+      flowsFrom(n, flow(TypeTracker::end())) or sourceSimpleLocalSmallSteps(_, n)
     }
 
     /**
@@ -805,7 +812,7 @@ module TypeTracking<LocationSig Location, TypeTrackingInput<Location> I> {
         )
         or
         n1.getTypeTracker().end() and
-        flowsTo(getNodeMid(n1), getNodeSink(n2)) and
+        flowsFrom(getNodeSink(n2), getNodeMid(n1)) and
         getNodeMid(n1) != getNodeSink(n2)
         or
         sourceSimpleLocalSmallSteps(n1.getNode(), getNodeSink(n2)) and
