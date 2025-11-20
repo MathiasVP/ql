@@ -47,3 +47,5 @@ extensions:
       - ["", "", False, "RtlMoveVolatileMemory", "", "", "Argument[*@1]", "Argument[*@0]", "value", "manual"]
       # winternl.h
       - ["", "", False, "RtlInitUnicodeString", "", "", "Argument[*1]", "Argument[*0].Field[*Buffer]", "value", "manual"]
+      # rpcdce.h
+      - ["", "", False, "RpcBindingCopy", "", "", "Argument[*0]", "Argument[*1]", "value", "manual"]

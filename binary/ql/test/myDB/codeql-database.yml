@@ -1,0 +1,12 @@
+---
+sourceLocationPrefix: C:\Users\mapeder\codeql-queries\codeql\binary\ql\test
+baselineLinesOfCode: 0
+unicodeNewlines: false
+columnKind: utf16
+primaryLanguage: binary
+creationMetadata:
+  cliVersion: 2.23.2
+  creationTime: 2025-11-18T13:23:38.085185300Z
+overlayBaseDatabase: false
+overlayDatabase: false
+finalised: true

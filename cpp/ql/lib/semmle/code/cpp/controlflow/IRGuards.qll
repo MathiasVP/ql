@@ -410,6 +410,51 @@ private module LogicInput_v1 implements GuardsImpl::LogicInputSig {
     // since they produce no value).
     g1.(ConditionalBranchInstruction).getCondition() = g2 and
     v1.asBooleanValue() = v2.asBooleanValue()
+    or
+    exists(RelationalInstruction rel, ConstantValueInstruction const |
+      g1 = rel and
+      v1.asBooleanValue() = true
+    |
+      rel.getLeft() = g2 and
+      rel.getRight() = const and
+      (
+        rel instanceof CompareLTInstruction and
+        v2.isIntRange(const.getValue().toInt() - 1, true)
+        or
+        rel instanceof CompareLEInstruction and
+        v2.isIntRange(const.getValue().toInt(), true)
+      )
+      or
+      rel.getLeft() = const and
+      rel.getRight() = g2 and
+      (
+        rel instanceof CompareLTInstruction and
+        v2.isIntRange(const.getValue().toInt() + 1, false)
+        or
+        rel instanceof CompareLEInstruction and
+        v2.isIntRange(const.getValue().toInt(), false)
+      )
+      or
+      rel.getLeft() = g2 and
+      rel.getRight() = const and
+      (
+        rel instanceof CompareGTInstruction and
+        v2.isIntRange(const.getValue().toInt() + 1, false)
+        or
+        rel instanceof CompareGEInstruction and
+        v2.isIntRange(const.getValue().toInt(), false)
+      )
+      or
+      rel.getLeft() = const and
+      rel.getRight() = g2 and
+      (
+        rel instanceof CompareGTInstruction and
+        v2.isIntRange(const.getValue().toInt() - 1, true)
+        or
+        rel instanceof CompareGEInstruction and
+        v2.isIntRange(const.getValue().toInt(), true)
+      )
+    )
   }
 
   predicate rangeGuard(
@@ -1120,8 +1165,10 @@ final class IRGuardCondition extends Guards_v1::Guard {
   pragma[inline]
   predicate ensuresLt(Operand op, int k, IRBlock block, boolean isLessThan) {
     exists(GuardValue value |
-      unary_compares_lt(valueNumber(this), op, k, isLessThan, value) and
-      this.valueControls(block, value)
+      // unary_compares_lt(vn, op, k, isLessThan, value) and
+      this.valueControls(block, value) and
+      this.getAUse() = op and
+      value.isIntRange(k, isLessThan.booleanNot())
     )
   }
 
