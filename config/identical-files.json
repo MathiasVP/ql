@@ -131,21 +131,6 @@
     "cpp/ql/lib/semmle/code/cpp/ir/implementation/unaliased_ssa/internal/PrintSSA.qll",
     "cpp/ql/lib/semmle/code/cpp/ir/implementation/aliased_ssa/internal/PrintSSA.qll"
   ],
-  "IR ValueNumberInternal": [
-    "cpp/ql/lib/semmle/code/cpp/ir/implementation/raw/gvn/internal/ValueNumberingInternal.qll",
-    "cpp/ql/lib/semmle/code/cpp/ir/implementation/unaliased_ssa/gvn/internal/ValueNumberingInternal.qll",
-    "cpp/ql/lib/semmle/code/cpp/ir/implementation/aliased_ssa/gvn/internal/ValueNumberingInternal.qll"
-  ],
-  "C++ IR ValueNumber": [
-    "cpp/ql/lib/semmle/code/cpp/ir/implementation/raw/gvn/ValueNumbering.qll",
-    "cpp/ql/lib/semmle/code/cpp/ir/implementation/unaliased_ssa/gvn/ValueNumbering.qll",
-    "cpp/ql/lib/semmle/code/cpp/ir/implementation/aliased_ssa/gvn/ValueNumbering.qll"
-  ],
-  "C++ IR PrintValueNumbering": [
-    "cpp/ql/lib/semmle/code/cpp/ir/implementation/raw/gvn/PrintValueNumbering.qll",
-    "cpp/ql/lib/semmle/code/cpp/ir/implementation/unaliased_ssa/gvn/PrintValueNumbering.qll",
-    "cpp/ql/lib/semmle/code/cpp/ir/implementation/aliased_ssa/gvn/PrintValueNumbering.qll"
-  ],
   "C++ IR ConstantAnalysis": [
     "cpp/ql/lib/semmle/code/cpp/ir/implementation/raw/constant/ConstantAnalysis.qll",
     "cpp/ql/lib/semmle/code/cpp/ir/implementation/unaliased_ssa/constant/ConstantAnalysis.qll",
