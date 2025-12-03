@@ -1,4 +1,5 @@
 private import ValueNumberingImports
+private import semmle.code.cpp.dataflow.new.DataFlow::DataFlow
 
 newtype TValueNumber =
   TVariableAddressValueNumber(IRFunction irFunc, Language::AST ast) {
@@ -37,9 +38,9 @@ newtype TValueNumber =
     inheritanceConversionValueNumber(_, irFunc, opcode, baseClass, derivedClass, operand)
   } or
   TLoadTotalOverlapValueNumber(
-    IRFunction irFunc, IRType type, TValueNumber memOperand, TValueNumber operand
+    IRFunction irFunc, IRType type, Ssa::Definition def, TValueNumber address
   ) {
-    loadTotalOverlapValueNumber(_, irFunc, type, memOperand, operand)
+    loadTotalOverlapValueNumber(_, irFunc, type, def, address)
   } or
   TUniqueValueNumber(Instruction instr) { uniqueValueNumber(instr) }
 
@@ -251,28 +252,88 @@ private predicate inheritanceConversionValueNumber(
   unique( | | instr.getDerivedClass()) = derivedClass
 }
 
-pragma[nomagic]
-private predicate loadTotalOverlapValueNumber0(
-  LoadTotalOverlapInstruction instr, IRFunction irFunc, IRType type, TValueNumber valueNumber,
-  boolean isAddress
-) {
-  unique( | | instr.getEnclosingIRFunction()) = irFunc and
-  instr.getResultIRType() = type and
+private predicate isSource(Instruction instr, Ssa::Definition def) {
+  instr = def.getAnIndirectUse(1).getDef()
+}
+
+private predicate step(Instruction i1, Instruction i2) {
+  i1 = i2.(PointerArithmeticInstruction).getLeft()
+  or
+  i1 = i2.(ConvertInstruction).getUnary()
+  or
+  i1 = i2.(CopyValueInstruction).getSourceValue()
+  or
+  i1 = i2.(ConvertInstruction).getUnary()
+  or
+  i1 = i2.(CheckedConvertOrNullInstruction).getUnary()
+  or
+  i1 = i2.(InheritanceConversionInstruction).getUnary()
+  or
+  i1 = i2.(FieldAddressInstruction).getObjectAddress()
+}
+
+private predicate fwd(Instruction i) {
+  isSource(i, _)
+  or
+  exists(Instruction i0 |
+    fwd(i0) and
+    step(i0, i)
+  )
+}
+
+private predicate isSink(Instruction i, LoadTotalOverlapInstruction load) {
+  i = load.getSourceAddress()
+}
+
+private predicate rev(Instruction i) {
+  fwd(i) and
   (
-    isAddress = true and
-    tvalueNumberOfOperand(instr.getSourceAddressOperand()) = valueNumber
+    isSink(i, _)
     or
-    isAddress = false and
-    tvalueNumber(instr.getSourceValueOperand().getAnyDef()) = valueNumber
+    exists(Instruction i1 |
+      rev(i1) and
+      step(i, i1)
+    )
+  )
+}
+
+private predicate prunedStep(Instruction i1, Instruction i2) {
+  rev(i1) and
+  rev(i2) and
+  step(i1, i2)
+}
+
+private predicate isPrunedSource(Instruction instr) {
+  isSource(instr, _) and
+  rev(instr)
+}
+
+private predicate isPrunedSink(Instruction instr) {
+  isSink(instr, _) and
+  rev(instr)
+}
+
+private predicate prunedStepPlus(Instruction i1, Instruction i2) =
+  doublyBoundedFastTC(prunedStep/2, isPrunedSource/1, isPrunedSink/1)(i1, i2)
+
+private predicate flowsTo(Ssa::Definition def, LoadTotalOverlapInstruction load) {
+  exists(Instruction i1, Instruction i2 |
+    isSource(i1, def) and
+    isSink(i2, load)
+  |
+    prunedStepPlus(i1, i2) or
+    i1 = i2
   )
 }
 
 private predicate loadTotalOverlapValueNumber(
-  LoadTotalOverlapInstruction instr, IRFunction irFunc, IRType type, TValueNumber memOperand,
+  LoadTotalOverlapInstruction instr, IRFunction irFunc, IRType type, Ssa::Definition def,
   TValueNumber operand
 ) {
-  loadTotalOverlapValueNumber0(instr, irFunc, type, operand, true) and
-  loadTotalOverlapValueNumber0(instr, irFunc, type, memOperand, false)
+  unique( | | instr.getEnclosingIRFunction()) = irFunc and
+  instr.getResultIRType() = type and
+  flowsTo(def, instr) and
+  tvalueNumber(instr.getSourceAddress()) = operand
 }
 
 /**
@@ -358,9 +419,9 @@ private TValueNumber nonUniqueValueNumber(Instruction instr) {
       result = TPointerArithmeticValueNumber(irFunc, opcode, elementSize, leftOperand, rightOperand)
     )
     or
-    exists(IRType type, TValueNumber memOperand, TValueNumber operand |
-      loadTotalOverlapValueNumber(instr, irFunc, type, memOperand, operand) and
-      result = TLoadTotalOverlapValueNumber(irFunc, type, memOperand, operand)
+    exists(IRType type, Ssa::Definition def, TValueNumber address |
+      loadTotalOverlapValueNumber(instr, irFunc, type, def, address) and
+      result = TLoadTotalOverlapValueNumber(irFunc, type, def, address)
     )
     or
     // The value number of a copy is just the value number of its source value.
