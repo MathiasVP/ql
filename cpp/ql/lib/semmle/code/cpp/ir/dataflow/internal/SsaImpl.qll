@@ -1009,7 +1009,7 @@ private module DataFlowIntegrationInput implements SsaImpl::DataFlowIntegrationI
 
     predicate hasValueBranchEdge(IRCfg::BasicBlock bb1, IRCfg::BasicBlock bb2, GuardValue branch) {
       exists(EdgeKind kind |
-        super.getBlock() = bb1 and
+        this = bb1.getLastInstruction().(ConditionalBranchInstruction).getCondition() and
         kind = getConditionalEdge(branch.asBooleanValue()) and
         bb1.getSuccessor(kind) = bb2
       )
@@ -1022,8 +1022,16 @@ private module DataFlowIntegrationInput implements SsaImpl::DataFlowIntegrationI
     }
   }
 
+  private predicate directlyValueControls(Guard g, IRCfg::BasicBlock bb, GuardValue v) {
+    exists(IRCfg::BasicBlock guard, IRCfg::BasicBlock succ |
+      g.hasValueBranchEdge(guard, succ, v) and
+      IRCfg::dominatingEdge(guard, succ) and
+      succ.dominates(bb)
+    )
+  }
+
   predicate guardDirectlyControlsBlock(Guard guard, IRCfg::BasicBlock bb, GuardValue branch) {
-    guard.(IRGuards::IRGuardCondition).valueControls(bb, branch)
+    directlyValueControls(guard, bb, branch)
   }
 
   predicate keepAllPhiInputBackEdges() { any() }
