@@ -2472,3 +2472,45 @@ class TranslatedCilStoreIndirect extends TranslatedCilInstruction, TTranslatedCi
     result = getTranslatedCilInstruction(instr.getABackwardPredecessor()).getStackElement(i + 2)
   }
 }
+
+// Translate a `nobjc<constructor>` CIL instruction to:
+// 1. x = init
+// 2. call co constructor(x, args...)
+class TranslatedNewObject extends TranslatedCilInstruction, TTranslatedNewObject {
+  override Raw::CilNewobj instr;
+
+  TranslatedNewObject() { this = TTranslatedNewObject(instr) }
+
+  final override predicate hasInstruction(
+    Opcode opcode, InstructionTag tag, Option<Variable>::Option v
+  ) {
+    opcode instanceof Opcode::Init and
+    tag = CilNewObjInitTag() and
+    v.asSome() = this.getTempVariable(CilNewObjInitVarTag())
+    or
+    opcode instanceof Opcode::Call and
+    tag = CilNewObjCallTag() and
+    v.isNone()
+  }
+
+  override predicate hasTempVariable(TempVariableTag tag) { tag = CilNewObjInitVarTag() }
+
+  override predicate producesResult() { any() }
+
+  override Variable getVariableOperand(InstructionTag tag, OperandTag operandTag) {
+    tag = CilNewObjCallTag() and
+    operandTag instanceof CallTargetTag and
+    // result = TODO.... The name is given by `il_call_target_unresolved`, but sometimes the target will be in the DB
+    // how should we represent this. maybe the entry instruction when it is in the DB, and an external ref otherwise?
+  }
+
+  override Instruction getChildSuccessor(TranslatedElement child, SuccessorType succType) { none() }
+
+  override Instruction getSuccessor(InstructionTag tag, SuccessorType succType) { none() }
+
+  override Instruction getEntry() { none() }
+
+  override Variable getResultVariable() { none() }
+
+  final override Variable getStackElement(int i) { none() }
+}

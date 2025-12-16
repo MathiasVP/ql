@@ -1,0 +1,36 @@
+[2025-12-15 19:48:38] This is codeql database index-files --working-dir=. --language=cil C:\Users\mapeder\codeql-queries\codeql\binary\test-inputs\TestAssembly\bin\Debug\net8.0\myDB
+[2025-12-15 19:48:38] Log file was started late.
+[2025-12-15 19:48:38] Using index-files script C:\Users\mapeder\codeql-cli-binaries\codeql-cli-binaries\cil\tools\index-files.cmd.
+[2025-12-15 19:48:38] [PROGRESS] database index-files> Scanning for files in C:\Users\mapeder\codeql-queries\codeql\binary\test-inputs\TestAssembly\bin\Debug\net8.0...
+[2025-12-15 19:48:38] Calling plumbing command: codeql resolve files C:\Users\mapeder\codeql-queries\codeql\binary\test-inputs\TestAssembly\bin\Debug\net8.0 --format=json
+[2025-12-15 19:48:38] [PROGRESS] resolve files> Scanning C:\Users\mapeder\codeql-queries\codeql\binary\test-inputs\TestAssembly\bin\Debug\net8.0...
+[2025-12-15 19:48:38] [PROGRESS] resolve files> Scanning C:\Users\mapeder\codeql-queries\codeql\binary\test-inputs\TestAssembly\bin\Debug\net8.0\myDB...
+[2025-12-15 19:48:38] [PROGRESS] resolve files> Scanning C:\Users\mapeder\codeql-queries\codeql\binary\test-inputs\TestAssembly\bin\Debug\net8.0\myDB\diagnostic...
+[2025-12-15 19:48:38] [PROGRESS] resolve files> Scanning C:\Users\mapeder\codeql-queries\codeql\binary\test-inputs\TestAssembly\bin\Debug\net8.0\myDB\diagnostic\extractors...
+[2025-12-15 19:48:38] [PROGRESS] resolve files> Scanning C:\Users\mapeder\codeql-queries\codeql\binary\test-inputs\TestAssembly\bin\Debug\net8.0\myDB\diagnostic\extractors\cil...
+[2025-12-15 19:48:38] [PROGRESS] resolve files> Scanning C:\Users\mapeder\codeql-queries\codeql\binary\test-inputs\TestAssembly\bin\Debug\net8.0\myDB\diagnostic\tracer...
+[2025-12-15 19:48:38] [PROGRESS] resolve files> Scanning C:\Users\mapeder\codeql-queries\codeql\binary\test-inputs\TestAssembly\bin\Debug\net8.0\myDB\log...
+[2025-12-15 19:48:38] [PROGRESS] resolve files> Scanning C:\Users\mapeder\codeql-queries\codeql\binary\test-inputs\TestAssembly\bin\Debug\net8.0\myDB\working...
+[2025-12-15 19:48:38] Plumbing command codeql resolve files completed:
+                      [
+                        "C:\\Users\\mapeder\\codeql-queries\\codeql\\binary\\test-inputs\\TestAssembly\\bin\\Debug\\net8.0\\myDB\\baseline-info.json",
+                        "C:\\Users\\mapeder\\codeql-queries\\codeql\\binary\\test-inputs\\TestAssembly\\bin\\Debug\\net8.0\\myDB\\codeql-database.yml",
+                        "C:\\Users\\mapeder\\codeql-queries\\codeql\\binary\\test-inputs\\TestAssembly\\bin\\Debug\\net8.0\\myDB\\diagnostic\\cli-diagnostics-add-20251215T194837.049Z.json",
+                        "C:\\Users\\mapeder\\codeql-queries\\codeql\\binary\\test-inputs\\TestAssembly\\bin\\Debug\\net8.0\\myDB\\log\\database-create-20251215.194835.434.log",
+                        "C:\\Users\\mapeder\\codeql-queries\\codeql\\binary\\test-inputs\\TestAssembly\\bin\\Debug\\net8.0\\myDB\\log\\database-index-files-20251215.194838.254.log",
+                        "C:\\Users\\mapeder\\codeql-queries\\codeql\\binary\\test-inputs\\TestAssembly\\bin\\Debug\\net8.0\\TestAssembly.deps.json",
+                        "C:\\Users\\mapeder\\codeql-queries\\codeql\\binary\\test-inputs\\TestAssembly\\bin\\Debug\\net8.0\\TestAssembly.dll",
+                        "C:\\Users\\mapeder\\codeql-queries\\codeql\\binary\\test-inputs\\TestAssembly\\bin\\Debug\\net8.0\\TestAssembly.pdb"
+                      ]
+[2025-12-15 19:48:38] [DETAILS] database index-files> Found 8 files.
+[2025-12-15 19:48:38] [PROGRESS] database index-files> C:\Users\mapeder\codeql-queries\codeql\binary\test-inputs\TestAssembly\bin\Debug\net8.0\myDB: Indexing files in in C:\Users\mapeder\codeql-queries\codeql\binary\test-inputs\TestAssembly\bin\Debug\net8.0...
+[2025-12-15 19:48:38] Using index-files script C:\Users\mapeder\codeql-cli-binaries\codeql-cli-binaries\cil\tools\index-files.cmd.
+[2025-12-15 19:48:38] [PROGRESS] database index-files> Running command in C:\Users\mapeder\codeql-queries\codeql\binary\test-inputs\TestAssembly\bin\Debug\net8.0: [C:\Users\mapeder\codeql-cli-binaries\codeql-cli-binaries\cil\tools\index-files.cmd, C:\Users\mapeder\codeql-queries\codeql\binary\test-inputs\TestAssembly\bin\Debug\net8.0\myDB\working\files-to-index10141973364555716433.list]
+[2025-12-15 19:48:38] [build-stdout] Extracting: C:\Users\mapeder\codeql-queries\codeql\binary\test-inputs\TestAssembly\bin\Debug\net8.0\TestAssembly.dll
+[2025-12-15 19:48:38] [build-stdout] Output: C:\Users\mapeder\codeql-queries\codeql\binary\test-inputs\TestAssembly\bin\Debug\net8.0\myDB\trap\cil\TestAssembly.trap
+[2025-12-15 19:48:38] [build-stdout] ================================================================================
+[2025-12-15 19:48:39] [build-stdout] Extracting C:\Users\mapeder\codeql-queries\codeql\binary\test-inputs\TestAssembly\bin\Debug\net8.0\TestAssembly.dll...
+[2025-12-15 19:48:39] [build-stdout] Extraction complete!
+[2025-12-15 19:48:39] [build-stdout] ================================================================================
+[2025-12-15 19:48:39] [build-stdout] TRAP file written to: C:\Users\mapeder\codeql-queries\codeql\binary\test-inputs\TestAssembly\bin\Debug\net8.0\myDB\trap\cil\TestAssembly.trap
+[2025-12-15 19:48:39] Terminating normally.

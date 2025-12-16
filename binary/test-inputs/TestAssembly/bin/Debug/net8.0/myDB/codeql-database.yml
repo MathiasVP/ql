@@ -1,0 +1,12 @@
+---
+sourceLocationPrefix: C:\Users\mapeder\codeql-queries\codeql\binary\test-inputs\TestAssembly\bin\Debug\net8.0
+baselineLinesOfCode: 0
+unicodeNewlines: false
+columnKind: utf16
+primaryLanguage: cil
+creationMetadata:
+  cliVersion: 2.23.2
+  creationTime: 2025-12-15T19:48:37.076713100Z
+overlayDatabase: false
+overlayBaseDatabase: false
+finalised: true

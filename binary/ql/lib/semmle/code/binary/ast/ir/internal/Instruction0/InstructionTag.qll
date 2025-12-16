@@ -61,7 +61,9 @@ newtype TInstructionTag =
   CilCallTag() or
   CilCallTargetTag() or
   CilLdindLoadTag() or
-  CilStindStoreTag()
+  CilStindStoreTag() or
+  CilNewObjInitTag() or
+  CilNewObjCallTag()
 
 class InstructionTag extends TInstructionTag {
   final string toString() {
@@ -228,6 +230,12 @@ class InstructionTag extends TInstructionTag {
     or
     this = CilStindStoreTag() and
     result = "CilStindStore"
+    or
+    this = CilNewObjInitTag() and
+    result = "CilNewObjInit"
+    or
+    this = CilNewObjCallTag() and
+    result = "CilNewObjCall"
   }
 }
 

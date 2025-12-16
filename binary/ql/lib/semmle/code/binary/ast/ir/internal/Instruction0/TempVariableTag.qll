@@ -33,7 +33,8 @@ newtype TTempVariableTag =
   CilCallTargetVarTag() or
   CilLoadStringVarTag() or
   CilLoadArgVarTag() or
-  CilLdindVarTag()
+  CilLdindVarTag() or
+  CilNewObjInitVarTag()
 
 class TempVariableTag extends TTempVariableTag {
   string toString() {
