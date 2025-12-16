@@ -55,7 +55,8 @@ newtype TInstructionTag =
   CilLdindLoadTag() or
   CilStindStoreTag() or
   CilNewObjInitTag() or
-  CilNewObjCallTag()
+  CilNewObjCallTag() or
+  CilNewObjExternalRefTag()
 
 class InstructionTag extends TInstructionTag {
   final string toString() {
@@ -204,6 +205,9 @@ class InstructionTag extends TInstructionTag {
     or
     this = CilNewObjCallTag() and
     result = "CilNewObjCall"
+    or
+    this = CilNewObjExternalRefTag() and
+    result = "CilNewObjExternalRef"
   }
 }
 
@@ -219,7 +223,7 @@ private newtype TOperandTag =
   TCondJumpTargetTag() or
   TJumpTargetTag() or
   TCilOperandTag(int i) {
-    i = [0 .. max(CilCall call, int k | k = call.getNumberOfArguments() - 1 | k)]
+    i = [0 .. max(CilCallOrNewObject call, int k | k = call.getNumberOfArguments() | k)]
   }
 
 abstract class OperandTag extends TOperandTag {
