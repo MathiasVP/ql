@@ -444,13 +444,23 @@ module RangeStage<
     )
   }
 
+  bindingset[t1, t2]
+  pragma[inline_late]
+  private predicate conversionCannotOverflowLate(Sem::Type t1, Sem::Type t2) {
+    Sem::conversionCannotOverflow(t1, t2)
+  }
+
   /**
    * A cast that can be ignored for the purpose of range analysis.
    */
   private class SafeCastExpr extends ConvertOrBoxExpr {
     SafeCastExpr() {
-      Sem::conversionCannotOverflow(Sem::getExprType(pragma[only_bind_into](this.getOperand())),
-        pragma[only_bind_out](Sem::getExprType(this)))
+      exists(Sem::Expr e, Sem::Type t1, Sem::Type t2 |
+        pragma[only_bind_into](e) = pragma[only_bind_into](this).getOperand() and
+        t1 = Sem::getExprType(e) and
+        t2 = Sem::getExprType(this) and
+        conversionCannotOverflowLate(t1, t2)
+      )
     }
   }
 
@@ -1266,6 +1276,7 @@ module RangeStage<
    * ...
    * ```
    */
+  pragma[nomagic]
   private predicate preBounded(Sem::Expr e, SemBound b, D::Delta delta, boolean upper) {
     baseBound(e, b, delta, upper)
     or

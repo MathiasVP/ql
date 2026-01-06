@@ -1145,6 +1145,10 @@ class PhiNode extends Definition instanceof SsaImpl::PhiNode {
   final predicate hasInputFromBlock(Definition input, IRBlock bb) {
     phiHasInputFromBlock(this, input, bb)
   }
+
+  override int getIndirection() {
+    result = this.getSourceVariable().getIndirection()
+  }
 }
 
 /** An static single assignment (SSA) definition. */

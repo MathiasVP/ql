@@ -316,6 +316,7 @@ module ModulusAnalysis<
     )
   }
 
+  pragma[nomagic]
   private predicate subModulus(Sem::Expr sub, boolean isLeft, Bounds::SemBound b, int val, int mod) {
     exists(Sem::Expr larg, Sem::Expr rarg | nonConstSubtraction(sub, larg, rarg) |
       exprModulus(larg, b, val, mod) and isLeft = true
