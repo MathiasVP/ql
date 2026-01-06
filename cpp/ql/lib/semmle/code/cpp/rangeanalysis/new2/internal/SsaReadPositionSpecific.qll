@@ -10,7 +10,7 @@ private import semmle.code.cpp.ir.IR as IR
 private import SsaReadPositionCommon
 
 class SsaVariable extends Ssa::Definition {
-  SsaVariable() { this.getIndirection() = [0, 1] }
+  SsaVariable() { this.isCertain() }
 }
 
 class SsaPhiNode = Ssa::PhiNode;

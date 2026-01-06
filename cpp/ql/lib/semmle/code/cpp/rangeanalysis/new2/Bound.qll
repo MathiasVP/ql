@@ -46,6 +46,25 @@ class ZeroBound extends Bound, TBoundZero {
   override Location getLocation() { result.hasLocationInfo("", 0, 0, 0, 0) }
 }
 
+private import semmle.code.cpp.ir.IR
+private import cpp as C
+
+private Instruction getUnconvertedStep(Instruction instr) {
+  instr.(ConvertInstruction).getUnary() = result // TODO: Only safe
+  or
+  instr.(InheritanceConversionInstruction).getUnary() = result
+  or
+  instr.(CheckedConvertOrNullInstruction).getUnary() = result
+  or
+  exists(BuiltInInstruction builtin |
+    instr = builtin and
+    builtin.getBuiltInOperation() instanceof C::BuiltInBitCast and
+    builtin.getAnOperand().getDef() = result
+  )
+}
+
+private Instruction getUnconverted(Instruction instr) { result = getUnconvertedStep*(instr) }
+
 /**
  * A bound corresponding to the value of an SSA variable.
  */
@@ -55,7 +74,9 @@ class SsaBound extends Bound, TBoundSsa {
 
   override string toString() { result = this.getSsa().toString() }
 
-  override Expr getExpr(int delta) { result = this.getSsa().getAUse().getDef() and delta = 0 }
+  override Expr getExpr(int delta) {
+    result = getUnconverted(this.getSsa().getAUse().getDef()) and delta = 0 // TODO: Do we really want to have all results here?
+  }
 
   override Location getLocation() { result = this.getSsa().getLocation() }
 }

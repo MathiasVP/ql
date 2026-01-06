@@ -1022,6 +1022,20 @@ module RangeStage<
   }
 
   /**
+   * Holds if `v >= 0 + delta` (for `upper = false`) or `v <= 0 + delta` (for `upper = true`)
+   * based on the variable's type and definition.
+   */
+  private predicate ssaBoundValue(Sem::SsaVariable v, D::Delta delta, boolean upper) {
+    // For unsigned types, we have a lower bound of 0
+    upper = false and
+    delta = D::fromInt(0) and
+    exists(Sem::IntegerType intType |
+      intType = Sem::getSsaType(v) and
+      not intType.isSigned()
+    )
+  }
+
+  /**
    * Holds if the candidate bound `b + delta` for `phi` is valid for the phi input
    * along the edge with rank `rix`.
    */
@@ -1031,15 +1045,36 @@ module RangeStage<
   ) {
     boundedPhiCand(phi, upper, b, delta, fromBackEdge, origdelta, reason) and
     (
-      exists(D::Delta d | boundedPhiInp1(phi, b, upper, rix, d) |
-        upper = true and D::toFloat(d) <= D::toFloat(delta)
+      exists(D::Delta d |
+        // phi[rix] <= b + d
+        boundedPhiInp1(phi, b, upper, rix, d) and
+        upper = true and
+        // d <= delta
+        // so phi[rix] <= b + delta
+        D::toFloat(d) <= D::toFloat(delta)
       )
       or
-      exists(D::Delta d | boundedPhiInp1(phi, b, upper, rix, d) |
-        upper = false and D::toFloat(d) >= D::toFloat(delta)
+      exists(D::Delta d |
+        // phi[rix] >= b + d
+        boundedPhiInp1(phi, b, upper, rix, d) and
+        upper = false and
+        // d >= delta
+        // so phi[rix] >= b + delta
+        D::toFloat(d) >= D::toFloat(delta)
       )
       or
       selfBoundedPhiInp(phi, rix, upper)
+      or
+      exists(D::Delta d1, D::Delta d2 |
+        upper = true and
+        // phi[rix] <= zero + d1
+        boundedPhiInp1(phi, any(SemZeroBound zb), upper, rix, d1) and
+        // b >= 0
+        ssaBoundValue(b.(SemSsaBound).getVariable(), d2, false) and
+        // d1 <= d2 + delta
+        // so phi[rix] <= zero + d1 = b + d1 <= b + d2 + delta <= b + (d2 + delta)
+        D::toFloat(d1) <= D::toFloat(d2) + D::toFloat(delta)
+      )
     )
   }
 

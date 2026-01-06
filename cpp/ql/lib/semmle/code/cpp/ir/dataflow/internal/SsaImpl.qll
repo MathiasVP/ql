@@ -421,7 +421,11 @@ private class DirectDef extends DefImpl, TDirectDefImpl {
 
   override Node0Impl getValue() { isDef(_, result, address, _, _, _) }
 
-  override predicate isCertain() { isDef(true, _, address, _, _, indirectionIndex) }
+  override predicate isCertain() {
+    isDef(true, _, address, _, _, indirectionIndex)
+    or
+    this.getValue().asInstruction() instanceof UninitializedInstruction
+  }
 }
 
 private class DirectUseImpl extends UseImpl, TDirectUseImpl {
@@ -1131,26 +1135,6 @@ predicate ssaFlow(Node nodeFrom, Node nodeTo) {
   not modeledFlowBarrier(nodeFrom)
 }
 
-/**
- * An static single assignment (SSA) phi node.
- */
-class PhiNode extends Definition instanceof SsaImpl::PhiNode {
-  /** Gets a definition that is an input to this phi node. */
-  final Definition getAnInput() { this.hasInputFromBlock(result, _) }
-
-  /**
-   * Holds if `input` is an input to this phi node along the edge originating
-   * in `bb`.
-   */
-  final predicate hasInputFromBlock(Definition input, IRBlock bb) {
-    phiHasInputFromBlock(this, input, bb)
-  }
-
-  override int getIndirection() {
-    result = this.getSourceVariable().getIndirection()
-  }
-}
-
 /** An static single assignment (SSA) definition. */
 class Definition extends SsaImpl::Definition {
   private Definition getAPhiInputOrPriorDefinition() {
@@ -1272,6 +1256,63 @@ class Definition extends SsaImpl::Definition {
 
   /** Gets the unspecified type of the variable being defined by this definition. */
   Type getUnspecifiedType() { result = this.getUnderlyingType().getUnspecifiedType() }
+}
+
+/**
+ * An static single assignment (SSA) phi node.
+ */
+class PhiNode extends Definition instanceof SsaImpl::PhiNode {
+  /** Gets a definition that is an input to this phi node. */
+  final Definition getAnInput() { this.hasInputFromBlock(result, _) }
+
+  /**
+   * Holds if `input` is an input to this phi node along the edge originating
+   * in `bb`.
+   */
+  final predicate hasInputFromBlock(Definition input, IRBlock bb) {
+    phiHasInputFromBlock(this, input, bb)
+  }
+
+  override int getIndirection() { result = this.getSourceVariable().getIndirection() }
+
+  override predicate isCertain() {
+    getCycle(this).isCertain()
+    or
+    not exists(getCycle(this)) and
+    forex(Definition inp | inp = this.getAnInput() | inp.isCertain())
+  }
+
+  final override Declaration getFunction() {
+    result = SsaImpl::PhiNode.super.getBasicBlock().getEnclosingFunction()
+  }
+}
+
+private PhiNode getAnInput(PhiNode phi) { result = phi.getAnInput() }
+
+private predicate definitionCycle(PhiNode phi) { getAnInput+(phi) = phi }
+
+private predicate hasAnInput(PhiNode phi1, PhiNode phi2) {
+  definitionCycle(phi1) and
+  definitionCycle(phi2) and
+  getAnInput(phi1) = phi2
+}
+
+private module PhiCycleEquivalence = QlBuiltins::EquivalenceRelation<PhiNode, hasAnInput/2>;
+
+private PhiCycle getCycle(PhiNode phi) { result.getAPhiNode() = phi }
+
+class PhiCycle extends PhiCycleEquivalence::EquivalenceClass {
+  PhiNode getAPhiNode() { PhiCycleEquivalence::getEquivalenceClass(result) = this }
+
+  string toString() { result = strictconcat(this.getAPhiNode().toString(), ", ") }
+
+  predicate isCertain() {
+    forex(PhiNode phi | phi = this.getAPhiNode() |
+      forall(PhiNode inp | phi.getAnInput() = inp and not this.getAPhiNode() = inp |
+        inp.isCertain()
+      )
+    )
+  }
 }
 
 /**
