@@ -89,6 +89,7 @@ module Private {
     Expr getOperand() { result = this.getUnary() }
 
     /** Returns the operation representing this expression. */
+    pragma[nomagic]
     TUnarySignOperation getOp() {
       this instanceof IR::NegateInstruction and result = TNegOp()
       or

@@ -78,7 +78,7 @@ private import semmle.code.cpp.dataflow.new.DataFlow
 private import semmle.code.cpp.ir.ValueNumbering
 private import semmle.code.cpp.controlflow.IRGuards
 private import AllocationToInvalidPointer as AllocToInvalidPointer
-private import semmle.code.cpp.rangeanalysis.new.RangeAnalysisUtil
+private import semmle.code.cpp.rangeanalysis.new2.RangeAnalysisUtil
 
 /**
  * Gets the virtual dispatch branching limit when calculating field flow while

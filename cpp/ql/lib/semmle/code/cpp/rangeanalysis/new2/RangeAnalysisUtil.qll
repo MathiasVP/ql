@@ -17,9 +17,9 @@ private Instruction getABoundIn(Bound b, IRFunction func) {
  * Holds if `i <= b + delta` (if `upper = true`), or `i >= b + delta` (if `upper = false`).
  */
 pragma[inline]
-private predicate boundedImplCand(Instruction i, Instruction b, int delta, boolean upper) {
+private predicate boundedImplCand(Instruction i, Instruction b, int delta) {
   exists(Bound bound, IRFunction func |
-    bounded(i, bound, delta, upper, _) and
+    bounded(i, bound, delta, true, _) and
     b = getABoundIn(bound, func) and
     i.getEnclosingIRFunction() = func
   )
@@ -30,12 +30,8 @@ private predicate boundedImplCand(Instruction i, Instruction b, int delta, boole
  * and `delta` is the smallest (if `upper = true`) / largest (if `upper = false`) integer that satisfies this condition.
  */
 pragma[inline]
-private predicate boundedImpl(Instruction i, Instruction b, int delta, boolean upper) {
-  upper = true and
-  delta = min(int cand | boundedImplCand(i, b, cand, true))
-  or
-  upper = false and
-  delta = max(int cand | boundedImplCand(i, b, cand, false))
+private predicate boundedImpl(Instruction i, Instruction b, int delta) {
+  delta = min(int cand | boundedImplCand(i, b, cand))
 }
 
 /**
@@ -45,8 +41,8 @@ private predicate boundedImpl(Instruction i, Instruction b, int delta, boolean u
  */
 bindingset[i]
 pragma[inline_late]
-predicate bounded1(Instruction i, Instruction b, int delta, boolean upper) {
-  boundedImpl(i, b, delta, upper)
+predicate bounded1(Instruction i, Instruction b, int delta) {
+  boundedImpl(i, b, delta)
 }
 
 /**
@@ -56,11 +52,11 @@ predicate bounded1(Instruction i, Instruction b, int delta, boolean upper) {
  */
 bindingset[b]
 pragma[inline_late]
-predicate bounded2(Instruction i, Instruction b, int delta, boolean upper) {
-  boundedImpl(i, b, delta, upper)
+predicate bounded2(Instruction i, Instruction b, int delta) {
+  boundedImpl(i, b, delta)
 }
 
 /**
  * Holds if `i <= b + delta` (if `upper = true`), or `i >= b + delta` (if `upper = false`).
  */
-predicate bounded = boundedImpl/4;
+predicate bounded = boundedImpl/3;

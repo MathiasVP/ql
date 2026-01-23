@@ -246,6 +246,8 @@ class Sign extends TSign {
   }
 
   /** Perform `op` on this sign. */
+  bindingset[op]
+  pragma[inline_late]
   Sign applyUnaryOp(TUnarySignOperation op) {
     op = TIncOp() and result = this.inc()
     or
