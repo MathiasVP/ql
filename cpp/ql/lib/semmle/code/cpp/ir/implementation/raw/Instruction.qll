@@ -15,22 +15,6 @@ import Imports::Opcode
 private import Imports::OperandTag
 
 /**
- * Gets an `Instruction` that is contained in `IRFunction`, and has a location with the specified
- * `File` and line number. Used for assigning register names when printing IR.
- */
-private Instruction getAnInstructionAtLine(IRFunction irFunc, Language::File file, int line) {
-  exists(IRConfiguration::IRConfiguration config |
-    config.shouldEvaluateDebugStringsForFunction(irFunc.getFunction())
-  ) and
-  exists(Language::Location location |
-    irFunc = result.getEnclosingIRFunction() and
-    location = result.getLocation() and
-    file = location.getFile() and
-    line = location.getStartLine()
-  )
-}
-
-/**
  * A single instruction in the IR.
  */
 class Instruction extends Construction::TStageInstruction {
@@ -54,11 +38,7 @@ class Instruction extends Construction::TStageInstruction {
       this.getResultString() + " = " + this.getOperationString() + " " + this.getOperandsString()
   }
 
-  private predicate shouldGenerateDumpStrings() {
-    exists(IRConfiguration::IRConfiguration config |
-      config.shouldEvaluateDebugStringsForFunction(this.getEnclosingFunction())
-    )
-  }
+  private predicate shouldGenerateDumpStrings() { any() }
 
   /**
    * Gets a string describing the operation of this instruction. This includes
@@ -114,18 +94,6 @@ class Instruction extends Construction::TStageInstruction {
     )
   }
 
-  private int getLineRank() {
-    this.shouldGenerateDumpStrings() and
-    exists(IRFunction enclosing, Language::File file, int line |
-      this =
-        rank[result](Instruction instr |
-          instr = getAnInstructionAtLine(enclosing, file, line)
-        |
-          instr order by instr.getBlock().getDisplayIndex(), instr.getDisplayIndexInBlock()
-        )
-    )
-  }
-
   /**
    * Gets a human-readable string that uniquely identifies this instruction
    * within the function. This string is used to refer to this instruction when
@@ -135,8 +103,7 @@ class Instruction extends Construction::TStageInstruction {
    */
   string getResultId() {
     this.shouldGenerateDumpStrings() and
-    result =
-      this.getResultPrefix() + this.getAst().getLocation().getStartLine() + "_" + this.getLineRank()
+    result = this.getResultPrefix() + this.getUniqueId_fast()
   }
 
   /**
@@ -175,6 +142,8 @@ class Instruction extends Construction::TStageInstruction {
    * inefficient for any other use.
    */
   final string getUniqueId() { result = Construction::getInstructionUniqueId(this) }
+
+  int getUniqueId_fast() { result = Construction::getInstructionUniqueId_fast(this) }
 
   /**
    * INTERNAL: Do not use.

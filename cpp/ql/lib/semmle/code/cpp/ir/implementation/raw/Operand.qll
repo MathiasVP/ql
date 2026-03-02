@@ -28,6 +28,11 @@ private class KnownLocation extends Language::Location {
   KnownLocation() { not this instanceof Language::UnknownLocation }
 }
 
+private predicate operandHasComponents(Operand op, int a, int b) {
+  a = op.getUse().getUniqueId_fast() and
+  b = op.getAnyDef().getUniqueId_fast()
+}
+
 /**
  * An operand of an `Instruction`. The operand represents a use of the result of one instruction
  * (the defining instruction) in another instruction (the use instruction)
@@ -46,6 +51,15 @@ class Operand extends TStageOperand {
     )
     or
     this = chiOperand(_, _)
+  }
+
+  int getUniqueId_fast() {
+    this =
+      rank[result + 1](Operand cand, int a, int b |
+        operandHasComponents(cand, a, b)
+      |
+        cand order by a, b
+      )
   }
 
   /** Gets a textual representation of this element. */
@@ -117,7 +131,7 @@ class Operand extends TStageOperand {
    * For example: `this:r3_5`
    */
   final string getDumpString() {
-    result = this.getDumpLabel() + this.getInexactSpecifier() + this.getDefinitionId()
+    result = this.getDumpLabel() + this.getDefinitionId()
   }
 
   /**
@@ -128,15 +142,6 @@ class Operand extends TStageOperand {
     result = this.getAnyDef().getResultId()
     or
     not exists(this.getAnyDef()) and result = "m?"
-  }
-
-  /**
-   * Gets a string prefix to prepend to the operand's definition ID in an IR dump, specifying whether the operand is
-   * an exact or inexact use of its definition. For an inexact use, the prefix is "~". For an exact use, the prefix is
-   * the empty string.
-   */
-  private string getInexactSpecifier() {
-    if this.isDefinitionInexact() then result = "~" else result = ""
   }
 
   /**
@@ -461,15 +466,15 @@ class PhiInputOperand extends MemoryOperand, TPhiOperand {
   final override Overlap getDefinitionOverlap() { result = overlap }
 
   final override int getDumpSortOrder() {
-    result = 11 + this.getPredecessorBlock().getDisplayIndex()
+    result = 11 + this.getPredecessorBlock().getUniqueId_fast()
   }
 
   final override string getDumpLabel() {
-    result = "from " + this.getPredecessorBlock().getDisplayIndex().toString() + ":"
+    result = "from " + this.getPredecessorBlock().getUniqueId_fast() + ":"
   }
 
   final override string getDumpId() {
-    result = this.getPredecessorBlock().getDisplayIndex().toString()
+    result = this.getPredecessorBlock().getUniqueId_fast().toString()
   }
 
   /**
