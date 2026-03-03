@@ -16,8 +16,14 @@ private import semmle.code.cpp.ir.ValueNumbering
  * a prvalue if `isGLValue` is false.
  */
 bindingset[isGLValue]
-private CppType getThisType(Cpp::MemberFunction f, boolean isGLValue) {
-  result.hasType(f.getTypeOfThis(), isGLValue)
+private CppType getThisType(Cpp::Declaration decl, boolean isGLValue) {
+  result.hasType(decl.(Cpp::MemberFunction).getTypeOfThis(), isGLValue)
+  or
+  exists(Cpp::Constructor c, Cpp::ConstructorFieldInit init |
+    init.getTarget() = decl and
+    c.getAnInitializer() = init and
+    result.hasType(c.getTypeOfThis(), isGLValue)
+  )
 }
 
 /**

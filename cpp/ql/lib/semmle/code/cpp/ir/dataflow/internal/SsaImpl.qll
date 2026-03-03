@@ -247,8 +247,65 @@ private predicate hasBeforePostCrementUseImpl(
   )
 }
 
+private predicate isNsdmiField(Field f) {
+  exists(Cpp::ConstructorFieldInit init |
+    exists(f.getInitializer()) and
+    init.getTarget() = f and
+    not exists(init.getExpr())
+  )
+}
+
+class ParameterOrNsdmiField instanceof Variable {
+  int anIndirectionIndex;
+
+  ParameterOrNsdmiField() {
+    // Only create an SSA read for the final use of a parameter if there's
+    // actually a body of the enclosing function. If there's no function body
+    // then we'll never need to flow out of the function anyway.
+    this.(Parameter).getFunction().hasDefinition() and
+    underlyingTypeIsModifiableAt(this.getUnderlyingType(), anIndirectionIndex)
+    or
+    anIndirectionIndex = 1 and
+    isNsdmiField(this)
+  }
+
+  int getArgumentIndex() {
+    this.(Parameter).getIndex() = result
+    or
+    this instanceof Field and
+    result = -1
+  }
+
+  Declaration getFunction() {
+    result = this.(Parameter).getFunction()
+    or
+    result = this.(Field)
+  }
+
+  bindingset[indirectionIndex]
+  Type getType(int indirectionIndex) {
+    result = getTypeImpl(this.(Parameter).getUnderlyingType(), indirectionIndex)
+    or
+    indirectionIndex = 1 and
+    result = this.(Field).getDeclaringType()
+  }
+
+  string toString() { result = super.toString() }
+
+  Location getLocation() {
+    // Parameters can have multiple locations. When there's a unique location we use
+    // that one, but if multiple locations exist we default to an unknown location.
+    result = unique( | | super.getLocation())
+    or
+    not exists(unique( | | super.getLocation())) and
+    result instanceof UnknownLocation
+  }
+
+  int getAnIndirection() { result = anIndirectionIndex }
+}
+
 cached
-private newtype TUseImpl =
+newtype TUseImpl =
   TDirectUseImpl(Operand operand, int indirectionIndex) {
     isUse(_, operand, _, _, indirectionIndex) and
     not isDef(true, _, operand, _, _, _) and
@@ -262,12 +319,8 @@ private newtype TUseImpl =
     // the assignment to a global variable isn't ruled out as dead.
     isGlobalUse(v, f, _, indirectionIndex)
   } or
-  TFinalParameterUse(Parameter p, int indirectionIndex) {
-    underlyingTypeIsModifiableAt(p.getUnderlyingType(), indirectionIndex) and
-    // Only create an SSA read for the final use of a parameter if there's
-    // actually a body of the enclosing function. If there's no function body
-    // then we'll never need to flow out of the function anyway.
-    p.getFunction().hasDefinition()
+  TFinalParameterUse(ParameterOrNsdmiField p, int indirectionIndex) {
+    p.getAnIndirection() = indirectionIndex
   }
 
 private predicate isGlobalUse(
@@ -620,14 +673,6 @@ private class SavedPostfixCrementUseImpl extends UseImpl, TSavedPostfixCrementUs
 }
 
 pragma[nomagic]
-private predicate finalParameterNodeHasParameterAndIndex(
-  FinalParameterNode n, Parameter p, int indirectionIndex
-) {
-  n.getParameter() = p and
-  n.getIndirectionIndex() = indirectionIndex
-}
-
-pragma[nomagic]
 private predicate hasReturnPosition(IRFunction f, IRBlock block, int index) {
   exists(Instruction return |
     return instanceof ReturnInstruction or
@@ -639,7 +684,7 @@ private predicate hasReturnPosition(IRFunction f, IRBlock block, int index) {
 }
 
 class FinalParameterUse extends UseImpl, TFinalParameterUse {
-  Parameter p;
+  ParameterOrNsdmiField p;
 
   FinalParameterUse() { this = TFinalParameterUse(p, indirectionIndex) }
 
@@ -647,11 +692,13 @@ class FinalParameterUse extends UseImpl, TFinalParameterUse {
 
   Parameter getParameter() { result = p }
 
-  int getArgumentIndex() { result = p.getIndex() }
+  int getArgumentIndex() { result = p.getArgumentIndex() }
 
-  override FinalParameterNode getNode() {
-    finalParameterNodeHasParameterAndIndex(result, p, indirectionIndex)
-  }
+  Declaration getFunction() { result = p.getFunction() }
+
+  Type getType() { result = p.getType(indirectionIndex) }
+
+  override FinalParameterNode getNode() { result = TFinalParameterNode(this) }
 
   override int getIndirection() { result = indirectionIndex + 1 }
 
@@ -674,14 +721,7 @@ class FinalParameterUse extends UseImpl, TFinalParameterUse {
     )
   }
 
-  override Cpp::Location getLocation() {
-    // Parameters can have multiple locations. When there's a unique location we use
-    // that one, but if multiple locations exist we default to an unknown location.
-    result = unique( | | p.getLocation())
-    or
-    not exists(unique( | | p.getLocation())) and
-    result instanceof UnknownLocation
-  }
+  override Cpp::Location getLocation() { result = p.getLocation() }
 
   pragma[nomagic]
   private predicate hasBaseSourceVariableAndIndirection(BaseIRVariable v, int indirection) {
