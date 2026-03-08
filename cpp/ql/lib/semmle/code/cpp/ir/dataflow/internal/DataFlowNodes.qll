@@ -1533,13 +1533,6 @@ class IndirectReturnNode extends Node {
   predicate isParameterReturn(int argumentIndex) {
     this.(FinalParameterNode).getArgumentIndex() = argumentIndex
   }
-
-  /** Gets the indirection index of this indirect return node. */
-  int getIndirectionIndex() {
-    result = this.(FinalParameterNode).getIndirectionIndex()
-    or
-    this.(IndirectOperand).hasOperandAndIndirectionIndex(_, result)
-  }
 }
 
 /**
