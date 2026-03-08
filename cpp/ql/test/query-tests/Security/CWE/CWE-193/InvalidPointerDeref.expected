@@ -127,9 +127,6 @@ edges
 | test.cpp:806:35:806:37 | *++ ... | test.cpp:807:7:807:12 | ... = ... | provenance |  |
 | test.cpp:806:35:806:37 | *++ ... | test.cpp:807:7:807:12 | ... = ... | provenance |  |
 | test.cpp:807:7:807:12 | ... = ... | test.cpp:806:35:806:37 | *++ ... | provenance |  |
-| test.cpp:815:52:815:54 | end | test.cpp:815:52:815:54 | end | provenance |  |
-| test.cpp:815:52:815:54 | end | test.cpp:821:7:821:12 | ... = ... | provenance | Config |
-| test.cpp:815:52:815:54 | end | test.cpp:821:7:821:12 | ... = ... | provenance | Config |
 | test.cpp:815:52:815:54 | end | test.cpp:821:7:821:12 | ... = ... | provenance | Config |
 | test.cpp:815:52:815:54 | end | test.cpp:821:7:821:12 | ... = ... | provenance | Config |
 | test.cpp:820:35:820:37 | *++ ... | test.cpp:821:7:821:12 | ... = ... | provenance |  |
@@ -265,7 +262,6 @@ nodes
 | test.cpp:806:35:806:37 | *++ ... | semmle.label | *++ ... |
 | test.cpp:807:7:807:12 | ... = ... | semmle.label | ... = ... |
 | test.cpp:807:7:807:12 | ... = ... | semmle.label | ... = ... |
-| test.cpp:815:52:815:54 | end | semmle.label | end |
 | test.cpp:815:52:815:54 | end | semmle.label | end |
 | test.cpp:820:35:820:37 | *++ ... | semmle.label | *++ ... |
 | test.cpp:821:7:821:12 | ... = ... | semmle.label | ... = ... |

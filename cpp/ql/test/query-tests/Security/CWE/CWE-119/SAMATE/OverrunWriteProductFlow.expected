@@ -1,10 +1,9 @@
 edges
-| test.cpp:16:11:16:21 | *mk_string_t [string] | test.cpp:39:21:39:31 | *call to mk_string_t [string] | provenance |  |
 | test.cpp:18:5:18:7 | *str [post update] [string] | test.cpp:19:5:19:7 | *str [string] | provenance |  |
 | test.cpp:18:5:18:30 | ... = ... | test.cpp:18:5:18:7 | *str [post update] [string] | provenance |  |
 | test.cpp:18:19:18:24 | call to malloc | test.cpp:18:5:18:30 | ... = ... | provenance |  |
 | test.cpp:19:5:19:7 | *str [string] | test.cpp:20:12:20:14 | *str [string] | provenance |  |
-| test.cpp:20:12:20:14 | *str [string] | test.cpp:16:11:16:21 | *mk_string_t [string] | provenance |  |
+| test.cpp:20:12:20:14 | *str [string] | test.cpp:39:21:39:31 | *call to mk_string_t [string] | provenance |  |
 | test.cpp:39:21:39:31 | *call to mk_string_t [string] | test.cpp:39:21:39:31 | *call to mk_string_t [string] | provenance |  |
 | test.cpp:39:21:39:31 | *call to mk_string_t [string] | test.cpp:42:13:42:15 | *str [string] | provenance |  |
 | test.cpp:39:21:39:31 | *call to mk_string_t [string] | test.cpp:72:17:72:19 | *str [string] | provenance |  |
@@ -50,7 +49,6 @@ edges
 | test.cpp:264:9:264:30 | ... = ... | test.cpp:266:12:266:12 | p | provenance |  |
 | test.cpp:264:13:264:30 | call to malloc | test.cpp:264:9:264:30 | ... = ... | provenance |  |
 nodes
-| test.cpp:16:11:16:21 | *mk_string_t [string] | semmle.label | *mk_string_t [string] |
 | test.cpp:18:5:18:7 | *str [post update] [string] | semmle.label | *str [post update] [string] |
 | test.cpp:18:5:18:30 | ... = ... | semmle.label | ... = ... |
 | test.cpp:18:19:18:24 | call to malloc | semmle.label | call to malloc |

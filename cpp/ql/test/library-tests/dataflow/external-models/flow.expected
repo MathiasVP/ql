@@ -117,7 +117,6 @@ edges
 | test.cpp:5:5:5:20 | [summary param] 0 in ymlStepGenerated | test.cpp:5:5:5:20 | [summary] to write: ReturnValue in ymlStepGenerated | provenance | MaD:47 |
 | test.cpp:6:5:6:27 | [summary param] 0 in ymlStepManual_with_body | test.cpp:6:5:6:27 | [summary] to write: ReturnValue in ymlStepManual_with_body | provenance | MaD:49 |
 | test.cpp:7:47:7:52 | value2 | test.cpp:7:64:7:69 | value2 | provenance |  |
-| test.cpp:7:64:7:69 | value2 | test.cpp:7:5:7:30 | ymlStepGenerated_with_body | provenance |  |
 | test.cpp:10:10:10:18 | call to ymlSource | test.cpp:10:10:10:18 | call to ymlSource | provenance | Src:MaD:22  |
 | test.cpp:10:10:10:18 | call to ymlSource | test.cpp:14:10:14:10 | x | provenance | Sink:MaD:1 |
 | test.cpp:10:10:10:18 | call to ymlSource | test.cpp:17:24:17:24 | x | provenance |  |
@@ -401,7 +400,6 @@ nodes
 | test.cpp:5:5:5:20 | [summary] to write: ReturnValue in ymlStepGenerated | semmle.label | [summary] to write: ReturnValue in ymlStepGenerated |
 | test.cpp:6:5:6:27 | [summary param] 0 in ymlStepManual_with_body | semmle.label | [summary param] 0 in ymlStepManual_with_body |
 | test.cpp:6:5:6:27 | [summary] to write: ReturnValue in ymlStepManual_with_body | semmle.label | [summary] to write: ReturnValue in ymlStepManual_with_body |
-| test.cpp:7:5:7:30 | ymlStepGenerated_with_body | semmle.label | ymlStepGenerated_with_body |
 | test.cpp:7:47:7:52 | value2 | semmle.label | value2 |
 | test.cpp:7:64:7:69 | value2 | semmle.label | value2 |
 | test.cpp:10:10:10:18 | call to ymlSource | semmle.label | call to ymlSource |
@@ -646,7 +644,7 @@ subpaths
 | test.cpp:17:24:17:24 | x | test.cpp:4:5:4:17 | [summary param] 0 in ymlStepManual | test.cpp:4:5:4:17 | [summary] to write: ReturnValue in ymlStepManual | test.cpp:17:10:17:22 | call to ymlStepManual |
 | test.cpp:21:27:21:27 | x | test.cpp:5:5:5:20 | [summary param] 0 in ymlStepGenerated | test.cpp:5:5:5:20 | [summary] to write: ReturnValue in ymlStepGenerated | test.cpp:21:10:21:25 | call to ymlStepGenerated |
 | test.cpp:25:35:25:35 | x | test.cpp:6:5:6:27 | [summary param] 0 in ymlStepManual_with_body | test.cpp:6:5:6:27 | [summary] to write: ReturnValue in ymlStepManual_with_body | test.cpp:25:11:25:33 | call to ymlStepManual_with_body |
-| test.cpp:32:41:32:41 | x | test.cpp:7:47:7:52 | value2 | test.cpp:7:5:7:30 | ymlStepGenerated_with_body | test.cpp:32:11:32:36 | call to ymlStepGenerated_with_body |
+| test.cpp:32:41:32:41 | x | test.cpp:7:47:7:52 | value2 | test.cpp:7:64:7:69 | value2 | test.cpp:32:11:32:36 | call to ymlStepGenerated_with_body |
 | test.cpp:118:44:118:44 | *x | test.cpp:111:3:111:25 | [summary param] *0 in callWithNonTypeTemplate | test.cpp:111:3:111:25 | [summary] to write: ReturnValue in callWithNonTypeTemplate | test.cpp:118:11:118:42 | call to callWithNonTypeTemplate |
 | windows.cpp:27:36:27:38 | *cmd | windows.cpp:17:8:17:25 | [summary param] *0 in CommandLineToArgvA | windows.cpp:17:8:17:25 | [summary] to write: ReturnValue[**] in CommandLineToArgvA | windows.cpp:27:17:27:34 | **call to CommandLineToArgvA |
 | windows.cpp:537:40:537:41 | *& ... | windows.cpp:473:17:473:37 | [summary param] *1 in RtlCopyVolatileMemory | windows.cpp:473:17:473:37 | [summary param] *0 in RtlCopyVolatileMemory [Return] | windows.cpp:537:27:537:37 | RtlCopyVolatileMemory output argument |

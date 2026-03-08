@@ -7,10 +7,8 @@ edges
 | A.cpp:27:22:27:32 | ... = ... | A.cpp:27:22:27:25 | *this [post update] [c] | provenance |  |
 | A.cpp:28:8:28:10 | this [c] | A.cpp:28:23:28:26 | *this [c] | provenance |  |
 | A.cpp:28:23:28:26 | *this [c] | A.cpp:28:29:28:29 | c | provenance |  |
-| A.cpp:28:29:28:29 | c | A.cpp:28:8:28:10 | get | provenance |  |
 | A.cpp:28:29:28:29 | c | A.cpp:28:29:28:29 | c | provenance |  |
 | A.cpp:29:23:29:23 | c | A.cpp:31:20:31:20 | c | provenance |  |
-| A.cpp:31:14:31:21 | *new [c] | A.cpp:29:15:29:18 | *make [c] | provenance |  |
 | A.cpp:31:14:31:21 | call to B [c] | A.cpp:31:14:31:21 | *new [c] | provenance |  |
 | A.cpp:31:20:31:20 | c | A.cpp:23:10:23:10 | c | provenance |  |
 | A.cpp:31:20:31:20 | c | A.cpp:31:14:31:21 | call to B [c] | provenance |  |
@@ -49,12 +47,10 @@ edges
 | A.cpp:81:10:81:15 | *call to setOnB [c] | A.cpp:81:5:81:22 | *... = ... [c] | provenance |  |
 | A.cpp:81:21:81:21 | c | A.cpp:81:10:81:15 | *call to setOnB [c] | provenance |  |
 | A.cpp:81:21:81:21 | c | A.cpp:85:26:85:26 | c | provenance |  |
-| A.cpp:82:12:82:24 | *... ? ... : ... [c] | A.cpp:78:6:78:15 | *setOnBWrap [c] | provenance |  |
 | A.cpp:85:26:85:26 | c | A.cpp:90:15:90:15 | c | provenance |  |
 | A.cpp:90:7:90:8 | set output argument [c] | A.cpp:91:14:91:15 | *b2 [c] | provenance |  |
 | A.cpp:90:15:90:15 | c | A.cpp:27:17:27:17 | c | provenance |  |
 | A.cpp:90:15:90:15 | c | A.cpp:90:7:90:8 | set output argument [c] | provenance |  |
-| A.cpp:91:14:91:15 | *b2 [c] | A.cpp:85:9:85:14 | *setOnB [c] | provenance |  |
 | A.cpp:98:12:98:18 | new | A.cpp:98:12:98:18 | new | provenance |  |
 | A.cpp:98:12:98:18 | new | A.cpp:100:5:100:13 | ... = ... | provenance |  |
 | A.cpp:100:5:100:6 | *c1 [post update] [a] | A.cpp:101:8:101:9 | *c1 [a] | provenance |  |
@@ -207,13 +203,11 @@ edges
 | C.cpp:31:10:31:11 | *this [s3] | C.cpp:31:10:31:11 | s3 | provenance |  |
 | D.cpp:10:11:10:17 | this [elem] | D.cpp:10:30:10:33 | *this [elem] | provenance |  |
 | D.cpp:10:30:10:33 | *this [elem] | D.cpp:10:30:10:33 | elem | provenance |  |
-| D.cpp:10:30:10:33 | elem | D.cpp:10:11:10:17 | getElem | provenance |  |
 | D.cpp:10:30:10:33 | elem | D.cpp:10:30:10:33 | elem | provenance |  |
 | D.cpp:11:24:11:24 | e | D.cpp:11:29:11:36 | ... = ... | provenance |  |
 | D.cpp:11:29:11:32 | *this [post update] [elem] | D.cpp:11:10:11:16 | this [Return] [elem] | provenance |  |
 | D.cpp:11:29:11:36 | ... = ... | D.cpp:11:29:11:32 | *this [post update] [elem] | provenance |  |
 | D.cpp:17:11:17:17 | this [*box, elem] | D.cpp:17:30:17:32 | *this [*box, elem] | provenance |  |
-| D.cpp:17:30:17:32 | *box [elem] | D.cpp:17:11:17:17 | *getBox1 [elem] | provenance |  |
 | D.cpp:17:30:17:32 | *box [elem] | D.cpp:17:30:17:32 | *box [elem] | provenance |  |
 | D.cpp:17:30:17:32 | *this [*box, elem] | D.cpp:17:30:17:32 | *box [elem] | provenance |  |
 | D.cpp:21:30:21:31 | *b2 [*box, elem] | D.cpp:22:10:22:11 | *b2 [*box, elem] | provenance |  |
@@ -451,19 +445,15 @@ edges
 | by_reference.cpp:24:25:24:29 | value | by_reference.cpp:24:19:24:22 | nonMemberSetA output argument [a] | provenance |  |
 | by_reference.cpp:31:46:31:46 | *s [a] | by_reference.cpp:32:12:32:12 | *s [a] | provenance |  |
 | by_reference.cpp:32:12:32:12 | *s [a] | by_reference.cpp:32:15:32:15 | a | provenance |  |
-| by_reference.cpp:32:15:32:15 | a | by_reference.cpp:31:16:31:28 | nonMemberGetA | provenance |  |
 | by_reference.cpp:32:15:32:15 | a | by_reference.cpp:32:15:32:15 | a | provenance |  |
 | by_reference.cpp:35:9:35:19 | this [a] | by_reference.cpp:36:12:36:15 | *this [a] | provenance |  |
 | by_reference.cpp:36:12:36:15 | *this [a] | by_reference.cpp:36:18:36:18 | a | provenance |  |
-| by_reference.cpp:36:18:36:18 | a | by_reference.cpp:35:9:35:19 | getDirectly | provenance |  |
 | by_reference.cpp:36:18:36:18 | a | by_reference.cpp:36:18:36:18 | a | provenance |  |
 | by_reference.cpp:39:9:39:21 | this [a] | by_reference.cpp:40:12:40:15 | *this [a] | provenance |  |
 | by_reference.cpp:40:12:40:15 | *this [a] | by_reference.cpp:35:9:35:19 | this [a] | provenance |  |
 | by_reference.cpp:40:12:40:15 | *this [a] | by_reference.cpp:40:18:40:28 | call to getDirectly | provenance |  |
-| by_reference.cpp:40:18:40:28 | call to getDirectly | by_reference.cpp:39:9:39:21 | getIndirectly | provenance |  |
 | by_reference.cpp:40:18:40:28 | call to getDirectly | by_reference.cpp:40:18:40:28 | call to getDirectly | provenance |  |
 | by_reference.cpp:43:9:43:27 | this [a] | by_reference.cpp:44:26:44:29 | *this [a] | provenance |  |
-| by_reference.cpp:44:12:44:24 | call to nonMemberGetA | by_reference.cpp:43:9:43:27 | getThroughNonMember | provenance |  |
 | by_reference.cpp:44:12:44:24 | call to nonMemberGetA | by_reference.cpp:44:12:44:24 | call to nonMemberGetA | provenance |  |
 | by_reference.cpp:44:26:44:29 | *this [a] | by_reference.cpp:31:46:31:46 | *s [a] | provenance |  |
 | by_reference.cpp:44:26:44:29 | *this [a] | by_reference.cpp:44:12:44:24 | call to nonMemberGetA | provenance |  |
@@ -657,11 +647,9 @@ edges
 | clearning.cpp:152:8:152:8 | s [val] | clearning.cpp:152:10:152:12 | val | provenance |  |
 | complex.cpp:9:7:9:7 | this [a_] | complex.cpp:9:20:9:21 | *this [a_] | provenance |  |
 | complex.cpp:9:20:9:21 | *this [a_] | complex.cpp:9:20:9:21 | a_ | provenance |  |
-| complex.cpp:9:20:9:21 | a_ | complex.cpp:9:7:9:7 | a | provenance |  |
 | complex.cpp:9:20:9:21 | a_ | complex.cpp:9:20:9:21 | a_ | provenance |  |
 | complex.cpp:10:7:10:7 | this [b_] | complex.cpp:10:20:10:21 | *this [b_] | provenance |  |
 | complex.cpp:10:20:10:21 | *this [b_] | complex.cpp:10:20:10:21 | b_ | provenance |  |
-| complex.cpp:10:20:10:21 | b_ | complex.cpp:10:7:10:7 | b | provenance |  |
 | complex.cpp:10:20:10:21 | b_ | complex.cpp:10:20:10:21 | b_ | provenance |  |
 | complex.cpp:11:17:11:17 | a | complex.cpp:11:22:11:27 | ... = ... | provenance |  |
 | complex.cpp:11:22:11:23 | *this [post update] [a_] | complex.cpp:11:8:11:11 | this [Return] [a_] | provenance |  |
@@ -730,11 +718,9 @@ edges
 | conflated.cpp:61:12:61:15 | *next [y] | conflated.cpp:61:18:61:18 | y | provenance |  |
 | constructors.cpp:18:9:18:9 | this [a_] | constructors.cpp:18:22:18:23 | *this [a_] | provenance |  |
 | constructors.cpp:18:22:18:23 | *this [a_] | constructors.cpp:18:22:18:23 | a_ | provenance |  |
-| constructors.cpp:18:22:18:23 | a_ | constructors.cpp:18:9:18:9 | a | provenance |  |
 | constructors.cpp:18:22:18:23 | a_ | constructors.cpp:18:22:18:23 | a_ | provenance |  |
 | constructors.cpp:19:9:19:9 | this [b_] | constructors.cpp:19:22:19:23 | *this [b_] | provenance |  |
 | constructors.cpp:19:22:19:23 | *this [b_] | constructors.cpp:19:22:19:23 | b_ | provenance |  |
-| constructors.cpp:19:22:19:23 | b_ | constructors.cpp:19:9:19:9 | b | provenance |  |
 | constructors.cpp:19:22:19:23 | b_ | constructors.cpp:19:22:19:23 | b_ | provenance |  |
 | constructors.cpp:23:5:23:7 | Foo [post update] [a_] | constructors.cpp:23:5:23:7 | this [Return] [a_] | provenance |  |
 | constructors.cpp:23:5:23:7 | Foo [post update] [b_] | constructors.cpp:23:5:23:7 | this [Return] [b_] | provenance |  |
@@ -823,11 +809,9 @@ edges
 | realistic.cpp:61:37:61:45 | userInput [bufferLen] | realistic.cpp:61:14:61:55 | bufferLen | provenance |  |
 | simple.cpp:18:9:18:9 | this [a_] | simple.cpp:18:22:18:23 | *this [a_] | provenance |  |
 | simple.cpp:18:22:18:23 | *this [a_] | simple.cpp:18:22:18:23 | a_ | provenance |  |
-| simple.cpp:18:22:18:23 | a_ | simple.cpp:18:9:18:9 | a | provenance |  |
 | simple.cpp:18:22:18:23 | a_ | simple.cpp:18:22:18:23 | a_ | provenance |  |
 | simple.cpp:19:9:19:9 | this [b_] | simple.cpp:19:22:19:23 | *this [b_] | provenance |  |
 | simple.cpp:19:22:19:23 | *this [b_] | simple.cpp:19:22:19:23 | b_ | provenance |  |
-| simple.cpp:19:22:19:23 | b_ | simple.cpp:19:9:19:9 | b | provenance |  |
 | simple.cpp:19:22:19:23 | b_ | simple.cpp:19:22:19:23 | b_ | provenance |  |
 | simple.cpp:20:19:20:19 | a | simple.cpp:20:24:20:29 | ... = ... | provenance |  |
 | simple.cpp:20:24:20:25 | *this [post update] [a_] | simple.cpp:20:10:20:13 | this [Return] [a_] | provenance |  |
@@ -865,7 +849,6 @@ edges
 | simple.cpp:78:9:78:15 | this [f2, f1] | simple.cpp:79:16:79:17 | *this [f2, f1] | provenance |  |
 | simple.cpp:79:16:79:17 | *this [f2, f1] | simple.cpp:79:16:79:17 | f2 [f1] | provenance |  |
 | simple.cpp:79:16:79:17 | f2 [f1] | simple.cpp:79:19:79:20 | f1 | provenance |  |
-| simple.cpp:79:19:79:20 | f1 | simple.cpp:78:9:78:15 | getf2f1 | provenance |  |
 | simple.cpp:79:19:79:20 | f1 | simple.cpp:79:19:79:20 | f1 | provenance |  |
 | simple.cpp:83:9:83:10 | *this [post update] [f2, f1] | simple.cpp:84:14:84:20 | *this [f2, f1] | provenance |  |
 | simple.cpp:83:9:83:10 | f2 [post update] [f1] | simple.cpp:83:9:83:10 | *this [post update] [f2, f1] | provenance |  |
@@ -932,12 +915,10 @@ nodes
 | A.cpp:27:17:27:17 | c | semmle.label | c |
 | A.cpp:27:22:27:25 | *this [post update] [c] | semmle.label | *this [post update] [c] |
 | A.cpp:27:22:27:32 | ... = ... | semmle.label | ... = ... |
-| A.cpp:28:8:28:10 | get | semmle.label | get |
 | A.cpp:28:8:28:10 | this [c] | semmle.label | this [c] |
 | A.cpp:28:23:28:26 | *this [c] | semmle.label | *this [c] |
 | A.cpp:28:29:28:29 | c | semmle.label | c |
 | A.cpp:28:29:28:29 | c | semmle.label | c |
-| A.cpp:29:15:29:18 | *make [c] | semmle.label | *make [c] |
 | A.cpp:29:23:29:23 | c | semmle.label | c |
 | A.cpp:31:14:31:21 | *new [c] | semmle.label | *new [c] |
 | A.cpp:31:14:31:21 | call to B [c] | semmle.label | call to B [c] |
@@ -971,13 +952,11 @@ nodes
 | A.cpp:73:25:73:32 | new | semmle.label | new |
 | A.cpp:75:10:75:11 | *b2 [c] | semmle.label | *b2 [c] |
 | A.cpp:75:10:75:14 | c | semmle.label | c |
-| A.cpp:78:6:78:15 | *setOnBWrap [c] | semmle.label | *setOnBWrap [c] |
 | A.cpp:78:27:78:27 | c | semmle.label | c |
 | A.cpp:81:5:81:22 | *... = ... [c] | semmle.label | *... = ... [c] |
 | A.cpp:81:10:81:15 | *call to setOnB [c] | semmle.label | *call to setOnB [c] |
 | A.cpp:81:21:81:21 | c | semmle.label | c |
 | A.cpp:82:12:82:24 | *... ? ... : ... [c] | semmle.label | *... ? ... : ... [c] |
-| A.cpp:85:9:85:14 | *setOnB [c] | semmle.label | *setOnB [c] |
 | A.cpp:85:26:85:26 | c | semmle.label | c |
 | A.cpp:90:7:90:8 | set output argument [c] | semmle.label | set output argument [c] |
 | A.cpp:90:15:90:15 | c | semmle.label | c |
@@ -1136,7 +1115,6 @@ nodes
 | C.cpp:29:10:29:11 | s1 | semmle.label | s1 |
 | C.cpp:31:10:31:11 | *this [s3] | semmle.label | *this [s3] |
 | C.cpp:31:10:31:11 | s3 | semmle.label | s3 |
-| D.cpp:10:11:10:17 | getElem | semmle.label | getElem |
 | D.cpp:10:11:10:17 | this [elem] | semmle.label | this [elem] |
 | D.cpp:10:30:10:33 | *this [elem] | semmle.label | *this [elem] |
 | D.cpp:10:30:10:33 | elem | semmle.label | elem |
@@ -1145,7 +1123,6 @@ nodes
 | D.cpp:11:24:11:24 | e | semmle.label | e |
 | D.cpp:11:29:11:32 | *this [post update] [elem] | semmle.label | *this [post update] [elem] |
 | D.cpp:11:29:11:36 | ... = ... | semmle.label | ... = ... |
-| D.cpp:17:11:17:17 | *getBox1 [elem] | semmle.label | *getBox1 [elem] |
 | D.cpp:17:11:17:17 | this [*box, elem] | semmle.label | this [*box, elem] |
 | D.cpp:17:30:17:32 | *box [elem] | semmle.label | *box [elem] |
 | D.cpp:17:30:17:32 | *box [elem] | semmle.label | *box [elem] |
@@ -1392,22 +1369,18 @@ nodes
 | by_reference.cpp:23:34:23:38 | value | semmle.label | value |
 | by_reference.cpp:24:19:24:22 | nonMemberSetA output argument [a] | semmle.label | nonMemberSetA output argument [a] |
 | by_reference.cpp:24:25:24:29 | value | semmle.label | value |
-| by_reference.cpp:31:16:31:28 | nonMemberGetA | semmle.label | nonMemberGetA |
 | by_reference.cpp:31:46:31:46 | *s [a] | semmle.label | *s [a] |
 | by_reference.cpp:32:12:32:12 | *s [a] | semmle.label | *s [a] |
 | by_reference.cpp:32:15:32:15 | a | semmle.label | a |
 | by_reference.cpp:32:15:32:15 | a | semmle.label | a |
-| by_reference.cpp:35:9:35:19 | getDirectly | semmle.label | getDirectly |
 | by_reference.cpp:35:9:35:19 | this [a] | semmle.label | this [a] |
 | by_reference.cpp:36:12:36:15 | *this [a] | semmle.label | *this [a] |
 | by_reference.cpp:36:18:36:18 | a | semmle.label | a |
 | by_reference.cpp:36:18:36:18 | a | semmle.label | a |
-| by_reference.cpp:39:9:39:21 | getIndirectly | semmle.label | getIndirectly |
 | by_reference.cpp:39:9:39:21 | this [a] | semmle.label | this [a] |
 | by_reference.cpp:40:12:40:15 | *this [a] | semmle.label | *this [a] |
 | by_reference.cpp:40:18:40:28 | call to getDirectly | semmle.label | call to getDirectly |
 | by_reference.cpp:40:18:40:28 | call to getDirectly | semmle.label | call to getDirectly |
-| by_reference.cpp:43:9:43:27 | getThroughNonMember | semmle.label | getThroughNonMember |
 | by_reference.cpp:43:9:43:27 | this [a] | semmle.label | this [a] |
 | by_reference.cpp:44:12:44:24 | call to nonMemberGetA | semmle.label | call to nonMemberGetA |
 | by_reference.cpp:44:12:44:24 | call to nonMemberGetA | semmle.label | call to nonMemberGetA |
@@ -1589,12 +1562,10 @@ nodes
 | clearning.cpp:151:11:151:20 | call to user_input | semmle.label | call to user_input |
 | clearning.cpp:152:8:152:8 | s [val] | semmle.label | s [val] |
 | clearning.cpp:152:10:152:12 | val | semmle.label | val |
-| complex.cpp:9:7:9:7 | a | semmle.label | a |
 | complex.cpp:9:7:9:7 | this [a_] | semmle.label | this [a_] |
 | complex.cpp:9:20:9:21 | *this [a_] | semmle.label | *this [a_] |
 | complex.cpp:9:20:9:21 | a_ | semmle.label | a_ |
 | complex.cpp:9:20:9:21 | a_ | semmle.label | a_ |
-| complex.cpp:10:7:10:7 | b | semmle.label | b |
 | complex.cpp:10:7:10:7 | this [b_] | semmle.label | this [b_] |
 | complex.cpp:10:20:10:21 | *this [b_] | semmle.label | *this [b_] |
 | complex.cpp:10:20:10:21 | b_ | semmle.label | b_ |
@@ -1668,12 +1639,10 @@ nodes
 | conflated.cpp:61:8:61:9 | *ll [*next, y] | semmle.label | *ll [*next, y] |
 | conflated.cpp:61:12:61:15 | *next [y] | semmle.label | *next [y] |
 | conflated.cpp:61:18:61:18 | y | semmle.label | y |
-| constructors.cpp:18:9:18:9 | a | semmle.label | a |
 | constructors.cpp:18:9:18:9 | this [a_] | semmle.label | this [a_] |
 | constructors.cpp:18:22:18:23 | *this [a_] | semmle.label | *this [a_] |
 | constructors.cpp:18:22:18:23 | a_ | semmle.label | a_ |
 | constructors.cpp:18:22:18:23 | a_ | semmle.label | a_ |
-| constructors.cpp:19:9:19:9 | b | semmle.label | b |
 | constructors.cpp:19:9:19:9 | this [b_] | semmle.label | this [b_] |
 | constructors.cpp:19:22:19:23 | *this [b_] | semmle.label | *this [b_] |
 | constructors.cpp:19:22:19:23 | b_ | semmle.label | b_ |
@@ -1768,12 +1737,10 @@ nodes
 | realistic.cpp:61:21:61:30 | access to array [*baz, userInput, bufferLen] | semmle.label | access to array [*baz, userInput, bufferLen] |
 | realistic.cpp:61:32:61:34 | *baz [userInput, bufferLen] | semmle.label | *baz [userInput, bufferLen] |
 | realistic.cpp:61:37:61:45 | userInput [bufferLen] | semmle.label | userInput [bufferLen] |
-| simple.cpp:18:9:18:9 | a | semmle.label | a |
 | simple.cpp:18:9:18:9 | this [a_] | semmle.label | this [a_] |
 | simple.cpp:18:22:18:23 | *this [a_] | semmle.label | *this [a_] |
 | simple.cpp:18:22:18:23 | a_ | semmle.label | a_ |
 | simple.cpp:18:22:18:23 | a_ | semmle.label | a_ |
-| simple.cpp:19:9:19:9 | b | semmle.label | b |
 | simple.cpp:19:9:19:9 | this [b_] | semmle.label | this [b_] |
 | simple.cpp:19:22:19:23 | *this [b_] | semmle.label | *this [b_] |
 | simple.cpp:19:22:19:23 | b_ | semmle.label | b_ |
@@ -1810,7 +1777,6 @@ nodes
 | simple.cpp:66:12:66:12 | a [i] | semmle.label | a [i] |
 | simple.cpp:67:10:67:11 | a2 [i] | semmle.label | a2 [i] |
 | simple.cpp:67:13:67:13 | i | semmle.label | i |
-| simple.cpp:78:9:78:15 | getf2f1 | semmle.label | getf2f1 |
 | simple.cpp:78:9:78:15 | this [f2, f1] | semmle.label | this [f2, f1] |
 | simple.cpp:79:16:79:17 | *this [f2, f1] | semmle.label | *this [f2, f1] |
 | simple.cpp:79:16:79:17 | f2 [f1] | semmle.label | f2 [f1] |
@@ -1877,14 +1843,14 @@ nodes
 | struct_init.c:46:16:46:24 | *pointerAB [a] | semmle.label | *pointerAB [a] |
 subpaths
 | A.cpp:31:20:31:20 | c | A.cpp:23:10:23:10 | c | A.cpp:23:5:23:5 | this [Return] [c] | A.cpp:31:14:31:21 | call to B [c] |
-| A.cpp:48:20:48:20 | c | A.cpp:29:23:29:23 | c | A.cpp:29:15:29:18 | *make [c] | A.cpp:48:12:48:18 | *call to make [c] |
+| A.cpp:48:20:48:20 | c | A.cpp:29:23:29:23 | c | A.cpp:31:14:31:21 | *new [c] | A.cpp:48:12:48:18 | *call to make [c] |
 | A.cpp:55:12:55:19 | new | A.cpp:27:17:27:17 | c | A.cpp:27:10:27:12 | this [Return] [c] | A.cpp:55:5:55:5 | set output argument [c] |
-| A.cpp:56:10:56:10 | *b [c] | A.cpp:28:8:28:10 | this [c] | A.cpp:28:8:28:10 | get | A.cpp:56:10:56:17 | call to get |
-| A.cpp:57:11:57:24 | *new [c] | A.cpp:28:8:28:10 | this [c] | A.cpp:28:8:28:10 | get | A.cpp:57:10:57:32 | call to get |
+| A.cpp:56:10:56:10 | *b [c] | A.cpp:28:8:28:10 | this [c] | A.cpp:28:29:28:29 | c | A.cpp:56:10:56:17 | call to get |
+| A.cpp:57:11:57:24 | *new [c] | A.cpp:28:8:28:10 | this [c] | A.cpp:28:29:28:29 | c | A.cpp:57:10:57:32 | call to get |
 | A.cpp:57:17:57:23 | new | A.cpp:23:10:23:10 | c | A.cpp:23:5:23:5 | this [Return] [c] | A.cpp:57:11:57:24 | call to B [c] |
-| A.cpp:64:21:64:28 | new | A.cpp:85:26:85:26 | c | A.cpp:85:9:85:14 | *setOnB [c] | A.cpp:64:10:64:15 | *call to setOnB [c] |
-| A.cpp:73:25:73:32 | new | A.cpp:78:27:78:27 | c | A.cpp:78:6:78:15 | *setOnBWrap [c] | A.cpp:73:10:73:19 | *call to setOnBWrap [c] |
-| A.cpp:81:21:81:21 | c | A.cpp:85:26:85:26 | c | A.cpp:85:9:85:14 | *setOnB [c] | A.cpp:81:10:81:15 | *call to setOnB [c] |
+| A.cpp:64:21:64:28 | new | A.cpp:85:26:85:26 | c | A.cpp:91:14:91:15 | *b2 [c] | A.cpp:64:10:64:15 | *call to setOnB [c] |
+| A.cpp:73:25:73:32 | new | A.cpp:78:27:78:27 | c | A.cpp:82:12:82:24 | *... ? ... : ... [c] | A.cpp:73:10:73:19 | *call to setOnBWrap [c] |
+| A.cpp:81:21:81:21 | c | A.cpp:85:26:85:26 | c | A.cpp:91:14:91:15 | *b2 [c] | A.cpp:81:10:81:15 | *call to setOnB [c] |
 | A.cpp:90:15:90:15 | c | A.cpp:27:17:27:17 | c | A.cpp:27:10:27:12 | this [Return] [c] | A.cpp:90:7:90:8 | set output argument [c] |
 | A.cpp:126:12:126:18 | new | A.cpp:27:17:27:17 | c | A.cpp:27:10:27:12 | this [Return] [c] | A.cpp:126:5:126:5 | set output argument [c] |
 | A.cpp:151:18:151:18 | b | A.cpp:140:13:140:13 | b | A.cpp:140:5:140:5 | this [Return] [b] | A.cpp:151:12:151:24 | call to D [b] |
@@ -1896,32 +1862,32 @@ subpaths
 | B.cpp:8:25:8:26 | *b1 [elem1] | B.cpp:44:16:44:17 | *b1 [elem1] | B.cpp:44:5:44:8 | this [Return] [*box1, elem1] | B.cpp:8:16:8:27 | call to Box2 [*box1, elem1] |
 | B.cpp:16:37:16:37 | e | B.cpp:33:26:33:27 | e2 | B.cpp:33:5:33:8 | this [Return] [elem2] | B.cpp:16:16:16:38 | call to Box1 [elem2] |
 | B.cpp:17:25:17:26 | *b1 [elem2] | B.cpp:44:16:44:17 | *b1 [elem2] | B.cpp:44:5:44:8 | this [Return] [*box1, elem2] | B.cpp:17:16:17:27 | call to Box2 [*box1, elem2] |
-| D.cpp:22:10:22:11 | *b2 [*box, elem] | D.cpp:17:11:17:17 | this [*box, elem] | D.cpp:17:11:17:17 | *getBox1 [elem] | D.cpp:22:14:22:20 | *call to getBox1 [elem] |
-| D.cpp:22:14:22:20 | *call to getBox1 [elem] | D.cpp:10:11:10:17 | this [elem] | D.cpp:10:11:10:17 | getElem | D.cpp:22:10:22:33 | call to getElem |
+| D.cpp:22:10:22:11 | *b2 [*box, elem] | D.cpp:17:11:17:17 | this [*box, elem] | D.cpp:17:30:17:32 | *box [elem] | D.cpp:22:14:22:20 | *call to getBox1 [elem] |
+| D.cpp:22:14:22:20 | *call to getBox1 [elem] | D.cpp:10:11:10:17 | this [elem] | D.cpp:10:30:10:33 | elem | D.cpp:22:10:22:33 | call to getElem |
 | D.cpp:37:21:37:21 | e | D.cpp:11:24:11:24 | e | D.cpp:11:10:11:16 | this [Return] [elem] | D.cpp:37:8:37:10 | setElem output argument [elem] |
 | D.cpp:51:27:51:27 | e | D.cpp:11:24:11:24 | e | D.cpp:11:10:11:16 | this [Return] [elem] | D.cpp:51:8:51:14 | setElem output argument [elem] |
 | by_reference.cpp:20:23:20:27 | value | by_reference.cpp:15:26:15:30 | value | by_reference.cpp:15:8:15:18 | this [Return] [a] | by_reference.cpp:20:5:20:8 | setDirectly output argument [a] |
 | by_reference.cpp:24:25:24:29 | value | by_reference.cpp:11:48:11:52 | value | by_reference.cpp:11:39:11:39 | *s [Return] [a] | by_reference.cpp:24:19:24:22 | nonMemberSetA output argument [a] |
 | by_reference.cpp:24:25:24:29 | value | by_reference.cpp:11:48:11:52 | value | by_reference.cpp:11:39:11:39 | *s [a] | by_reference.cpp:24:19:24:22 | nonMemberSetA output argument [a] |
-| by_reference.cpp:40:12:40:15 | *this [a] | by_reference.cpp:35:9:35:19 | this [a] | by_reference.cpp:35:9:35:19 | getDirectly | by_reference.cpp:40:18:40:28 | call to getDirectly |
-| by_reference.cpp:44:26:44:29 | *this [a] | by_reference.cpp:31:46:31:46 | *s [a] | by_reference.cpp:31:16:31:28 | nonMemberGetA | by_reference.cpp:44:12:44:24 | call to nonMemberGetA |
+| by_reference.cpp:40:12:40:15 | *this [a] | by_reference.cpp:35:9:35:19 | this [a] | by_reference.cpp:36:18:36:18 | a | by_reference.cpp:40:18:40:28 | call to getDirectly |
+| by_reference.cpp:44:26:44:29 | *this [a] | by_reference.cpp:31:46:31:46 | *s [a] | by_reference.cpp:32:15:32:15 | a | by_reference.cpp:44:12:44:24 | call to nonMemberGetA |
 | by_reference.cpp:50:17:50:26 | call to user_input | by_reference.cpp:15:26:15:30 | value | by_reference.cpp:15:8:15:18 | this [Return] [a] | by_reference.cpp:50:3:50:3 | setDirectly output argument [a] |
-| by_reference.cpp:51:8:51:8 | s [a] | by_reference.cpp:35:9:35:19 | this [a] | by_reference.cpp:35:9:35:19 | getDirectly | by_reference.cpp:51:10:51:20 | call to getDirectly |
+| by_reference.cpp:51:8:51:8 | s [a] | by_reference.cpp:35:9:35:19 | this [a] | by_reference.cpp:36:18:36:18 | a | by_reference.cpp:51:10:51:20 | call to getDirectly |
 | by_reference.cpp:56:19:56:28 | call to user_input | by_reference.cpp:19:28:19:32 | value | by_reference.cpp:19:8:19:20 | this [Return] [a] | by_reference.cpp:56:3:56:3 | setIndirectly output argument [a] |
-| by_reference.cpp:57:8:57:8 | s [a] | by_reference.cpp:39:9:39:21 | this [a] | by_reference.cpp:39:9:39:21 | getIndirectly | by_reference.cpp:57:10:57:22 | call to getIndirectly |
+| by_reference.cpp:57:8:57:8 | s [a] | by_reference.cpp:39:9:39:21 | this [a] | by_reference.cpp:40:18:40:28 | call to getDirectly | by_reference.cpp:57:10:57:22 | call to getIndirectly |
 | by_reference.cpp:62:25:62:34 | call to user_input | by_reference.cpp:23:34:23:38 | value | by_reference.cpp:23:8:23:26 | this [Return] [a] | by_reference.cpp:62:3:62:3 | setThroughNonMember output argument [a] |
-| by_reference.cpp:63:8:63:8 | s [a] | by_reference.cpp:43:9:43:27 | this [a] | by_reference.cpp:43:9:43:27 | getThroughNonMember | by_reference.cpp:63:10:63:28 | call to getThroughNonMember |
+| by_reference.cpp:63:8:63:8 | s [a] | by_reference.cpp:43:9:43:27 | this [a] | by_reference.cpp:44:12:44:24 | call to nonMemberGetA | by_reference.cpp:63:10:63:28 | call to getThroughNonMember |
 | by_reference.cpp:68:21:68:30 | call to user_input | by_reference.cpp:11:48:11:52 | value | by_reference.cpp:11:39:11:39 | *s [Return] [a] | by_reference.cpp:68:17:68:18 | nonMemberSetA output argument [a] |
 | by_reference.cpp:68:21:68:30 | call to user_input | by_reference.cpp:11:48:11:52 | value | by_reference.cpp:11:39:11:39 | *s [a] | by_reference.cpp:68:17:68:18 | nonMemberSetA output argument [a] |
-| by_reference.cpp:69:22:69:23 | *& ... [a] | by_reference.cpp:31:46:31:46 | *s [a] | by_reference.cpp:31:16:31:28 | nonMemberGetA | by_reference.cpp:69:8:69:20 | call to nonMemberGetA |
-| complex.cpp:42:16:42:16 | f [a_] | complex.cpp:9:7:9:7 | this [a_] | complex.cpp:9:7:9:7 | a | complex.cpp:42:18:42:18 | call to a |
-| complex.cpp:43:16:43:16 | f [b_] | complex.cpp:10:7:10:7 | this [b_] | complex.cpp:10:7:10:7 | b | complex.cpp:43:18:43:18 | call to b |
+| by_reference.cpp:69:22:69:23 | *& ... [a] | by_reference.cpp:31:46:31:46 | *s [a] | by_reference.cpp:32:15:32:15 | a | by_reference.cpp:69:8:69:20 | call to nonMemberGetA |
+| complex.cpp:42:16:42:16 | f [a_] | complex.cpp:9:7:9:7 | this [a_] | complex.cpp:9:20:9:21 | a_ | complex.cpp:42:18:42:18 | call to a |
+| complex.cpp:43:16:43:16 | f [b_] | complex.cpp:10:7:10:7 | this [b_] | complex.cpp:10:20:10:21 | b_ | complex.cpp:43:18:43:18 | call to b |
 | complex.cpp:53:19:53:28 | call to user_input | complex.cpp:11:17:11:17 | a | complex.cpp:11:8:11:11 | this [Return] [a_] | complex.cpp:53:12:53:12 | setA output argument [a_] |
 | complex.cpp:54:19:54:28 | call to user_input | complex.cpp:12:17:12:17 | b | complex.cpp:12:8:12:11 | this [Return] [b_] | complex.cpp:54:12:54:12 | setB output argument [b_] |
 | complex.cpp:55:19:55:28 | call to user_input | complex.cpp:11:17:11:17 | a | complex.cpp:11:8:11:11 | this [Return] [a_] | complex.cpp:55:12:55:12 | setA output argument [a_] |
 | complex.cpp:56:19:56:28 | call to user_input | complex.cpp:12:17:12:17 | b | complex.cpp:12:8:12:11 | this [Return] [b_] | complex.cpp:56:12:56:12 | setB output argument [b_] |
-| constructors.cpp:28:10:28:10 | f [a_] | constructors.cpp:18:9:18:9 | this [a_] | constructors.cpp:18:9:18:9 | a | constructors.cpp:28:12:28:12 | call to a |
-| constructors.cpp:29:10:29:10 | f [b_] | constructors.cpp:19:9:19:9 | this [b_] | constructors.cpp:19:9:19:9 | b | constructors.cpp:29:12:29:12 | call to b |
+| constructors.cpp:28:10:28:10 | f [a_] | constructors.cpp:18:9:18:9 | this [a_] | constructors.cpp:18:22:18:23 | a_ | constructors.cpp:28:12:28:12 | call to a |
+| constructors.cpp:29:10:29:10 | f [b_] | constructors.cpp:19:9:19:9 | this [b_] | constructors.cpp:19:22:19:23 | b_ | constructors.cpp:29:12:29:12 | call to b |
 | constructors.cpp:34:11:34:20 | call to user_input | constructors.cpp:23:13:23:13 | a | constructors.cpp:23:5:23:7 | this [Return] [a_] | constructors.cpp:34:9:34:9 | call to Foo [a_] |
 | constructors.cpp:35:14:35:23 | call to user_input | constructors.cpp:23:20:23:20 | b | constructors.cpp:23:5:23:7 | this [Return] [b_] | constructors.cpp:35:9:35:9 | call to Foo [b_] |
 | constructors.cpp:36:11:36:20 | call to user_input | constructors.cpp:23:13:23:13 | a | constructors.cpp:23:5:23:7 | this [Return] [a_] | constructors.cpp:36:9:36:9 | call to Foo [a_] |
@@ -1931,13 +1897,13 @@ subpaths
 | qualifiers.cpp:32:35:32:44 | call to user_input | qualifiers.cpp:12:40:12:44 | value | qualifiers.cpp:12:27:12:31 | *inner [a] | qualifiers.cpp:32:23:32:30 | pointerSetA output argument [a] |
 | qualifiers.cpp:37:38:37:47 | call to user_input | qualifiers.cpp:13:42:13:46 | value | qualifiers.cpp:13:29:13:33 | *inner [Return] [a] | qualifiers.cpp:37:19:37:35 | referenceSetA output argument [a] |
 | qualifiers.cpp:37:38:37:47 | call to user_input | qualifiers.cpp:13:42:13:46 | value | qualifiers.cpp:13:29:13:33 | *inner [a] | qualifiers.cpp:37:19:37:35 | referenceSetA output argument [a] |
-| simple.cpp:28:10:28:10 | f [a_] | simple.cpp:18:9:18:9 | this [a_] | simple.cpp:18:9:18:9 | a | simple.cpp:28:12:28:12 | call to a |
-| simple.cpp:29:10:29:10 | f [b_] | simple.cpp:19:9:19:9 | this [b_] | simple.cpp:19:9:19:9 | b | simple.cpp:29:12:29:12 | call to b |
+| simple.cpp:28:10:28:10 | f [a_] | simple.cpp:18:9:18:9 | this [a_] | simple.cpp:18:22:18:23 | a_ | simple.cpp:28:12:28:12 | call to a |
+| simple.cpp:29:10:29:10 | f [b_] | simple.cpp:19:9:19:9 | this [b_] | simple.cpp:19:22:19:23 | b_ | simple.cpp:29:12:29:12 | call to b |
 | simple.cpp:39:12:39:21 | call to user_input | simple.cpp:20:19:20:19 | a | simple.cpp:20:10:20:13 | this [Return] [a_] | simple.cpp:39:5:39:5 | setA output argument [a_] |
 | simple.cpp:40:12:40:21 | call to user_input | simple.cpp:21:19:21:19 | b | simple.cpp:21:10:21:13 | this [Return] [b_] | simple.cpp:40:5:40:5 | setB output argument [b_] |
 | simple.cpp:41:12:41:21 | call to user_input | simple.cpp:20:19:20:19 | a | simple.cpp:20:10:20:13 | this [Return] [a_] | simple.cpp:41:5:41:5 | setA output argument [a_] |
 | simple.cpp:42:12:42:21 | call to user_input | simple.cpp:21:19:21:19 | b | simple.cpp:21:10:21:13 | this [Return] [b_] | simple.cpp:42:5:42:5 | setB output argument [b_] |
-| simple.cpp:84:14:84:20 | *this [f2, f1] | simple.cpp:78:9:78:15 | this [f2, f1] | simple.cpp:78:9:78:15 | getf2f1 | simple.cpp:84:14:84:20 | call to getf2f1 |
+| simple.cpp:84:14:84:20 | *this [f2, f1] | simple.cpp:78:9:78:15 | this [f2, f1] | simple.cpp:79:19:79:20 | f1 | simple.cpp:84:14:84:20 | call to getf2f1 |
 | struct_init.c:24:10:24:12 | *& ... [a] | struct_init.c:14:24:14:25 | *ab [a] | struct_init.c:14:24:14:25 | *ab [a] | struct_init.c:24:10:24:12 | absink output argument [a] |
 #select
 | A.cpp:43:10:43:12 | *& ... | A.cpp:41:15:41:21 | new | A.cpp:43:10:43:12 | *& ... | *& ... flows from $@ | A.cpp:41:15:41:21 | new | new |
