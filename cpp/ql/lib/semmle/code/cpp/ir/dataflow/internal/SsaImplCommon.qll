@@ -513,6 +513,13 @@ private class BaseCallInstruction extends BaseSourceVariableInstruction, CallIns
 
 cached
 private module Cached {
+  private predicate initIndirectionLoad(LoadInstruction load, AddressOperand addr) {
+    exists(InitializeIndirectionInstruction init |
+      init.getDestinationAddress() = load and
+      load.getSourceAddressOperand() = addr
+    )
+  }
+
   /**
    * Holds if `operand` is an operand that is not used by the dataflow library.
    * Ignored operands are not recognized as uses by SSA, and they don't have a
@@ -520,9 +527,25 @@ private module Cached {
    */
   cached
   predicate ignoreOperand(Operand operand) {
-    operand = any(Instruction instr | ignoreInstruction(instr)).getAnOperand() or
-    operand = any(Instruction instr | ignoreInstruction(instr)).getAUse() or
+    operand = any(Instruction instr | ignoreInstruction(instr)).getAnOperand()
+    or
+    operand = any(Instruction instr | ignoreInstruction(instr)).getAUse()
+    or
     operand instanceof MemoryOperand
+    or
+    // For every pointer/reference parameter we have the following sequence of instructions in the IR:
+    // r1(glval<char *>) = VariableAddress[p]       :
+    // m1(char *)        = InitializeParameter[p]   : &:r1
+    // r2(char *)        = Load[p]                  : &:r1, m1
+    // m2(unknown)       = InitializeIndirection[p] : &:r2
+    // The `InitializeParameter` instruction represents the parameter node
+    // of `p`. That is, `m1` is represents the value of `*&p` (i.e., the
+    // indirection of the address of `p`). Use-use flow then flows from `m1`
+    // to `*&:r1` on the `Load` instruction (notice how they both represent
+    // the same value: the value of type `char*`). The `toString` on this
+    // indirect operand will be `*p` which looks strange in path graphs.
+    // Since this value is not needed for dataflow we exclude it from SSA.
+    initIndirectionLoad(_, operand)
   }
 
   /**
