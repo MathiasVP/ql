@@ -651,6 +651,17 @@ class InitializeIndirectionInstruction extends VariableInstruction {
     or
     index = -1 and this.getIRVariable() instanceof IRThisVariable
   }
+
+  /**
+   * Gets the operand that provides the address of the memory to be initialized.
+   */
+  AddressOperand getDestinationAddressOperand() { result = this.getAnOperand() }
+
+  /**
+   * Gets the instruction whose result provides the address of the memory to be
+   * initialized.
+   */
+  Instruction getDestinationAddress() { result = this.getDestinationAddressOperand().getDef() }
 }
 
 /**
