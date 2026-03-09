@@ -224,9 +224,17 @@ private module Cached {
 import Cached
 
 private int getNumberOfIndirections(Node n) {
-  result = n.(RawIndirectOperand).getIndirectionIndex()
+  exists(RawIndirectOperand rio, int k |
+    n = rio and
+    k = rio.getIndirectionIndex() and
+    if rio.isGLValue() then result = k - 1 else result = k
+  )
   or
-  result = n.(RawIndirectInstruction).getIndirectionIndex()
+  exists(RawIndirectInstruction rii, int k |
+    n = rii and
+    k = rii.getIndirectionIndex() and
+    if rii.isGLValue() then result = k - 1 else result = k
+  )
   or
   result = n.(VariableNode).getIndirectionIndex()
   or
