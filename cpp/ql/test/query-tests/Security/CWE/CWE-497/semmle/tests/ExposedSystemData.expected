@@ -6,11 +6,11 @@ edges
 | tests2.cpp:91:42:91:45 | *str1 | tests2.cpp:93:14:93:17 | *str1 | provenance |  |
 | tests2.cpp:101:3:101:22 | *... = ... | tests2.cpp:102:14:102:15 | *pw | provenance |  |
 | tests2.cpp:101:8:101:15 | *call to getpwuid | tests2.cpp:101:3:101:22 | *... = ... | provenance |  |
-| tests2.cpp:109:3:109:4 | *c1 [post update] [*ptr] | tests2.cpp:111:14:111:15 | *c1 [*ptr] | provenance |  |
-| tests2.cpp:109:3:109:36 | *... = ... | tests2.cpp:109:3:109:4 | *c1 [post update] [*ptr] | provenance |  |
+| tests2.cpp:109:3:109:4 | c1 [post update] [*ptr] | tests2.cpp:111:14:111:15 | c1 [*ptr] | provenance |  |
+| tests2.cpp:109:3:109:36 | *... = ... | tests2.cpp:109:3:109:4 | c1 [post update] [*ptr] | provenance |  |
 | tests2.cpp:109:12:109:17 | *call to getenv | tests2.cpp:109:3:109:36 | *... = ... | provenance |  |
-| tests2.cpp:111:14:111:15 | *c1 [*ptr] | tests2.cpp:111:14:111:19 | *ptr | provenance |  |
-| tests2.cpp:111:14:111:15 | *c1 [*ptr] | tests2.cpp:111:17:111:19 | *ptr | provenance |  |
+| tests2.cpp:111:14:111:15 | c1 [*ptr] | tests2.cpp:111:14:111:19 | *ptr | provenance |  |
+| tests2.cpp:111:14:111:15 | c1 [*ptr] | tests2.cpp:111:17:111:19 | *ptr | provenance |  |
 | tests2.cpp:111:17:111:19 | *ptr | tests2.cpp:111:14:111:19 | *ptr | provenance |  |
 | tests2.cpp:120:5:120:21 | [summary param] *1 in zmq_msg_init_data | tests2.cpp:120:5:120:21 | [summary param] *0 in zmq_msg_init_data [Return] | provenance |  |
 | tests2.cpp:134:2:134:30 | *... = ... | tests2.cpp:138:23:138:34 | *message_data | provenance |  |
@@ -46,10 +46,10 @@ nodes
 | tests2.cpp:101:3:101:22 | *... = ... | semmle.label | *... = ... |
 | tests2.cpp:101:8:101:15 | *call to getpwuid | semmle.label | *call to getpwuid |
 | tests2.cpp:102:14:102:15 | *pw | semmle.label | *pw |
-| tests2.cpp:109:3:109:4 | *c1 [post update] [*ptr] | semmle.label | *c1 [post update] [*ptr] |
+| tests2.cpp:109:3:109:4 | c1 [post update] [*ptr] | semmle.label | c1 [post update] [*ptr] |
 | tests2.cpp:109:3:109:36 | *... = ... | semmle.label | *... = ... |
 | tests2.cpp:109:12:109:17 | *call to getenv | semmle.label | *call to getenv |
-| tests2.cpp:111:14:111:15 | *c1 [*ptr] | semmle.label | *c1 [*ptr] |
+| tests2.cpp:111:14:111:15 | c1 [*ptr] | semmle.label | c1 [*ptr] |
 | tests2.cpp:111:14:111:19 | *ptr | semmle.label | *ptr |
 | tests2.cpp:111:17:111:19 | *ptr | semmle.label | *ptr |
 | tests2.cpp:120:5:120:21 | [summary param] *0 in zmq_msg_init_data [Return] | semmle.label | [summary param] *0 in zmq_msg_init_data [Return] |

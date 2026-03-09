@@ -117,7 +117,7 @@ edges
 | test.cpp:5:5:5:20 | [summary param] 0 in ymlStepGenerated | test.cpp:5:5:5:20 | [summary] to write: ReturnValue in ymlStepGenerated | provenance | MaD:47 |
 | test.cpp:6:5:6:27 | [summary param] 0 in ymlStepManual_with_body | test.cpp:6:5:6:27 | [summary] to write: ReturnValue in ymlStepManual_with_body | provenance | MaD:49 |
 | test.cpp:7:47:7:52 | value2 | test.cpp:7:64:7:69 | value2 | provenance |  |
-| test.cpp:7:64:7:69 | value2 | test.cpp:7:5:7:30 | *ymlStepGenerated_with_body | provenance |  |
+| test.cpp:7:64:7:69 | value2 | test.cpp:7:5:7:30 | ymlStepGenerated_with_body | provenance |  |
 | test.cpp:10:10:10:18 | call to ymlSource | test.cpp:10:10:10:18 | call to ymlSource | provenance | Src:MaD:22  |
 | test.cpp:10:10:10:18 | call to ymlSource | test.cpp:14:10:14:10 | x | provenance | Sink:MaD:1 |
 | test.cpp:10:10:10:18 | call to ymlSource | test.cpp:17:24:17:24 | x | provenance |  |
@@ -145,8 +145,8 @@ edges
 | test.cpp:48:13:48:13 | *s [x] | test.cpp:48:16:48:16 | x | provenance | Sink:MaD:1 |
 | test.cpp:52:5:52:18 | [summary param] *3 in pthread_create [x] | test.cpp:52:5:52:18 | [summary] to write: Argument[2].Parameter[*0] in pthread_create [x] | provenance | MaD:46 |
 | test.cpp:52:5:52:18 | [summary] to write: Argument[2].Parameter[*0] in pthread_create [x] | test.cpp:46:30:46:32 | *arg [x] | provenance |  |
-| test.cpp:56:2:56:2 | *s [post update] [x] | test.cpp:59:55:59:64 | *& ... [x] | provenance |  |
-| test.cpp:56:2:56:18 | ... = ... | test.cpp:56:2:56:2 | *s [post update] [x] | provenance |  |
+| test.cpp:56:2:56:2 | s [post update] [x] | test.cpp:59:55:59:64 | *& ... [x] | provenance |  |
+| test.cpp:56:2:56:18 | ... = ... | test.cpp:56:2:56:2 | s [post update] [x] | provenance |  |
 | test.cpp:56:8:56:16 | call to ymlSource | test.cpp:56:2:56:18 | ... = ... | provenance | Src:MaD:22  |
 | test.cpp:59:55:59:64 | *& ... [x] | test.cpp:52:5:52:18 | [summary param] *3 in pthread_create [x] | provenance |  |
 | test.cpp:63:6:63:21 | [summary param] 1 in callWithArgument | test.cpp:63:6:63:21 | [summary] to write: Argument[0].Parameter[0] in callWithArgument | provenance | MaD:44 |
@@ -210,12 +210,12 @@ edges
 | windows.cpp:168:35:168:40 | ReadFile output argument | windows.cpp:170:10:170:16 | * ... | provenance | Src:MaD:14  |
 | windows.cpp:177:23:177:28 | ReadFileEx output argument | windows.cpp:179:10:179:16 | * ... | provenance | Src:MaD:15  |
 | windows.cpp:189:21:189:26 | ReadFile output argument | windows.cpp:190:5:190:56 | *... = ... | provenance | Src:MaD:14  |
-| windows.cpp:190:5:190:14 | *overlapped [post update] [*hEvent] | windows.cpp:192:53:192:63 | *& ... [*hEvent] | provenance |  |
-| windows.cpp:190:5:190:56 | *... = ... | windows.cpp:190:5:190:14 | *overlapped [post update] [*hEvent] | provenance |  |
+| windows.cpp:190:5:190:14 | overlapped [post update] [*hEvent] | windows.cpp:192:53:192:63 | *& ... [*hEvent] | provenance |  |
+| windows.cpp:190:5:190:56 | *... = ... | windows.cpp:190:5:190:14 | overlapped [post update] [*hEvent] | provenance |  |
 | windows.cpp:192:53:192:63 | *& ... [*hEvent] | windows.cpp:90:6:90:15 | [summary param] *3 in ReadFileEx [*hEvent] | provenance |  |
 | windows.cpp:198:21:198:26 | ReadFile output argument | windows.cpp:199:5:199:57 | ... = ... | provenance | Src:MaD:14  |
-| windows.cpp:199:5:199:14 | *overlapped [post update] [hEvent] | windows.cpp:201:53:201:63 | *& ... [hEvent] | provenance |  |
-| windows.cpp:199:5:199:57 | ... = ... | windows.cpp:199:5:199:14 | *overlapped [post update] [hEvent] | provenance |  |
+| windows.cpp:199:5:199:14 | overlapped [post update] [hEvent] | windows.cpp:201:53:201:63 | *& ... [hEvent] | provenance |  |
+| windows.cpp:199:5:199:57 | ... = ... | windows.cpp:199:5:199:14 | overlapped [post update] [hEvent] | provenance |  |
 | windows.cpp:201:53:201:63 | *& ... [hEvent] | windows.cpp:90:6:90:15 | [summary param] *3 in ReadFileEx [hEvent] | provenance |  |
 | windows.cpp:209:84:209:89 | NtReadFile output argument | windows.cpp:211:10:211:16 | * ... | provenance | Src:MaD:13  |
 | windows.cpp:286:23:286:35 | *call to MapViewOfFile | windows.cpp:286:23:286:35 | *call to MapViewOfFile | provenance | Src:MaD:9  |
@@ -254,10 +254,10 @@ edges
 | windows.cpp:417:26:417:36 | *lpParameter [x] | windows.cpp:419:10:419:25 | *lpParameter [x] | provenance |  |
 | windows.cpp:419:10:419:25 | *lpParameter [x] | windows.cpp:420:8:420:8 | *s [x] | provenance |  |
 | windows.cpp:420:8:420:8 | *s [x] | windows.cpp:420:8:420:11 | x | provenance |  |
-| windows.cpp:431:3:431:3 | *s [post update] [x] | windows.cpp:439:7:439:8 | *& ... [x] | provenance |  |
-| windows.cpp:431:3:431:3 | *s [post update] [x] | windows.cpp:451:7:451:8 | *& ... [x] | provenance |  |
-| windows.cpp:431:3:431:3 | *s [post update] [x] | windows.cpp:464:7:464:8 | *& ... [x] | provenance |  |
-| windows.cpp:431:3:431:16 | ... = ... | windows.cpp:431:3:431:3 | *s [post update] [x] | provenance |  |
+| windows.cpp:431:3:431:3 | s [post update] [x] | windows.cpp:439:7:439:8 | *& ... [x] | provenance |  |
+| windows.cpp:431:3:431:3 | s [post update] [x] | windows.cpp:451:7:451:8 | *& ... [x] | provenance |  |
+| windows.cpp:431:3:431:3 | s [post update] [x] | windows.cpp:464:7:464:8 | *& ... [x] | provenance |  |
+| windows.cpp:431:3:431:16 | ... = ... | windows.cpp:431:3:431:3 | s [post update] [x] | provenance |  |
 | windows.cpp:431:9:431:14 | call to source | windows.cpp:431:3:431:16 | ... = ... | provenance |  |
 | windows.cpp:439:7:439:8 | *& ... [x] | windows.cpp:349:8:349:19 | [summary param] *3 in CreateThread [x] | provenance |  |
 | windows.cpp:451:7:451:8 | *& ... [x] | windows.cpp:357:8:357:25 | [summary param] *4 in CreateRemoteThread [x] | provenance |  |
@@ -296,18 +296,18 @@ edges
 | windows.cpp:552:43:552:44 | *& ... | windows.cpp:552:30:552:40 | RtlCopyMemoryNonTemporal output argument | provenance | MaD:37 |
 | windows.cpp:559:5:559:24 | ... = ... | windows.cpp:561:39:561:44 | *buffer | provenance |  |
 | windows.cpp:559:17:559:24 | call to source | windows.cpp:559:5:559:24 | ... = ... | provenance |  |
-| windows.cpp:561:26:561:36 | RtlInitUnicodeString output argument [*Buffer] | windows.cpp:562:10:562:19 | *src_string [*Buffer] | provenance |  |
+| windows.cpp:561:26:561:36 | RtlInitUnicodeString output argument [*Buffer] | windows.cpp:562:10:562:19 | src_string [*Buffer] | provenance |  |
 | windows.cpp:561:26:561:36 | RtlInitUnicodeString output argument [*Buffer] | windows.cpp:563:40:563:50 | *& ... [*Buffer] | provenance |  |
 | windows.cpp:561:39:561:44 | *buffer | windows.cpp:527:6:527:25 | [summary param] *1 in RtlInitUnicodeString | provenance |  |
 | windows.cpp:561:39:561:44 | *buffer | windows.cpp:561:26:561:36 | RtlInitUnicodeString output argument [*Buffer] | provenance | MaD:40 |
-| windows.cpp:562:10:562:19 | *src_string [*Buffer] | windows.cpp:562:10:562:29 | access to array | provenance |  |
-| windows.cpp:562:10:562:19 | *src_string [*Buffer] | windows.cpp:562:21:562:26 | *Buffer | provenance |  |
+| windows.cpp:562:10:562:19 | src_string [*Buffer] | windows.cpp:562:10:562:29 | access to array | provenance |  |
+| windows.cpp:562:10:562:19 | src_string [*Buffer] | windows.cpp:562:21:562:26 | *Buffer | provenance |  |
 | windows.cpp:562:21:562:26 | *Buffer | windows.cpp:562:10:562:29 | access to array | provenance |  |
-| windows.cpp:563:26:563:37 | RtlCopyUnicodeString output argument [*Buffer] | windows.cpp:564:10:564:20 | *dest_string [*Buffer] | provenance |  |
+| windows.cpp:563:26:563:37 | RtlCopyUnicodeString output argument [*Buffer] | windows.cpp:564:10:564:20 | dest_string [*Buffer] | provenance |  |
 | windows.cpp:563:40:563:50 | *& ... [*Buffer] | windows.cpp:510:6:510:25 | [summary param] *1 in RtlCopyUnicodeString [*Buffer] | provenance |  |
 | windows.cpp:563:40:563:50 | *& ... [*Buffer] | windows.cpp:563:26:563:37 | RtlCopyUnicodeString output argument [*Buffer] | provenance | MaD:38 |
-| windows.cpp:564:10:564:20 | *dest_string [*Buffer] | windows.cpp:564:10:564:30 | access to array | provenance |  |
-| windows.cpp:564:10:564:20 | *dest_string [*Buffer] | windows.cpp:564:22:564:27 | *Buffer | provenance |  |
+| windows.cpp:564:10:564:20 | dest_string [*Buffer] | windows.cpp:564:10:564:30 | access to array | provenance |  |
+| windows.cpp:564:10:564:20 | dest_string [*Buffer] | windows.cpp:564:22:564:27 | *Buffer | provenance |  |
 | windows.cpp:564:22:564:27 | *Buffer | windows.cpp:564:10:564:30 | access to array | provenance |  |
 | windows.cpp:568:19:568:29 | RtlMoveMemory output argument | windows.cpp:569:10:569:23 | access to array | provenance |  |
 | windows.cpp:568:32:568:33 | *& ... | windows.cpp:515:6:515:18 | [summary param] *1 in RtlMoveMemory | provenance |  |
@@ -401,7 +401,7 @@ nodes
 | test.cpp:5:5:5:20 | [summary] to write: ReturnValue in ymlStepGenerated | semmle.label | [summary] to write: ReturnValue in ymlStepGenerated |
 | test.cpp:6:5:6:27 | [summary param] 0 in ymlStepManual_with_body | semmle.label | [summary param] 0 in ymlStepManual_with_body |
 | test.cpp:6:5:6:27 | [summary] to write: ReturnValue in ymlStepManual_with_body | semmle.label | [summary] to write: ReturnValue in ymlStepManual_with_body |
-| test.cpp:7:5:7:30 | *ymlStepGenerated_with_body | semmle.label | *ymlStepGenerated_with_body |
+| test.cpp:7:5:7:30 | ymlStepGenerated_with_body | semmle.label | ymlStepGenerated_with_body |
 | test.cpp:7:47:7:52 | value2 | semmle.label | value2 |
 | test.cpp:7:64:7:69 | value2 | semmle.label | value2 |
 | test.cpp:10:10:10:18 | call to ymlSource | semmle.label | call to ymlSource |
@@ -429,7 +429,7 @@ nodes
 | test.cpp:48:16:48:16 | x | semmle.label | x |
 | test.cpp:52:5:52:18 | [summary param] *3 in pthread_create [x] | semmle.label | [summary param] *3 in pthread_create [x] |
 | test.cpp:52:5:52:18 | [summary] to write: Argument[2].Parameter[*0] in pthread_create [x] | semmle.label | [summary] to write: Argument[2].Parameter[*0] in pthread_create [x] |
-| test.cpp:56:2:56:2 | *s [post update] [x] | semmle.label | *s [post update] [x] |
+| test.cpp:56:2:56:2 | s [post update] [x] | semmle.label | s [post update] [x] |
 | test.cpp:56:2:56:18 | ... = ... | semmle.label | ... = ... |
 | test.cpp:56:8:56:16 | call to ymlSource | semmle.label | call to ymlSource |
 | test.cpp:59:55:59:64 | *& ... [x] | semmle.label | *& ... [x] |
@@ -501,11 +501,11 @@ nodes
 | windows.cpp:177:23:177:28 | ReadFileEx output argument | semmle.label | ReadFileEx output argument |
 | windows.cpp:179:10:179:16 | * ... | semmle.label | * ... |
 | windows.cpp:189:21:189:26 | ReadFile output argument | semmle.label | ReadFile output argument |
-| windows.cpp:190:5:190:14 | *overlapped [post update] [*hEvent] | semmle.label | *overlapped [post update] [*hEvent] |
+| windows.cpp:190:5:190:14 | overlapped [post update] [*hEvent] | semmle.label | overlapped [post update] [*hEvent] |
 | windows.cpp:190:5:190:56 | *... = ... | semmle.label | *... = ... |
 | windows.cpp:192:53:192:63 | *& ... [*hEvent] | semmle.label | *& ... [*hEvent] |
 | windows.cpp:198:21:198:26 | ReadFile output argument | semmle.label | ReadFile output argument |
-| windows.cpp:199:5:199:14 | *overlapped [post update] [hEvent] | semmle.label | *overlapped [post update] [hEvent] |
+| windows.cpp:199:5:199:14 | overlapped [post update] [hEvent] | semmle.label | overlapped [post update] [hEvent] |
 | windows.cpp:199:5:199:57 | ... = ... | semmle.label | ... = ... |
 | windows.cpp:201:53:201:63 | *& ... [hEvent] | semmle.label | *& ... [hEvent] |
 | windows.cpp:209:84:209:89 | NtReadFile output argument | semmle.label | NtReadFile output argument |
@@ -556,7 +556,7 @@ nodes
 | windows.cpp:419:10:419:25 | *lpParameter [x] | semmle.label | *lpParameter [x] |
 | windows.cpp:420:8:420:8 | *s [x] | semmle.label | *s [x] |
 | windows.cpp:420:8:420:11 | x | semmle.label | x |
-| windows.cpp:431:3:431:3 | *s [post update] [x] | semmle.label | *s [post update] [x] |
+| windows.cpp:431:3:431:3 | s [post update] [x] | semmle.label | s [post update] [x] |
 | windows.cpp:431:3:431:16 | ... = ... | semmle.label | ... = ... |
 | windows.cpp:431:9:431:14 | call to source | semmle.label | call to source |
 | windows.cpp:439:7:439:8 | *& ... [x] | semmle.label | *& ... [x] |
@@ -601,12 +601,12 @@ nodes
 | windows.cpp:559:17:559:24 | call to source | semmle.label | call to source |
 | windows.cpp:561:26:561:36 | RtlInitUnicodeString output argument [*Buffer] | semmle.label | RtlInitUnicodeString output argument [*Buffer] |
 | windows.cpp:561:39:561:44 | *buffer | semmle.label | *buffer |
-| windows.cpp:562:10:562:19 | *src_string [*Buffer] | semmle.label | *src_string [*Buffer] |
+| windows.cpp:562:10:562:19 | src_string [*Buffer] | semmle.label | src_string [*Buffer] |
 | windows.cpp:562:10:562:29 | access to array | semmle.label | access to array |
 | windows.cpp:562:21:562:26 | *Buffer | semmle.label | *Buffer |
 | windows.cpp:563:26:563:37 | RtlCopyUnicodeString output argument [*Buffer] | semmle.label | RtlCopyUnicodeString output argument [*Buffer] |
 | windows.cpp:563:40:563:50 | *& ... [*Buffer] | semmle.label | *& ... [*Buffer] |
-| windows.cpp:564:10:564:20 | *dest_string [*Buffer] | semmle.label | *dest_string [*Buffer] |
+| windows.cpp:564:10:564:20 | dest_string [*Buffer] | semmle.label | dest_string [*Buffer] |
 | windows.cpp:564:10:564:30 | access to array | semmle.label | access to array |
 | windows.cpp:564:22:564:27 | *Buffer | semmle.label | *Buffer |
 | windows.cpp:568:19:568:29 | RtlMoveMemory output argument | semmle.label | RtlMoveMemory output argument |
@@ -646,7 +646,7 @@ subpaths
 | test.cpp:17:24:17:24 | x | test.cpp:4:5:4:17 | [summary param] 0 in ymlStepManual | test.cpp:4:5:4:17 | [summary] to write: ReturnValue in ymlStepManual | test.cpp:17:10:17:22 | call to ymlStepManual |
 | test.cpp:21:27:21:27 | x | test.cpp:5:5:5:20 | [summary param] 0 in ymlStepGenerated | test.cpp:5:5:5:20 | [summary] to write: ReturnValue in ymlStepGenerated | test.cpp:21:10:21:25 | call to ymlStepGenerated |
 | test.cpp:25:35:25:35 | x | test.cpp:6:5:6:27 | [summary param] 0 in ymlStepManual_with_body | test.cpp:6:5:6:27 | [summary] to write: ReturnValue in ymlStepManual_with_body | test.cpp:25:11:25:33 | call to ymlStepManual_with_body |
-| test.cpp:32:41:32:41 | x | test.cpp:7:47:7:52 | value2 | test.cpp:7:5:7:30 | *ymlStepGenerated_with_body | test.cpp:32:11:32:36 | call to ymlStepGenerated_with_body |
+| test.cpp:32:41:32:41 | x | test.cpp:7:47:7:52 | value2 | test.cpp:7:5:7:30 | ymlStepGenerated_with_body | test.cpp:32:11:32:36 | call to ymlStepGenerated_with_body |
 | test.cpp:118:44:118:44 | *x | test.cpp:111:3:111:25 | [summary param] *0 in callWithNonTypeTemplate | test.cpp:111:3:111:25 | [summary] to write: ReturnValue in callWithNonTypeTemplate | test.cpp:118:11:118:42 | call to callWithNonTypeTemplate |
 | windows.cpp:27:36:27:38 | *cmd | windows.cpp:17:8:17:25 | [summary param] *0 in CommandLineToArgvA | windows.cpp:17:8:17:25 | [summary] to write: ReturnValue[**] in CommandLineToArgvA | windows.cpp:27:17:27:34 | **call to CommandLineToArgvA |
 | windows.cpp:537:40:537:41 | *& ... | windows.cpp:473:17:473:37 | [summary param] *1 in RtlCopyVolatileMemory | windows.cpp:473:17:473:37 | [summary param] *0 in RtlCopyVolatileMemory [Return] | windows.cpp:537:27:537:37 | RtlCopyVolatileMemory output argument |

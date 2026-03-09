@@ -36,10 +36,10 @@ edges
 | test_buffer_overrun.cpp:32:46:32:49 | *argv | test_buffer_overrun.cpp:32:46:32:49 | *argv | provenance |  |
 | tests.cpp:634:19:634:24 | *source | tests.cpp:636:17:636:22 | *source | provenance |  |
 | tests.cpp:643:19:643:24 | *source | tests.cpp:646:2:646:16 | *... = ... | provenance |  |
-| tests.cpp:646:2:646:2 | *s [post update] [*home] | tests.cpp:649:14:649:14 | *s [*home] | provenance |  |
-| tests.cpp:646:2:646:16 | *... = ... | tests.cpp:646:2:646:2 | *s [post update] [*home] | provenance |  |
-| tests.cpp:649:14:649:14 | *s [*home] | tests.cpp:649:14:649:19 | *home | provenance |  |
-| tests.cpp:649:14:649:14 | *s [*home] | tests.cpp:649:16:649:19 | *home | provenance |  |
+| tests.cpp:646:2:646:2 | s [post update] [*home] | tests.cpp:649:14:649:14 | s [*home] | provenance |  |
+| tests.cpp:646:2:646:16 | *... = ... | tests.cpp:646:2:646:2 | s [post update] [*home] | provenance |  |
+| tests.cpp:649:14:649:14 | s [*home] | tests.cpp:649:14:649:19 | *home | provenance |  |
+| tests.cpp:649:14:649:14 | s [*home] | tests.cpp:649:16:649:19 | *home | provenance |  |
 | tests.cpp:649:16:649:19 | *home | tests.cpp:649:14:649:19 | *home | provenance |  |
 | tests.cpp:1074:32:1074:35 | **argv | tests.cpp:1099:9:1099:15 | *access to array | provenance |  |
 | tests.cpp:1074:32:1074:35 | **argv | tests.cpp:1100:9:1100:15 | *access to array | provenance |  |
@@ -75,9 +75,9 @@ nodes
 | tests.cpp:634:19:634:24 | *source | semmle.label | *source |
 | tests.cpp:636:17:636:22 | *source | semmle.label | *source |
 | tests.cpp:643:19:643:24 | *source | semmle.label | *source |
-| tests.cpp:646:2:646:2 | *s [post update] [*home] | semmle.label | *s [post update] [*home] |
+| tests.cpp:646:2:646:2 | s [post update] [*home] | semmle.label | s [post update] [*home] |
 | tests.cpp:646:2:646:16 | *... = ... | semmle.label | *... = ... |
-| tests.cpp:649:14:649:14 | *s [*home] | semmle.label | *s [*home] |
+| tests.cpp:649:14:649:14 | s [*home] | semmle.label | s [*home] |
 | tests.cpp:649:14:649:19 | *home | semmle.label | *home |
 | tests.cpp:649:16:649:19 | *home | semmle.label | *home |
 | tests.cpp:1074:32:1074:35 | **argv | semmle.label | **argv |

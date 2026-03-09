@@ -19,8 +19,8 @@ edges
 | test.c:137:13:137:16 | call to rand | test.c:139:10:139:10 | r | provenance |  |
 | test.c:155:22:155:27 | call to rand | test.c:155:22:155:27 | call to rand | provenance |  |
 | test.c:155:22:155:27 | call to rand | test.c:157:9:157:9 | r | provenance |  |
-| test.cpp:6:5:6:12 | *get_rand | test.cpp:24:11:24:18 | call to get_rand | provenance |  |
-| test.cpp:8:9:8:12 | call to rand | test.cpp:6:5:6:12 | *get_rand | provenance |  |
+| test.cpp:6:5:6:12 | get_rand | test.cpp:24:11:24:18 | call to get_rand | provenance |  |
+| test.cpp:8:9:8:12 | call to rand | test.cpp:6:5:6:12 | get_rand | provenance |  |
 | test.cpp:8:9:8:12 | call to rand | test.cpp:8:9:8:12 | call to rand | provenance |  |
 | test.cpp:11:21:11:24 | *dest | test.cpp:30:13:30:14 | get_rand2 output argument | provenance |  |
 | test.cpp:13:2:13:15 | ... = ... | test.cpp:11:21:11:24 | *dest | provenance |  |
@@ -91,7 +91,7 @@ nodes
 | test.c:155:22:155:27 | call to rand | semmle.label | call to rand |
 | test.c:155:22:155:27 | call to rand | semmle.label | call to rand |
 | test.c:157:9:157:9 | r | semmle.label | r |
-| test.cpp:6:5:6:12 | *get_rand | semmle.label | *get_rand |
+| test.cpp:6:5:6:12 | get_rand | semmle.label | get_rand |
 | test.cpp:8:9:8:12 | call to rand | semmle.label | call to rand |
 | test.cpp:8:9:8:12 | call to rand | semmle.label | call to rand |
 | test.cpp:11:21:11:24 | *dest | semmle.label | *dest |

@@ -1,46 +1,46 @@
-| example.c:15:37:15:37 | **b | example.c:15:37:15:37 | **b |
-| example.c:15:37:15:37 | **b | example.c:15:37:15:37 | **b |
-| example.c:15:37:15:37 | **b | example.c:15:37:15:37 | *b |
-| example.c:15:37:15:37 | **b | example.c:19:6:19:6 | *b |
-| example.c:15:37:15:37 | *b | example.c:15:37:15:37 | **b |
 | example.c:15:37:15:37 | *b | example.c:15:37:15:37 | *b |
 | example.c:15:37:15:37 | *b | example.c:15:37:15:37 | *b |
-| example.c:15:37:15:37 | *b | example.c:15:37:15:37 | b |
-| example.c:15:37:15:37 | *b | example.c:19:6:19:6 | b |
-| example.c:15:37:15:37 | b | example.c:15:37:15:37 | *b |
+| example.c:15:37:15:37 | *b | example.c:15:37:15:37 | *b |
+| example.c:15:37:15:37 | *b | example.c:15:37:15:37 | *b |
+| example.c:15:37:15:37 | *b | example.c:19:6:19:6 | *b |
+| example.c:15:37:15:37 | b | example.c:15:37:15:37 | b |
+| example.c:15:37:15:37 | b | example.c:15:37:15:37 | b |
+| example.c:15:37:15:37 | b | example.c:15:37:15:37 | b |
+| example.c:15:37:15:37 | b | example.c:15:37:15:37 | b |
 | example.c:15:37:15:37 | b | example.c:15:37:15:37 | b |
 | example.c:15:37:15:37 | b | example.c:15:37:15:37 | b |
 | example.c:15:37:15:37 | b | example.c:19:6:19:6 | b |
+| example.c:15:37:15:37 | b | example.c:19:6:19:6 | b |
 | example.c:15:44:15:46 | pos | example.c:24:24:24:26 | pos |
-| example.c:17:11:17:16 | *definition of coords | example.c:17:11:17:16 | *definition of coords |
-| example.c:17:11:17:16 | *definition of coords | example.c:17:11:17:16 | *definition of coords |
-| example.c:17:11:17:16 | *definition of coords | example.c:17:11:17:16 | *definition of coords |
-| example.c:17:11:17:16 | *definition of coords | example.c:17:11:17:16 | *definition of coords |
-| example.c:17:11:17:16 | *definition of coords | example.c:24:13:24:18 | *coords |
-| example.c:17:11:17:16 | *definition of coords [post update] | example.c:24:13:24:18 | *coords |
-| example.c:17:11:17:16 | definition of coords | example.c:17:11:17:16 | *definition of coords |
+| example.c:17:11:17:16 | definition of coords | example.c:17:11:17:16 | definition of coords |
+| example.c:17:11:17:16 | definition of coords | example.c:17:11:17:16 | definition of coords |
+| example.c:17:11:17:16 | definition of coords | example.c:17:11:17:16 | definition of coords |
+| example.c:17:11:17:16 | definition of coords | example.c:17:11:17:16 | definition of coords |
+| example.c:17:11:17:16 | definition of coords | example.c:17:11:17:16 | definition of coords |
 | example.c:17:11:17:16 | definition of coords | example.c:17:11:17:16 | definition of coords |
 | example.c:17:11:17:16 | definition of coords | example.c:17:11:17:16 | definition of coords |
 | example.c:17:11:17:16 | definition of coords | example.c:17:11:17:16 | definition of coords |
 | example.c:17:11:17:16 | definition of coords | example.c:17:11:17:16 | definition of coords |
 | example.c:17:11:17:16 | definition of coords | example.c:24:13:24:18 | coords |
+| example.c:17:11:17:16 | definition of coords | example.c:24:13:24:18 | coords |
 | example.c:17:11:17:16 | definition of coords [post update] | example.c:17:11:17:16 | definition of coords |
 | example.c:17:11:17:16 | definition of coords [post update] | example.c:24:13:24:18 | coords |
-| example.c:17:11:17:16 | {...} | example.c:17:11:17:16 | *definition of coords |
+| example.c:17:11:17:16 | definition of coords [post update] | example.c:24:13:24:18 | coords |
+| example.c:17:11:17:16 | {...} | example.c:17:11:17:16 | definition of coords |
 | example.c:17:19:17:22 | {...} | example.c:17:19:17:22 | {...} |
 | example.c:17:21:17:21 | 0 | example.c:17:21:17:21 | 0 |
 | example.c:19:6:19:6 | *b | example.c:15:37:15:37 | *b |
 | example.c:19:6:19:6 | *b [post update] | example.c:15:37:15:37 | *b |
-| example.c:24:2:24:7 | *coords | example.c:26:18:26:24 | *& ... |
-| example.c:24:2:24:7 | *coords [post update] | example.c:26:18:26:24 | *& ... |
 | example.c:24:2:24:7 | coords | example.c:26:18:26:24 | & ... |
+| example.c:24:2:24:7 | coords | example.c:26:18:26:24 | *& ... |
 | example.c:24:2:24:7 | coords [post update] | example.c:26:18:26:24 | & ... |
-| example.c:24:13:24:18 | *coords | example.c:24:2:24:7 | *coords |
-| example.c:24:13:24:18 | *coords [post update] | example.c:24:2:24:7 | *coords |
+| example.c:24:2:24:7 | coords [post update] | example.c:26:18:26:24 | *& ... |
+| example.c:24:13:24:18 | coords | example.c:24:2:24:7 | coords |
 | example.c:24:13:24:18 | coords | example.c:24:2:24:7 | coords |
 | example.c:24:13:24:18 | coords [post update] | example.c:24:2:24:7 | coords |
+| example.c:24:13:24:18 | coords [post update] | example.c:24:2:24:7 | coords |
 | example.c:24:13:24:30 | ... = ... | example.c:24:2:24:30 | ... = ... |
-| example.c:24:20:24:20 | *y | example.c:24:20:24:20 | *y |
+| example.c:24:20:24:20 | y | example.c:24:20:24:20 | y |
 | example.c:24:20:24:20 | y | example.c:24:20:24:20 | y |
 | example.c:24:20:24:20 | y | example.c:24:20:24:20 | y |
 | example.c:24:24:24:26 | pos | example.c:28:14:28:25 | & ... |
@@ -48,8 +48,8 @@
 | example.c:24:24:24:30 | ... + ... | example.c:24:13:24:30 | ... = ... |
 | example.c:26:13:26:16 | call to getX | example.c:26:2:26:25 | ... = ... |
 | example.c:26:18:26:24 | & ... | example.c:26:2:26:7 | coords |
-| example.c:26:18:26:24 | *& ... | example.c:26:2:26:7 | *coords |
-| example.c:26:18:26:24 | getX output argument | example.c:26:2:26:7 | *coords |
+| example.c:26:18:26:24 | *& ... | example.c:26:2:26:7 | coords |
+| example.c:26:18:26:24 | getX output argument | example.c:26:2:26:7 | coords |
 | example.c:26:18:26:24 | pointer to getX output argument | example.c:26:2:26:7 | coords |
 | example.c:26:19:26:24 | coords | example.c:26:18:26:24 | & ... |
 | example.c:28:22:28:25 | & ... | example.c:28:14:28:25 | & ... |
@@ -96,8 +96,8 @@
 | test.cpp:23:23:23:24 | t1 | test.cpp:23:27:23:29 | [input] SSA phi read(t1) |
 | test.cpp:23:23:23:24 | t1 | test.cpp:26:8:26:9 | t1 |
 | test.cpp:23:23:23:24 | t1 | test.cpp:26:8:26:9 | t1 |
-| test.cpp:23:27:23:27 | *i | test.cpp:23:27:23:27 | *i |
-| test.cpp:23:27:23:27 | *i | test.cpp:23:27:23:27 | i |
+| test.cpp:23:27:23:27 | i | test.cpp:23:27:23:27 | i |
+| test.cpp:23:27:23:27 | i | test.cpp:23:27:23:27 | i |
 | test.cpp:23:27:23:27 | i | test.cpp:23:27:23:27 | i |
 | test.cpp:23:27:23:27 | i | test.cpp:23:27:23:27 | i |
 | test.cpp:23:27:23:27 | i | test.cpp:23:27:23:29 | [input] SSA phi read(i) |
@@ -157,18 +157,18 @@
 | test.cpp:391:17:391:23 | source1 | test.cpp:391:16:391:23 | & ... |
 | test.cpp:392:8:392:10 | tmp | test.cpp:394:10:394:12 | tmp |
 | test.cpp:392:8:392:10 | tmp | test.cpp:394:10:394:12 | tmp |
-| test.cpp:487:67:487:67 | **s | test.cpp:487:67:487:67 | **s |
-| test.cpp:487:67:487:67 | **s | test.cpp:487:67:487:67 | **s |
-| test.cpp:487:67:487:67 | **s | test.cpp:487:67:487:67 | *s |
-| test.cpp:487:67:487:67 | **s | test.cpp:488:21:488:21 | *s |
-| test.cpp:487:67:487:67 | *s | test.cpp:487:67:487:67 | **s |
 | test.cpp:487:67:487:67 | *s | test.cpp:487:67:487:67 | *s |
 | test.cpp:487:67:487:67 | *s | test.cpp:487:67:487:67 | *s |
-| test.cpp:487:67:487:67 | *s | test.cpp:487:67:487:67 | s |
-| test.cpp:487:67:487:67 | *s | test.cpp:488:21:488:21 | s |
-| test.cpp:487:67:487:67 | s | test.cpp:487:67:487:67 | *s |
+| test.cpp:487:67:487:67 | *s | test.cpp:487:67:487:67 | *s |
+| test.cpp:487:67:487:67 | *s | test.cpp:487:67:487:67 | *s |
+| test.cpp:487:67:487:67 | *s | test.cpp:488:21:488:21 | *s |
 | test.cpp:487:67:487:67 | s | test.cpp:487:67:487:67 | s |
 | test.cpp:487:67:487:67 | s | test.cpp:487:67:487:67 | s |
+| test.cpp:487:67:487:67 | s | test.cpp:487:67:487:67 | s |
+| test.cpp:487:67:487:67 | s | test.cpp:487:67:487:67 | s |
+| test.cpp:487:67:487:67 | s | test.cpp:487:67:487:67 | s |
+| test.cpp:487:67:487:67 | s | test.cpp:487:67:487:67 | s |
+| test.cpp:487:67:487:67 | s | test.cpp:488:21:488:21 | s |
 | test.cpp:487:67:487:67 | s | test.cpp:488:21:488:21 | s |
 | test.cpp:488:21:488:21 | *s | test.cpp:489:20:489:20 | *s |
 | test.cpp:488:21:488:21 | *s [post update] | test.cpp:489:20:489:20 | *s |
@@ -183,11 +183,11 @@
 | test.cpp:489:23:489:29 | *content | test.cpp:490:8:490:17 | * ... |
 | test.cpp:489:23:489:29 | content | test.cpp:489:23:489:29 | content |
 | test.cpp:489:23:489:29 | content | test.cpp:490:9:490:17 | p_content |
-| test.cpp:1086:12:1086:12 | definition of a | test.cpp:1087:3:1087:3 | *a |
-| test.cpp:1087:3:1087:3 | *a | test.cpp:1088:8:1088:9 | *& ... |
-| test.cpp:1087:3:1087:3 | *a [post update] | test.cpp:1088:8:1088:9 | *& ... |
+| test.cpp:1086:12:1086:12 | definition of a | test.cpp:1087:3:1087:3 | a |
 | test.cpp:1087:3:1087:3 | a | test.cpp:1088:8:1088:9 | & ... |
+| test.cpp:1087:3:1087:3 | a | test.cpp:1088:8:1088:9 | *& ... |
 | test.cpp:1087:3:1087:3 | a [post update] | test.cpp:1088:8:1088:9 | & ... |
+| test.cpp:1087:3:1087:3 | a [post update] | test.cpp:1088:8:1088:9 | *& ... |
 | test.cpp:1087:15:1087:21 | 0 | test.cpp:1087:3:1087:21 | ... = ... |
 | test.cpp:1087:15:1087:21 | *0 | test.cpp:1087:3:1087:21 | *... = ... |
 | test.cpp:1088:9:1088:9 | a | test.cpp:1088:8:1088:9 | & ... |
