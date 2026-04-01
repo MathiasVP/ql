@@ -866,3 +866,17 @@ void test_iconv(size_t size) {
 	iconv(0, &s, &size, &p, &size_out);
 	sink(*p); // $ ast,ir
 }
+
+void indirect_sink(const char*);
+
+void indirect_base_to_array_expr_flow(char **ps) {
+  char* ps_[10];
+  memcpy(ps_, &ps[1], 10);
+  indirect_sink(ps_[0]); // $ MISSING: ir, ast
+}
+
+void test_indirect_base_to_array_expr_flow() {
+	char *s = indirect_source();
+	char** ps = &s;
+  indirect_base_to_array_expr_flow(ps);
+}

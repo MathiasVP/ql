@@ -8008,6 +8008,24 @@ WARNING: module 'TaintTracking' has been deprecated and may be removed in future
 | taint.cpp:866:26:866:34 | ref arg & ... | taint.cpp:866:27:866:34 | size_out [inner post update] |  |
 | taint.cpp:866:27:866:34 | size_out | taint.cpp:866:26:866:34 | & ... |  |
 | taint.cpp:867:8:867:8 | p | taint.cpp:867:7:867:8 | * ... | TAINT |
+| taint.cpp:872:46:872:47 | ps | taint.cpp:872:46:872:47 | ps |  |
+| taint.cpp:872:46:872:47 | ps | taint.cpp:874:16:874:17 | ps |  |
+| taint.cpp:873:9:873:11 | ps_ | taint.cpp:874:10:874:12 | ps_ |  |
+| taint.cpp:873:9:873:11 | ps_ | taint.cpp:875:17:875:19 | ps_ |  |
+| taint.cpp:874:10:874:12 | ps_ | taint.cpp:874:3:874:8 | call to memcpy |  |
+| taint.cpp:874:10:874:12 | ref arg ps_ | taint.cpp:875:17:875:19 | ps_ |  |
+| taint.cpp:874:15:874:20 | & ... | taint.cpp:874:3:874:8 | call to memcpy | TAINT |
+| taint.cpp:874:15:874:20 | & ... | taint.cpp:874:10:874:12 | ref arg ps_ | TAINT |
+| taint.cpp:874:15:874:20 | ref arg & ... | taint.cpp:872:46:872:47 | ps |  |
+| taint.cpp:874:15:874:20 | ref arg & ... | taint.cpp:874:16:874:17 | ps [inner post update] |  |
+| taint.cpp:874:16:874:17 | ps | taint.cpp:874:16:874:20 | access to array | TAINT |
+| taint.cpp:874:16:874:20 | access to array | taint.cpp:874:15:874:20 | & ... |  |
+| taint.cpp:874:19:874:19 | 1 | taint.cpp:874:16:874:20 | access to array | TAINT |
+| taint.cpp:875:17:875:19 | ps_ | taint.cpp:875:17:875:22 | access to array |  |
+| taint.cpp:875:21:875:21 | 0 | taint.cpp:875:17:875:22 | access to array | TAINT |
+| taint.cpp:879:12:879:26 | call to indirect_source | taint.cpp:880:15:880:15 | s |  |
+| taint.cpp:880:14:880:15 | & ... | taint.cpp:881:36:881:37 | ps |  |
+| taint.cpp:880:15:880:15 | s | taint.cpp:880:14:880:15 | & ... |  |
 | thread.cpp:10:27:10:27 | s | thread.cpp:10:27:10:27 | s |  |
 | thread.cpp:10:27:10:27 | s | thread.cpp:11:8:11:8 | s |  |
 | thread.cpp:14:26:14:26 | s | thread.cpp:15:8:15:8 | s |  |
