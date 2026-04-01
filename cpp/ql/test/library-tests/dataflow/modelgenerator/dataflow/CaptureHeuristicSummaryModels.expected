@@ -1,2 +1,18 @@
 unexpectedModel
+| Unexpected heuristic-summary found: ;;true;copy_struct;(HasInt *,const HasInt *);;Argument[0];Argument[*0];taint;df-generated |
+| Unexpected heuristic-summary found: ;;true;get_x_from_union;(U *);;Argument[0];Argument[*0];taint;df-generated |
+| Unexpected heuristic-summary found: ;;true;set_x_in_union;(U *,int);;Argument[0];Argument[*0];taint;df-generated |
+| Unexpected heuristic-summary found: Models;BasicFlow;true;returnParam0;(int *,int *);;Argument[0];Argument[*0];taint;df-generated |
+| Unexpected heuristic-summary found: Models;BasicFlow;true;returnParam0;(int *,int *);;Argument[0];ReturnValue[*];taint;df-generated |
+| Unexpected heuristic-summary found: Models;BasicFlow;true;returnParam1;(int *,int *);;Argument[1];Argument[*1];taint;df-generated |
+| Unexpected heuristic-summary found: Models;BasicFlow;true;returnParam1;(int *,int *);;Argument[1];ReturnValue[*];taint;df-generated |
+| Unexpected heuristic-summary found: Models;BasicFlow;true;returnParamMultiple;(bool,int *,int *);;Argument[1];Argument[*1];taint;df-generated |
+| Unexpected heuristic-summary found: Models;BasicFlow;true;returnParamMultiple;(bool,int *,int *);;Argument[1];ReturnValue[*];taint;df-generated |
+| Unexpected heuristic-summary found: Models;BasicFlow;true;returnParamMultiple;(bool,int *,int *);;Argument[2];Argument[*2];taint;df-generated |
+| Unexpected heuristic-summary found: Models;BasicFlow;true;returnParamMultiple;(bool,int *,int *);;Argument[2];ReturnValue[*];taint;df-generated |
+| Unexpected heuristic-summary found: Models;BasicFlow;true;setField;(int *);;Argument[0];Argument[*0];taint;df-generated |
+| Unexpected heuristic-summary found: Models;TemplatedFlow<T>;true;template_returnParam0;(T *,T *);;Argument[0];Argument[*0];taint;df-generated |
+| Unexpected heuristic-summary found: Models;TemplatedFlow<T>;true;template_returnParam0;(T *,T *);;Argument[0];ReturnValue[*];taint;df-generated |
+| Unexpected heuristic-summary found: Models;TemplatedFlow<T>;true;templated_function<U>;(U *,T *);;Argument[0];Argument[*0];taint;df-generated |
+| Unexpected heuristic-summary found: Models;TemplatedFlow<T>;true;templated_function<U>;(U *,T *);;Argument[0];ReturnValue[*];taint;df-generated |
 expectedModel
