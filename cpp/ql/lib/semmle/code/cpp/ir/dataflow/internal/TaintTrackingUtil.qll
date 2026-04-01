@@ -54,6 +54,14 @@ private module Cached {
     or
     modeledTaintStep(nodeFrom, nodeTo, model)
     or
+    exists(Operand operand, Instruction instr, int indirectionIndex |
+      not instr instanceof FieldAddressInstruction and
+      hasOperandAndIndex(nodeFrom, operand, pragma[only_bind_into](indirectionIndex)) and
+      hasInstructionAndIndex(nodeTo, instr, pragma[only_bind_into](indirectionIndex)) and
+      operandToInstructionTaintStep(operand, instr)
+    ) and
+    model = ""
+    or
     // Flow from (the indirection of) an operand of a pointer arithmetic instruction to the
     // indirection of the pointer arithmetic instruction. This provides flow from `source`
     // in `x[source]` to the result of the associated load instruction.
