@@ -10,6 +10,7 @@ import semmle.code.cpp.models.interfaces.Taint
 import semmle.code.cpp.models.interfaces.Alias
 import semmle.code.cpp.models.interfaces.SideEffect
 import semmle.code.cpp.models.interfaces.FlowSource
+private import semmle.code.cpp.security.FlowSources
 
 /**
  * The `scanf` family of functions.
@@ -72,11 +73,20 @@ abstract private class ScanfFunctionModel extends ArrayFunction, TaintFunction, 
 /**
  * The standard function `scanf` and its assorted variants
  */
-private class ScanfModel extends ScanfFunctionModel, LocalFlowSourceFunction instanceof Scanf {
-  override predicate hasLocalFlowSource(FunctionOutput output, string description) {
-    output.isParameterDeref(any(int i | i >= this.getArgsStartPosition())) and
-    description = "value read by " + this.getName()
-  }
+private class ScanfModel extends ScanfFunctionModel instanceof Scanf { }
+
+abstract private class AbstractScanfFlowSource extends DataFlow::Node {
+  ScanfFunctionCall scanf;
+
+  AbstractScanfFlowSource() { this.asDefiningArgument(1) = scanf.getAnOutputArgument() }
+
+  string getSourceType() { result = "value read by " + scanf.getScanfFunction().getName() }
+}
+
+private class ScanfFlowSource extends AbstractScanfFlowSource, LocalFlowSource {
+  ScanfFlowSource() { scanf.getScanfFunction() instanceof Scanf }
+
+  final override string getSourceType() { result = AbstractScanfFlowSource.super.getSourceType() }
 }
 
 /**
@@ -84,13 +94,24 @@ private class ScanfModel extends ScanfFunctionModel, LocalFlowSourceFunction ins
  */
 private class FscanfModel extends ScanfFunctionModel, RemoteFlowSourceFunction instanceof Fscanf {
   override predicate hasRemoteFlowSource(FunctionOutput output, string description) {
-    output.isParameterDeref(any(int i | i >= this.getArgsStartPosition())) and
-    description = "value read by " + this.getName()
+    // We cannot judge whether a parameter is an output parameter or not since
+    // not all variadic arguments are necessarily output parameters. So we
+    // implement this as `none` and instead extend `RemoteFlowSource` in the
+    // `FScanfFlowSource` class instead.
+    // Ideally, the `hasSocketInput` should probably be moved out to another
+    // abstract class.
+    none()
   }
 
   override predicate hasSocketInput(FunctionInput input) {
     input.isParameterDeref(super.getInputParameterIndex())
   }
+}
+
+private class FScanfFlowSource extends AbstractScanfFlowSource, RemoteFlowSource {
+  FScanfFlowSource() { scanf.getScanfFunction() instanceof Fscanf }
+
+  final override string getSourceType() { result = AbstractScanfFlowSource.super.getSourceType() }
 }
 
 /**
