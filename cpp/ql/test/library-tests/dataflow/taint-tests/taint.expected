@@ -3,3 +3,209 @@ WARNING: module 'DataFlow' has been deprecated and may be removed in future (tai
 WARNING: module 'DataFlow' has been deprecated and may be removed in future (taint.ql:61,22-30)
 WARNING: module 'DataFlow' has been deprecated and may be removed in future (taint.ql:68,25-33)
 WARNING: module 'TaintTracking' has been deprecated and may be removed in future (taint.ql:73,20-33)
+| map.cpp:86:7:86:32 | call to pair | Fixed missing result: ir |
+| map.cpp:95:7:95:7 | call to pair | Fixed missing result: ir |
+| map.cpp:96:9:96:13 | first | Fixed missing result: ir |
+| map.cpp:98:15:98:20 | *second | Fixed missing result: ir |
+| map.cpp:98:15:98:20 | second | Fixed missing result: ir |
+| map.cpp:108:7:108:54 | call to iterator | Unexpected result: ir |
+| map.cpp:110:75:110:85 | // $ ast,ir | Missing result: ast |
+| map.cpp:111:7:111:48 | call to iterator | Unexpected result: ir |
+| map.cpp:112:58:112:68 | // $ ast,ir | Missing result: ast |
+| map.cpp:114:12:114:22 | // $ ast,ir | Missing result: ast |
+| map.cpp:116:12:116:22 | // $ ast,ir | Missing result: ast |
+| map.cpp:117:12:117:22 | // $ ast,ir | Missing result: ast |
+| map.cpp:118:12:118:22 | // $ ast,ir | Missing result: ast |
+| map.cpp:120:24:120:34 | // $ ast,ir | Missing result: ast |
+| map.cpp:122:24:122:34 | // $ ast,ir | Missing result: ast |
+| map.cpp:123:24:123:34 | // $ ast,ir | Missing result: ast |
+| map.cpp:124:24:124:34 | // $ ast,ir | Missing result: ast |
+| map.cpp:126:24:126:44 | // $ SPURIOUS: ast,ir | Fixed spurious result: ast |
+| map.cpp:128:24:128:44 | // $ SPURIOUS: ast,ir | Fixed spurious result: ast |
+| map.cpp:129:24:129:44 | // $ SPURIOUS: ast,ir | Fixed spurious result: ast |
+| map.cpp:130:24:130:44 | // $ SPURIOUS: ast,ir | Fixed spurious result: ast |
+| map.cpp:137:12:137:22 | // $ ast,ir | Missing result: ast |
+| map.cpp:138:12:138:22 | // $ ast,ir | Missing result: ast |
+| map.cpp:139:12:139:22 | // $ ast,ir | Missing result: ast |
+| map.cpp:140:24:140:34 | // $ ast,ir | Missing result: ast |
+| map.cpp:141:24:141:34 | // $ ast,ir | Missing result: ast |
+| map.cpp:142:24:142:34 | // $ ast,ir | Missing result: ast |
+| map.cpp:154:14:154:24 | // $ ast,ir | Missing result: ast |
+| map.cpp:160:8:160:10 | call to pair | Fixed missing result: ir |
+| map.cpp:172:20:172:30 | // $ ast,ir | Missing result: ast |
+| map.cpp:174:20:174:30 | // $ ast,ir | Missing result: ast |
+| map.cpp:182:30:182:61 | // $ ast,ir=179:33 ast,ir=180:33 | Missing result: ast=179:33 |
+| map.cpp:182:30:182:61 | // $ ast,ir=179:33 ast,ir=180:33 | Missing result: ast=180:33 |
+| map.cpp:183:30:183:61 | // $ ast,ir=179:33 ast,ir=180:33 | Missing result: ast=179:33 |
+| map.cpp:183:30:183:61 | // $ ast,ir=179:33 ast,ir=180:33 | Missing result: ast=180:33 |
+| map.cpp:184:7:184:32 | call to iterator | Unexpected result: ir=179:33 |
+| map.cpp:184:7:184:32 | call to iterator | Unexpected result: ir=180:33 |
+| map.cpp:185:7:185:33 | call to iterator | Unexpected result: ir=179:33 |
+| map.cpp:185:7:185:33 | call to iterator | Unexpected result: ir=180:33 |
+| map.cpp:186:30:186:71 | // $ SPURIOUS: ast,ir=179:33 ast,ir=180:33 | Fixed spurious result: ast=179:33 |
+| map.cpp:186:30:186:71 | // $ SPURIOUS: ast,ir=179:33 ast,ir=180:33 | Fixed spurious result: ast=180:33 |
+| map.cpp:187:7:187:33 | call to iterator | Unexpected result: ir=179:33 |
+| map.cpp:187:7:187:33 | call to iterator | Unexpected result: ir=180:33 |
+| map.cpp:193:13:193:23 | // $ ast,ir | Missing result: ast |
+| map.cpp:196:13:196:23 | // $ ast,ir | Missing result: ast |
+| map.cpp:199:13:199:30 | // $ SPURIOUS: ast | Fixed spurious result: ast |
+| map.cpp:202:13:202:30 | // $ SPURIOUS: ast | Fixed spurious result: ast |
+| map.cpp:210:13:210:23 | // $ ast,ir | Missing result: ast |
+| map.cpp:213:13:213:23 | // $ ast,ir | Missing result: ast |
+| map.cpp:216:13:216:23 | // $ ast,ir | Missing result: ast |
+| map.cpp:218:13:218:23 | // $ ast,ir | Missing result: ast |
+| map.cpp:219:13:219:23 | // $ ast,ir | Missing result: ast |
+| map.cpp:225:13:225:44 | // $ ast,ir=223:49 ast,ir=224:49 | Missing result: ast=223:49 |
+| map.cpp:225:13:225:44 | // $ ast,ir=223:49 ast,ir=224:49 | Missing result: ast=224:49 |
+| map.cpp:226:32:226:63 | // $ ast,ir=223:49 ast,ir=224:49 | Missing result: ast=223:49 |
+| map.cpp:226:32:226:63 | // $ ast,ir=223:49 ast,ir=224:49 | Missing result: ast=224:49 |
+| map.cpp:227:13:227:44 | // $ ast,ir=223:49 ast,ir=224:49 | Missing result: ast=223:49 |
+| map.cpp:227:13:227:44 | // $ ast,ir=223:49 ast,ir=224:49 | Missing result: ast=224:49 |
+| map.cpp:229:13:229:54 | // $ SPURIOUS: ast,ir=223:49 ast,ir=224:49 | Fixed spurious result: ast=223:49 |
+| map.cpp:229:13:229:54 | // $ SPURIOUS: ast,ir=223:49 ast,ir=224:49 | Fixed spurious result: ast=224:49 |
+| map.cpp:235:7:235:40 | call to iterator | Unexpected result: ir |
+| map.cpp:236:13:236:23 | // $ ast,ir | Missing result: ast |
+| map.cpp:239:56:239:66 | // $ ast,ir | Missing result: ast |
+| map.cpp:240:13:240:23 | // $ ast,ir | Missing result: ast |
+| map.cpp:246:7:246:44 | call to iterator | Unexpected result: ir |
+| map.cpp:247:13:247:23 | // $ ast,ir | Missing result: ast |
+| map.cpp:250:55:250:65 | // $ ast,ir | Missing result: ast |
+| map.cpp:251:13:251:23 | // $ ast,ir | Missing result: ast |
+| map.cpp:260:7:260:54 | call to iterator | Unexpected result: ir |
+| map.cpp:262:75:262:85 | // $ ast,ir | Missing result: ast |
+| map.cpp:263:7:263:48 | call to iterator | Unexpected result: ir |
+| map.cpp:264:58:264:68 | // $ ast,ir | Missing result: ast |
+| map.cpp:266:12:266:22 | // $ ast,ir | Missing result: ast |
+| map.cpp:268:12:268:22 | // $ ast,ir | Missing result: ast |
+| map.cpp:269:12:269:22 | // $ ast,ir | Missing result: ast |
+| map.cpp:270:12:270:22 | // $ ast,ir | Missing result: ast |
+| map.cpp:272:24:272:34 | // $ ast,ir | Missing result: ast |
+| map.cpp:274:24:274:34 | // $ ast,ir | Missing result: ast |
+| map.cpp:275:24:275:34 | // $ ast,ir | Missing result: ast |
+| map.cpp:276:24:276:34 | // $ ast,ir | Missing result: ast |
+| map.cpp:278:24:278:44 | // $ SPURIOUS: ast,ir | Fixed spurious result: ast |
+| map.cpp:280:24:280:44 | // $ SPURIOUS: ast,ir | Fixed spurious result: ast |
+| map.cpp:281:24:281:44 | // $ SPURIOUS: ast,ir | Fixed spurious result: ast |
+| map.cpp:282:24:282:44 | // $ SPURIOUS: ast,ir | Fixed spurious result: ast |
+| map.cpp:289:12:289:22 | // $ ast,ir | Missing result: ast |
+| map.cpp:290:12:290:22 | // $ ast,ir | Missing result: ast |
+| map.cpp:291:12:291:22 | // $ ast,ir | Missing result: ast |
+| map.cpp:292:24:292:34 | // $ ast,ir | Missing result: ast |
+| map.cpp:293:24:293:34 | // $ ast,ir | Missing result: ast |
+| map.cpp:294:24:294:34 | // $ ast,ir | Missing result: ast |
+| map.cpp:306:14:306:24 | // $ ast,ir | Missing result: ast |
+| map.cpp:312:8:312:10 | call to pair | Fixed missing result: ir |
+| map.cpp:324:20:324:30 | // $ ast,ir | Missing result: ast |
+| map.cpp:326:20:326:30 | // $ ast,ir | Missing result: ast |
+| map.cpp:334:7:334:32 | call to iterator | Unexpected result: ir=331:33 |
+| map.cpp:334:7:334:32 | call to iterator | Unexpected result: ir=332:33 |
+| map.cpp:335:7:335:33 | call to iterator | Unexpected result: ir=331:33 |
+| map.cpp:335:7:335:33 | call to iterator | Unexpected result: ir=332:33 |
+| map.cpp:336:7:336:33 | call to iterator | Unexpected result: ir=331:33 |
+| map.cpp:336:7:336:33 | call to iterator | Unexpected result: ir=332:33 |
+| map.cpp:342:13:342:23 | // $ ast,ir | Missing result: ast |
+| map.cpp:345:13:345:23 | // $ ast,ir | Missing result: ast |
+| map.cpp:348:13:348:30 | // $ SPURIOUS: ast | Fixed spurious result: ast |
+| map.cpp:351:13:351:30 | // $ SPURIOUS: ast | Fixed spurious result: ast |
+| map.cpp:359:13:359:23 | // $ ast,ir | Missing result: ast |
+| map.cpp:362:13:362:23 | // $ ast,ir | Missing result: ast |
+| map.cpp:365:13:365:23 | // $ ast,ir | Missing result: ast |
+| map.cpp:367:13:367:23 | // $ ast,ir | Missing result: ast |
+| map.cpp:368:13:368:23 | // $ ast,ir | Missing result: ast |
+| map.cpp:374:13:374:44 | // $ ast,ir=372:49 ast,ir=373:49 | Missing result: ast=372:49 |
+| map.cpp:374:13:374:44 | // $ ast,ir=372:49 ast,ir=373:49 | Missing result: ast=373:49 |
+| map.cpp:375:32:375:63 | // $ ast,ir=372:49 ast,ir=373:49 | Missing result: ast=372:49 |
+| map.cpp:375:32:375:63 | // $ ast,ir=372:49 ast,ir=373:49 | Missing result: ast=373:49 |
+| map.cpp:376:13:376:44 | // $ ast,ir=372:49 ast,ir=373:49 | Missing result: ast=372:49 |
+| map.cpp:376:13:376:44 | // $ ast,ir=372:49 ast,ir=373:49 | Missing result: ast=373:49 |
+| map.cpp:378:13:378:54 | // $ SPURIOUS: ast,ir=372:49 ast,ir=373:49 | Fixed spurious result: ast=372:49 |
+| map.cpp:378:13:378:54 | // $ SPURIOUS: ast,ir=372:49 ast,ir=373:49 | Fixed spurious result: ast=373:49 |
+| map.cpp:384:7:384:40 | call to iterator | Unexpected result: ir |
+| map.cpp:385:13:385:23 | // $ ast,ir | Missing result: ast |
+| map.cpp:388:56:388:66 | // $ ast,ir | Missing result: ast |
+| map.cpp:389:13:389:23 | // $ ast,ir | Missing result: ast |
+| map.cpp:396:7:396:44 | call to iterator | Unexpected result: ir |
+| map.cpp:398:13:398:54 | // $ ast,ir=396:30 SPURIOUS: ast,ir=397:30 | Fixed spurious result: ast=397:30 |
+| map.cpp:398:13:398:54 | // $ ast,ir=396:30 SPURIOUS: ast,ir=397:30 | Missing result: ast=396:30 |
+| map.cpp:401:55:401:65 | // $ ast,ir | Missing result: ast |
+| map.cpp:402:13:402:23 | // $ ast,ir | Missing result: ast |
+| map.cpp:413:7:413:37 | call to pair | Fixed missing result: ir |
+| map.cpp:416:45:416:55 | // $ ast,ir | Missing result: ast |
+| map.cpp:417:13:417:23 | // $ ast,ir | Missing result: ast |
+| map.cpp:418:20:418:30 | // $ ast,ir | Missing result: ast |
+| map.cpp:419:45:419:55 | // $ ast,ir | Missing result: ast |
+| map.cpp:420:13:420:23 | // $ ast,ir | Missing result: ast |
+| map.cpp:421:20:421:30 | // $ ast,ir | Missing result: ast |
+| map.cpp:432:13:432:23 | // $ ast,ir | Missing result: ast |
+| map.cpp:433:53:433:63 | // $ ast,ir | Missing result: ast |
+| string.cpp:33:19:33:29 | // $ ast,ir | Missing result: ast |
+| string.cpp:39:28:39:38 | // $ ast,ir | Missing result: ast |
+| string.cpp:43:28:43:38 | // $ ast,ir | Missing result: ast |
+| string.cpp:46:28:46:38 | // $ ast,ir | Missing result: ast |
+| string.cpp:70:12:70:22 | // $ ast,ir | Missing result: ast |
+| string.cpp:145:18:145:28 | // $ ast,ir | Missing result: ast |
+| string.cpp:146:18:146:28 | // $ ast,ir | Missing result: ast |
+| string.cpp:147:18:147:28 | // $ ast,ir | Missing result: ast |
+| string.cpp:159:13:159:23 | // $ ast,ir | Missing result: ast |
+| string.cpp:162:19:162:29 | // $ ast,ir | Missing result: ast |
+| string.cpp:163:13:163:23 | // $ ast,ir | Missing result: ast |
+| string.cpp:167:20:167:30 | // $ ast,ir | Missing result: ast |
+| string.cpp:168:13:168:23 | // $ ast,ir | Missing result: ast |
+| string.cpp:172:13:172:23 | // $ ast,ir | Missing result: ast |
+| string.cpp:177:13:177:23 | // $ ast,ir | Missing result: ast |
+| string.cpp:185:14:185:24 | // $ ast,ir | Missing result: ast |
+| string.cpp:199:23:199:33 | // $ ast,ir | Missing result: ast |
+| string.cpp:200:12:200:22 | // $ ast,ir | Missing result: ast |
+| string.cpp:202:26:202:36 | // $ ast,ir | Missing result: ast |
+| string.cpp:203:12:203:22 | // $ ast,ir | Missing result: ast |
+| string.cpp:206:7:206:8 | *s6 | Unexpected result: ir |
+| string.cpp:220:26:220:36 | // $ ast,ir | Missing result: ast |
+| string.cpp:224:26:224:36 | // $ ast,ir | Missing result: ast |
+| string.cpp:225:12:225:22 | // $ ast,ir | Missing result: ast |
+| string.cpp:228:29:228:39 | // $ ast,ir | Missing result: ast |
+| string.cpp:229:12:229:22 | // $ ast,ir | Missing result: ast |
+| string.cpp:243:30:243:40 | // $ ast,ir | Missing result: ast |
+| string.cpp:247:30:247:40 | // $ ast,ir | Missing result: ast |
+| string.cpp:248:12:248:22 | // $ ast,ir | Missing result: ast |
+| string.cpp:251:33:251:43 | // $ ast,ir | Missing result: ast |
+| string.cpp:252:12:252:22 | // $ ast,ir | Missing result: ast |
+| string.cpp:265:12:265:22 | // $ ast,ir | Missing result: ast |
+| string.cpp:312:18:312:28 | // $ ast,ir | Missing result: ast |
+| string.cpp:323:33:323:43 | // $ ast,ir | Missing result: ast |
+| string.cpp:340:11:340:21 | // $ ast,ir | Missing result: ast |
+| string.cpp:341:11:341:21 | // $ ast,ir | Missing result: ast |
+| string.cpp:342:11:342:21 | // $ ast,ir | Missing result: ast |
+| string.cpp:350:13:350:23 | // $ ast,ir | Missing result: ast |
+| string.cpp:351:20:351:30 | // $ ast,ir | Missing result: ast |
+| string.cpp:363:42:363:52 | // $ ast,ir | Missing result: ast |
+| string.cpp:364:13:364:23 | // $ ast,ir | Missing result: ast |
+| string.cpp:436:27:436:37 | // $ ast,ir | Missing result: ast |
+| string.cpp:437:12:437:22 | // $ ast,ir | Missing result: ast |
+| string.cpp:449:53:449:63 | // $ ast,ir | Missing result: ast |
+| string.cpp:450:12:450:22 | // $ ast,ir | Missing result: ast |
+| string.cpp:462:50:462:60 | // $ ast,ir | Missing result: ast |
+| string.cpp:463:12:463:22 | // $ ast,ir | Missing result: ast |
+| string.cpp:465:52:465:62 | // $ ast,ir | Missing result: ast |
+| string.cpp:478:41:478:51 | // $ ast,ir | Missing result: ast |
+| string.cpp:479:12:479:22 | // $ ast,ir | Missing result: ast |
+| string.cpp:481:42:481:52 | // $ ast,ir | Missing result: ast |
+| string.cpp:494:43:494:53 | // $ ast,ir | Missing result: ast |
+| string.cpp:495:12:495:22 | // $ ast,ir | Missing result: ast |
+| string.cpp:498:8:498:9 | *s6 | Unexpected result: ir |
+| string.cpp:513:12:513:22 | // $ ast,ir | Missing result: ast |
+| string.cpp:522:19:522:39 | // $ SPURIOUS: ast,ir | Fixed spurious result: ast |
+| string.cpp:523:18:523:28 | // $ ast,ir | Missing result: ast |
+| string.cpp:536:33:536:43 | // $ ast,ir | Missing result: ast |
+| string.cpp:538:36:538:46 | // $ ast,ir | Missing result: ast |
+| string.cpp:541:12:541:22 | // $ ast,ir | Missing result: ast |
+| string.cpp:542:12:542:22 | // $ ast,ir | Missing result: ast |
+| string.cpp:543:12:543:22 | // $ ast,ir | Missing result: ast |
+| string.cpp:543:12:543:22 | // $ ast,ir | Missing result: ir |
+| string.cpp:544:12:544:22 | // $ ast,ir | Missing result: ast |
+| string.cpp:556:41:556:51 | // $ ast,ir | Missing result: ast |
+| string.cpp:557:44:557:54 | // $ ast,ir | Missing result: ast |
+| string.cpp:561:12:561:22 | // $ ast,ir | Missing result: ast |
+| string.cpp:562:12:562:22 | // $ ast,ir | Missing result: ast |
+| string.cpp:563:12:563:22 | // $ ast,ir | Missing result: ast |
+| string.cpp:563:12:563:22 | // $ ast,ir | Missing result: ir |
+| string.cpp:564:12:564:32 | // $ SPURIOUS: ast,ir | Fixed spurious result: ast |

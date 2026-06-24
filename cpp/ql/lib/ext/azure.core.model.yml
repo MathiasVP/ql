@@ -3,10 +3,10 @@ extensions:
       pack: codeql/cpp-all
       extensible: sourceModel
     data: # namespace, type, subtypes, name, signature, ext, output, kind, provenance
-      - ["Azure::Core::Http", "RawResponse", True, "GetHeaders", "", "", "ReturnValue[*]", "remote", "manual"]
+      - ["Azure::Core::Http", "RawResponse", True, "GetHeaders", "", "", "ReturnValue[*].Element.Field[std::pair::second]", "remote", "manual"] # TODO: Support access paths for sources
       - ["Azure::Core::Http", "RawResponse", True, "GetBody", "", "", "ReturnValue[*]", "remote", "manual"]
       - ["Azure::Core::Http", "RawResponse", True, "ExtractBodyStream", "", "", "ReturnValue[*]", "remote", "manual"]
-      - ["Azure::Core::Http", "Request", True, "GetHeaders", "", "", "ReturnValue", "remote", "manual"]
+      - ["Azure::Core::Http", "Request", True, "GetHeaders", "", "", "ReturnValue.Element.Field[std::pair::second]", "remote", "manual"] # TODO: Support access paths for sources
       - ["Azure::Core::Http", "Request", True, "GetHeader", "", "", "ReturnValue", "remote", "manual"]
       - ["Azure::Core::Http", "Request", True, "GetBodyStream", "", "", "ReturnValue[*]", "remote", "manual"]
 
