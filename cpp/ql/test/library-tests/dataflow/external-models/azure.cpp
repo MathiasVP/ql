@@ -7,6 +7,12 @@ using uint32_t = unsigned int;
 
 namespace std
 {
+  template<typename T, typename U>
+  struct pair {
+    T first;
+    U second;
+  };
+
   class string
   {
   public:
@@ -19,10 +25,11 @@ namespace std
   class map
   {
   public:
+    using key_type = K;
     map();
     ~map();
 
-    V& operator[](const K& key);
+    V& operator[](const key_type& key);
   };
 
   template <typename T>
