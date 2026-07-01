@@ -89,7 +89,7 @@ class DataFlowCall extends TDataFlowCall {
   DataFlowCallable getEnclosingCallable() { none() }
 
   /** Gets the underlying source code call, if any. */
-  ApplyExprCfgNode asCall() { none() }
+  abstract ApplyExprCfgNode asCall();
 
   /** Gets the underlying key-path application node, if any. */
   KeyPathApplicationExprCfgNode asKeyPath() { none() }
@@ -155,6 +155,8 @@ private class KeyPathCall extends DataFlowCall, TKeyPathCall {
     result = apply.getBase()
   }
 
+  final override ApplyExprCfgNode asCall() { none() }
+
   override DataFlowCallable getEnclosingCallable() { result = TDataFlowFunc(apply.getScope()) }
 
   override string toString() { result = apply.toString() }
@@ -171,6 +173,8 @@ class PropertyGetterCall extends DataFlowCall, TPropertyGetterCall {
     i = -1 and
     result = getter.getBase()
   }
+
+  final override ApplyExprCfgNode asCall() { none() }
 
   override DataFlowCallable getEnclosingCallable() { result = TDataFlowFunc(getter.getScope()) }
 
@@ -196,6 +200,8 @@ class PropertySetterCall extends DataFlowCall, TPropertySetterCall {
     result = setter.getSource()
   }
 
+  final override ApplyExprCfgNode asCall() { none() }
+
   override DataFlowCallable getEnclosingCallable() { result = TDataFlowFunc(setter.getScope()) }
 
   PropertySetterCfgNode getSetter() { result = setter }
@@ -220,6 +226,8 @@ class PropertyObserverCall extends DataFlowCall, TPropertyObserverCall {
     result = observer.getSource()
   }
 
+  final override ApplyExprCfgNode asCall() { none() }
+
   override DataFlowCallable getEnclosingCallable() { result = TDataFlowFunc(observer.getScope()) }
 
   PropertyObserverCfgNode getObserver() { result = observer }
@@ -239,6 +247,8 @@ class SummaryCall extends DataFlowCall, TSummaryCall {
 
   /** Gets the data flow node that this call targets. */
   FlowSummaryImpl::Private::SummaryNode getReceiver() { result = receiver }
+
+  final override ApplyExprCfgNode asCall() { none() }
 
   override DataFlowCallable getEnclosingCallable() { result = TSummarizedCallable(c) }
 
