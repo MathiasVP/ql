@@ -54,23 +54,13 @@ signature module InputSig<LocationSig Location, DF::InputSig<Location> Lang> {
     none()
   }
 
-  /**
-   * A base class of calls that are candidates for flow summary modeling.
-   */
-  class FlowSummaryCallBase {
-    string toString();
-  }
-
   /** Gets a call that targets summarized callable `sc`. */
-  default FlowSummaryCallBase getASourceCall(SummarizedCallableBase sc) { none() }
+  Lang::DataFlowCall getACall(SummarizedCallableBase sc);
 
   /** Gets the callable corresponding to summarized callable `c`. */
   default Lang::DataFlowCallable getSummarizedCallableAsDataFlowCallable(SummarizedCallableBase c) {
     none()
   }
-
-  /** Gets the enclosing callable of `call`. */
-  default Lang::DataFlowCallable getSourceCallEnclosingCallable(FlowSummaryCallBase call) { none() }
 
   /** Gets the parameter position representing a callback itself, if any. */
   default Lang::ArgumentPosition callbackSelfParameterPosition() { none() }
@@ -1304,9 +1294,9 @@ module Make<
       TSummaryParameterNode(SummarizedCallable c, ParameterPosition pos) {
         summaryParameterNodeRange(c, pos)
       } or
-      TSummaryReturnArgumentNode(FlowSummaryCallBase call, ReturnKind rk) {
+      TSummaryReturnArgumentNode(DataFlowCall call, ReturnKind rk) {
         exists(SummarizedCallable sc |
-          call = getASourceCall(sc) and
+          call = getACall(sc) and
           relevantFlowSummaryPosition(sc, rk)
         )
       } or
@@ -1360,7 +1350,7 @@ module Make<
     }
 
     private class SummaryReturnArgumentNode extends SummaryNode, TSummaryReturnArgumentNode {
-      private FlowSummaryCallBase call;
+      private DataFlowCall call;
       private ReturnKind rk;
 
       SummaryReturnArgumentNode() { this = TSummaryReturnArgumentNode(call, rk) }
@@ -1379,7 +1369,7 @@ module Make<
      * flow into the caller when a value is written to the value returned by
      * `call` with kind `rk`.
      */
-    SummaryNode summaryArgumentNode(FlowSummaryCallBase call, ReturnKind rk) {
+    SummaryNode summaryArgumentNode(DataFlowCall call, ReturnKind rk) {
       result = TSummaryReturnArgumentNode(call, rk)
     }
 
@@ -1387,9 +1377,9 @@ module Make<
     DataFlowCallable getEnclosingCallable(SummaryNode sn) {
       result = getSummarizedCallableAsDataFlowCallable(sn.getSummarizedCallable())
       or
-      exists(FlowSummaryCallBase call |
+      exists(DataFlowCall call |
         sn = TSummaryReturnArgumentNode(call, _) and
-        result = getSourceCallEnclosingCallable(call)
+        result = call.getEnclosingCallable()
       )
     }
 
@@ -1820,11 +1810,8 @@ module Make<
       /** Gets the summary node represented by data-flow node `n`, if any. */
       SummaryNode getSummaryNode(Node n);
 
-      /** Gets a call that targets summarized callable `sc`. */
-      DataFlowCall getACall(SummarizedCallable sc);
-
       /** Gets the out node of kind `rk` for `call`, if any. */
-      default Node getSourceOutNode(FlowSummaryCallBase call, ReturnKind rk) { none() }
+      default Node getSourceOutNode(DataFlowCall call, ReturnKind rk) { none() }
 
       /** Gets the enclosing callable of `source`. */
       DataFlowCallable getSourceNodeEnclosingCallable(SourceBase source);
@@ -1905,9 +1892,9 @@ module Make<
           summaryLocalStepImpl(predSummary, succ, preservesValue, model)
         )
         or
-        exists(FlowSummaryCallBase summaryCall, ReturnKind rk, SummarizedCallable sc |
+        exists(DataFlowCall summaryCall, ReturnKind rk, SummarizedCallable sc |
           pred = StepsInput::getSourceOutNode(summaryCall, rk) and
-          summaryCall = getASourceCall(sc) and
+          summaryCall = getACall(sc) and
           summary(sc, SummaryComponentStack::return(rk), _, preservesValue, model) and
           succ = TSummaryReturnArgumentNode(summaryCall, rk)
         )
@@ -2014,7 +2001,7 @@ module Make<
         DataFlowCall call, SummarizedCallable sc, ParameterPosition ppos, SummaryParamNode p
       ) {
         p = TSummaryParameterNode(sc, ppos) and
-        call = StepsInput::getACall(sc)
+        call = getACall(sc)
       }
 
       pragma[nomagic]
