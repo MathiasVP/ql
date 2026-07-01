@@ -21,21 +21,15 @@ module Input implements InputSig<Location, DataFlowImplSpecific::CppDataFlow> {
 
   class SinkBase = Void;
 
-  class FlowSummaryCallBase = CallInstruction;
-
-  predicate callableFromSource(SummarizedCallableBase c) { exists(c.getBlock()) }
-
-  FlowSummaryCallBase getASourceCall(SummarizedCallableBase sc) {
-    result.getStaticCallTarget() = sc
-  }
-
   DataFlowCallable getSummarizedCallableAsDataFlowCallable(SummarizedCallableBase c) {
     result.asSummarizedCallable() = c
   }
 
-  DataFlowCallable getSourceCallEnclosingCallable(FlowSummaryCallBase call) {
-    result.asSourceCallable() = call.getEnclosingFunction()
+  DataFlowCall getACall(SummarizedCallableBase sc) {
+    result.getStaticCallTarget().getUnderlyingCallable() = sc
   }
+
+  predicate callableFromSource(SummarizedCallableBase c) { exists(c.getBlock()) }
 
   ArgumentPosition callbackSelfParameterPosition() { result = TDirectPosition(-1) }
 
@@ -137,13 +131,9 @@ private module StepsInput implements Impl::Private::StepsInputSig {
     result = n.(FlowSummaryNode).getSummaryNode()
   }
 
-  DataFlowCall getACall(Public::SummarizedCallable sc) {
-    result.getStaticCallTarget().getUnderlyingCallable() = sc
-  }
-
-  Node getSourceOutNode(Input::FlowSummaryCallBase call, ReturnKind rk) {
+  Node getSourceOutNode(DataFlowCall call, ReturnKind rk) {
     exists(IndirectReturnOutNode out | result = out |
-      out.getCallInstruction() = call and
+      out.getCallInstruction() = call.asCallInstruction() and
       pragma[only_bind_out](rk.(NormalReturnKind).getIndirectionIndex()) =
         pragma[only_bind_out](out.getIndirectionIndex())
     )

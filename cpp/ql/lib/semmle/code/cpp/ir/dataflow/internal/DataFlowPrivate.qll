@@ -563,15 +563,15 @@ class SummaryArgumentNode extends ArgumentNode, FlowSummaryNode {
 
 /** An argument node that re-enters return output as input to a flow summary. */
 private class FlowSummaryArgumentNode extends ArgumentNode, FlowSummaryNode {
-  private CallInstruction callInstruction;
+  private DataFlowCall call;
   private ReturnKind rk;
 
   FlowSummaryArgumentNode() {
-    this.getSummaryNode() = FlowSummaryImpl::Private::summaryArgumentNode(callInstruction, rk)
+    this.getSummaryNode() = FlowSummaryImpl::Private::summaryArgumentNode(call, rk)
   }
 
-  override predicate argumentOf(DataFlowCall call, ArgumentPosition pos) {
-    call.asCallInstruction() = callInstruction and
+  override predicate argumentOf(DataFlowCall call_, ArgumentPosition pos) {
+    call_ = call and
     pos = TFlowSummaryPosition(rk)
   }
 }
@@ -1198,7 +1198,7 @@ class DataFlowCall extends TDataFlowCall {
   /**
    * Gets the `Function` that the call targets, if this is statically known.
    */
-  Declaration getStaticCallSourceTarget() { none() }
+  abstract Declaration getStaticCallSourceTarget();
 
   /**
    * Gets the target of this call. We use the following strategy for deciding
@@ -1306,6 +1306,8 @@ class SummaryCall extends DataFlowCall, TSummaryCall {
    * targets.
    */
   FlowSummaryImpl::Private::SummaryNode getReceiver() { result = receiver }
+
+  override Declaration getStaticCallSourceTarget() { none() }
 
   // no implementation for `getCallTargetOperand()`, `getStaticCallTarget()`
   // or `getArgumentOperand(int index)`. This is because the flow summary
