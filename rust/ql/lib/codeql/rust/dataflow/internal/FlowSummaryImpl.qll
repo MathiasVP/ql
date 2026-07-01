@@ -33,7 +33,7 @@ module Input implements InputSig<Location, RustDataFlow> {
 
   class SummarizedCallableBase = Function;
 
-  class FlowSummaryCallBase = Void;
+  DataFlowCall getACall(SummarizedCallableBase sc) { result.asCall().getStaticTarget() = sc }
 
   predicate callableFromSource(SummarizedCallableBase c) { c.fromSource() }
 
@@ -151,8 +151,6 @@ module StepsInput implements Impl::Private::StepsInputSig {
   Impl::Private::SummaryNode getSummaryNode(RustDataFlow::Node n) {
     result = n.(FlowSummaryNode).getSummaryNode()
   }
-
-  DataFlowCall getACall(Public::SummarizedCallable sc) { result.asCall().getStaticTarget() = sc }
 
   /** Gets the argument of `source` described by `sc`, if any. */
   private Expr getSourceNodeArgument(Input::SourceBase source, Impl::Private::SummaryComponent sc) {
