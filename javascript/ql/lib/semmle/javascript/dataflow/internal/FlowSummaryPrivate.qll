@@ -18,6 +18,17 @@ private import semmle.javascript.internal.flow_summaries.ExceptionFlow
  */
 class SummarizedCallableBase = string;
 
+overlay[global]
+DataFlowCall getACall(SummarizedCallableBase sc) {
+  exists(LibraryCallable callable | callable = sc |
+    result.asOrdinaryCall() =
+      [
+        callable.getACall(), callable.getACallSimple(),
+        callable.(LibraryCallableInternal).getACallStage2()
+      ]
+  )
+}
+
 class SourceBase extends Unit {
   SourceBase() { none() }
 }
@@ -144,17 +155,6 @@ ReturnKind getStandardReturnValueKind() { result = MkNormalReturnKind() and Stag
 private module FlowSummaryStepInput implements Private::StepsInputSig {
   Private::SummaryNode getSummaryNode(DataFlow::Node n) {
     result = n.(FlowSummaryNode).getSummaryNode()
-  }
-
-  overlay[global]
-  DataFlowCall getACall(SummarizedCallable sc) {
-    exists(LibraryCallable callable | callable = sc |
-      result.asOrdinaryCall() =
-        [
-          callable.getACall(), callable.getACallSimple(),
-          callable.(LibraryCallableInternal).getACallStage2()
-        ]
-    )
   }
 
   DataFlowCallable getSourceNodeEnclosingCallable(SourceBase source) { none() }

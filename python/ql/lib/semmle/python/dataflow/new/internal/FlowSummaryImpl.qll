@@ -20,7 +20,14 @@ module Input implements InputSig<Location, DataFlowImplSpecific::PythonDataFlow>
 
   class SinkBase = Void;
 
-  class FlowSummaryCallBase = Void;
+  overlay[global]
+  DataFlowCall getACall(SummarizedCallableBase sc) {
+    result =
+      TPotentialLibraryCall([
+          sc.(LibraryCallable).getACall().asCfgNode(),
+          sc.(LibraryCallable).getACallSimple().asCfgNode()
+        ])
+  }
 
   predicate callableFromSource(SummarizedCallableBase c) { none() }
 
@@ -113,15 +120,6 @@ private import Make<Location, DataFlowImplSpecific::PythonDataFlow, Input> as Im
 private module StepsInput implements Impl::Private::StepsInputSig {
   Impl::Private::SummaryNode getSummaryNode(Node n) {
     result = n.(FlowSummaryNode).getSummaryNode()
-  }
-
-  overlay[global]
-  DataFlowCall getACall(Public::SummarizedCallable sc) {
-    result =
-      TPotentialLibraryCall([
-          sc.(LibraryCallable).getACall().asCfgNode(),
-          sc.(LibraryCallable).getACallSimple().asCfgNode()
-        ])
   }
 
   DataFlowCallable getSourceNodeEnclosingCallable(Input::SourceBase source) { none() }

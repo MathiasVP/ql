@@ -31,7 +31,12 @@ module Input implements InputSig<Location, DataFlowImplSpecific::GoDataFlow> {
 
   class SinkBase = Void;
 
-  class FlowSummaryCallBase = Void;
+  DataFlowCall getACall(Public::SummarizedCallable sc) {
+    exists(DataFlow::CallNode call |
+      call.asExpr() = result and
+      call.getACalleeIncludingExternals() = sc
+    )
+  }
 
   predicate callableFromSource(SummarizedCallableBase c) { exists(c.getFuncDef()) }
 
@@ -117,13 +122,6 @@ private import Make<Location, DataFlowImplSpecific::GoDataFlow, Input> as Impl
 private module StepsInput implements Impl::Private::StepsInputSig {
   Impl::Private::SummaryNode getSummaryNode(Node n) {
     result = n.(FlowSummaryNode).getSummaryNode()
-  }
-
-  DataFlowCall getACall(Public::SummarizedCallable sc) {
-    exists(DataFlow::CallNode call |
-      call.asExpr() = result and
-      call.getACalleeIncludingExternals() = sc
-    )
   }
 
   DataFlowCallable getSourceNodeEnclosingCallable(Input::SourceBase source) { none() }
