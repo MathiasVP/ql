@@ -38,10 +38,16 @@ module Input implements InputSig<Location, DataFlowImplSpecific::CppDataFlow> {
 
   abstract private class SourceSinkBase extends Element {
     /** Gets the call associated with this element, if any. */
-    CallInstruction getCall() { none() }
+    CallInstruction asCall() { none() }
 
-    /** Gets the function associated with this element, if any. */
-    Function getFunction() { none() }
+    /**
+     * Holds if `(call, i)` represents an argument associated with this
+     * element, if any.
+     */
+    predicate asArgument(CallInstruction call, int i) { none() }
+
+    /** Gets the parameter associated with this element, if any. */
+    Parameter asParameter() { none() }
 
     /** Gets the enclosing function of this element. */
     abstract Declaration getEnclosingFunction();
@@ -56,9 +62,41 @@ module Input implements InputSig<Location, DataFlowImplSpecific::CppDataFlow> {
 
     SourceSinkCall() { call.getUnconvertedResultExpression() = this }
 
-    final override CallInstruction getCall() { result = call }
+    final override CallInstruction asCall() { result = call }
 
     final override Declaration getEnclosingFunction() { result = Call.super.getEnclosingFunction() }
+  }
+
+  private class Argument extends Expr {
+    CallInstruction call;
+    int i;
+
+    Argument() { call.getArgument(i).getUnconvertedResultExpression() = this }
+
+    CallInstruction getCall() { result = call }
+
+    int getIndex() { result = i }
+  }
+
+  private class SourceSinkArgument extends SourceBase, SinkBase instanceof Argument {
+    final override predicate asArgument(CallInstruction call, int i) {
+      call = Argument.super.getCall() and
+      Argument.super.getIndex() = i
+    }
+
+    final override Declaration getEnclosingFunction() {
+      result = Argument.super.getEnclosingFunction()
+    }
+  }
+
+  private class SourceSinkParameter extends SourceBase, SinkBase instanceof Parameter {
+    Function f;
+
+    SourceSinkParameter() { f = Parameter.super.getFunction() }
+
+    final override Parameter asParameter() { result = this }
+
+    final override Declaration getEnclosingFunction() { result = f }
   }
 
   class FlowSummaryCallBase = CallInstruction;
@@ -172,40 +210,24 @@ private module StepsInput implements Impl::Private::StepsInputSig {
     result.asSourceCallable() = source.getEnclosingFunction()
   }
 
-  private ArgumentNode getSourceNodeArgument(
-    Input::SourceBase source, Impl::Private::SummaryComponent sc
-  ) {
-    exists(Position pos, DataFlowCall call |
-      sc = Impl::Private::SummaryComponent::argument(pos) and
-      source.getCall() = call.asCallInstruction() and
-      result.argumentOf(call, pos)
-    )
-  }
-
   Node getSourceNode(Input::SourceBase source, Impl::Private::SummaryComponentStack s) {
     exists(ReturnKind rk, DataFlowCall call |
       s.head() = Impl::Private::SummaryComponent::return(rk) and
-      source.getCall() = call.asCallInstruction() and
+      source.asCall() = call.asCallInstruction() and
       result = getAnOutNode(call, rk)
     )
     or
     exists(Position pos, DataFlowCallable callable |
       s.head() = Impl::Private::SummaryComponent::parameter(pos) and
-      result.(ParameterNode).isParameterOf(callable, pos)
-    |
-      exists(ArgumentNode arg, DataFlowCall call |
-        arg = getSourceNodeArgument(source, s.tail().headOfSingleton()) and
-        arg.argumentOf(call, pos) and
-        callable = call.getStaticCallTarget()
-      )
-      or
-      source.getFunction() = callable.asSourceCallable()
+      result.(ParameterNode).isParameterOf(callable, pos) and
+      source.asParameter().getFunction() = callable.asSourceCallable() and
+      source.asParameter().getIndex() = pos.getArgumentIndex()
     )
     or
-    exists(Position pos |
-      s.head() = Impl::Private::SummaryComponent::argument(pos) and
-      result.(PostUpdateNode).getPreUpdateNode() =
-        getSourceNodeArgument(source, s.headOfSingleton())
+    exists(Position pos, DataFlowCall call |
+      result.(PostUpdateNode).getPreUpdateNode().(ArgumentNode).argumentOf(call, pos) and
+      s.headOfSingleton() = Impl::Private::SummaryComponent::argument(pos) and
+      source.asArgument(call.asCallInstruction(), pos.getArgumentIndex())
     )
   }
 
@@ -367,7 +389,69 @@ module Private {
 
 module Public = Impl::Public;
 
-private class SourceModelCall extends Public::SourceElement instanceof Call {
+private string getSourceToken(string output, int i) {
+  sourceModel(_, _, _, _, _, _, output, _, _, _) and
+  (
+    i = 0 and
+    not output.matches("%.%") and
+    result = output
+    or
+    result = output.splitAt(".", i)
+  )
+}
+
+private predicate interpretSourceRec(
+  Element e, int i, string namespace, string type, boolean subtypes, string name, string signature,
+  string ext, string output, string kind, string provenance, string model, boolean needsRef
+) {
+  sourceModel(namespace, type, subtypes, name, signature, ext, output, kind, provenance, model) and
+  (
+    i = 0 and
+    e = interpretElement(namespace, type, subtypes, name, signature, ext) and
+    needsRef = true
+    or
+    needsRef = false and
+    exists(Element p, AccessPath::AccessPathTokenBase token, boolean needsRef0 |
+      interpretSourceRec(p, i - 1, namespace, type, subtypes, name, signature, ext, output, kind,
+        provenance, model, needsRef0) and
+      token = getSourceToken(output, i - 1)
+    |
+      token.getName() = "ReturnValue" and
+      e.(Call).getTarget() = p
+      or
+      exists(SourcePosition pos |
+        token.getName() = "Parameter" and
+        pos = decodePosition(token.getArgument(0)) and
+        e = p.(Function).getParameter(pos.getArgumentIndex())
+      )
+      or
+      exists(SourcePosition pos, Call c |
+        token.getName() = "Argument" and
+        pos = decodePosition(token.getArgument(0)) and
+        (if needsRef0 = true then c.getTarget() = p else c = p)
+      |
+        e = c.getArgument(pos.getArgumentIndex())
+        or
+        pos.getArgumentIndex() = -1 and
+        e = c.getQualifier()
+      )
+    )
+  )
+}
+
+private predicate interpretSource(
+  Element e, string namespace, string type, boolean subtypes, string name, string signature,
+  string ext, string output, string kind, string provenance, string model
+) {
+  exists(boolean needsRef, Element e0 |
+    interpretSourceRec(e0, count(int i | exists(getSourceToken(output, i))), namespace, type,
+      subtypes, name, signature, ext, output, kind, provenance, model, needsRef)
+  |
+    if needsRef = true then e.(Call).getTarget() = e0 else e0 = e
+  )
+}
+
+private class SourceModelCall extends Public::SourceElement {
   private string namespace;
   private string type;
   private boolean subtypes;
@@ -376,8 +460,7 @@ private class SourceModelCall extends Public::SourceElement instanceof Call {
   private string ext;
 
   SourceModelCall() {
-    sourceModel(namespace, type, subtypes, name, signature, ext, _, _, _, _) and
-    this.getTarget() = interpretElement(namespace, type, subtypes, name, signature, ext)
+    interpretSource(this, namespace, type, subtypes, name, signature, ext, _, _, _, _)
   }
 
   override predicate isSource(
