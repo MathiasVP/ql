@@ -12,6 +12,27 @@ private import semmle.code.cpp.ir.dataflow.internal.DataFlowImplSpecific as Data
 private import semmle.code.cpp.dataflow.ExternalFlow
 private import semmle.code.cpp.ir.IR
 
+/**
+ * Decodes an argument / parameter position string, for example the `0` in `Argument[0]`.
+ * Supports ranges (`Argument[x..y]`), qualifiers (`Argument[-1]`), indirections
+ * (`Argument[*x]`) and combinations (such as `Argument[**0..1]`).
+ */
+bindingset[argString]
+SourcePosition decodePosition(string argString) {
+  exists(int indirection, string posString, int pos |
+    argString = repeatStars(indirection) + posString and
+    pos = AccessPath::parseInt(posString) and
+    (
+      pos >= 0 and indirection = 0 and result = TDirectPosition(pos)
+      or
+      pos >= 0 and indirection > 0 and result = TIndirectionPosition(pos, indirection)
+      or
+      // `Argument[-1]` / `Parameter[-1]` is the qualifier object `*this`, not the `this` pointer itself.
+      pos = -1 and result = TIndirectionPosition(pos, indirection + 1)
+    )
+  )
+}
+
 module Input implements InputSig<Location, DataFlowImplSpecific::CppDataFlow> {
   class SummarizedCallableBase = Function;
 
@@ -113,27 +134,6 @@ module Input implements InputSig<Location, DataFlowImplSpecific::CppDataFlow> {
   string encodeWithContent(ContentSet c, string arg) {
     // used for type tracking, not currently used in C/C++.
     none()
-  }
-
-  /**
-   * Decodes an argument / parameter position string, for example the `0` in `Argument[0]`.
-   * Supports ranges (`Argument[x..y]`), qualifiers (`Argument[-1]`), indirections
-   * (`Argument[*x]`) and combinations (such as `Argument[**0..1]`).
-   */
-  bindingset[argString]
-  private TPosition decodePosition(string argString) {
-    exists(int indirection, string posString, int pos |
-      argString = repeatStars(indirection) + posString and
-      pos = AccessPath::parseInt(posString) and
-      (
-        pos >= 0 and indirection = 0 and result = TDirectPosition(pos)
-        or
-        pos >= 0 and indirection > 0 and result = TIndirectionPosition(pos, indirection)
-        or
-        // `Argument[-1]` / `Parameter[-1]` is the qualifier object `*this`, not the `this` pointer itself.
-        pos = -1 and result = TIndirectionPosition(pos, indirection + 1)
-      )
-    )
   }
 
   bindingset[token]

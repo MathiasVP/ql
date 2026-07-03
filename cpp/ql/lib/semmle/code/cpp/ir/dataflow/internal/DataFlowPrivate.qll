@@ -584,7 +584,9 @@ class ParameterPosition = Position;
 /** An argument position represented by an integer. */
 class ArgumentPosition = Position;
 
-abstract class Position extends TPosition {
+private class TSourcePosition = TDirectPosition or TIndirectionPosition;
+
+abstract class SourcePosition extends TSourcePosition {
   /** Gets a textual representation of this position. */
   abstract string toString();
 
@@ -598,7 +600,7 @@ abstract class Position extends TPosition {
   abstract int getIndirectionIndex();
 }
 
-class DirectPosition extends Position, TDirectPosition {
+class DirectPosition extends SourcePosition, TDirectPosition {
   int index;
 
   DirectPosition() { this = TDirectPosition(index) }
@@ -616,7 +618,7 @@ class DirectPosition extends Position, TDirectPosition {
   final override int getIndirectionIndex() { result = 0 }
 }
 
-class IndirectionPosition extends Position, TIndirectionPosition {
+class IndirectionPosition extends SourcePosition, TIndirectionPosition {
   int argumentIndex;
   int indirectionIndex;
 
@@ -633,16 +635,38 @@ class IndirectionPosition extends Position, TIndirectionPosition {
   final override int getIndirectionIndex() { result = indirectionIndex }
 }
 
-class FlowSummaryPosition extends Position, TFlowSummaryPosition {
+class FlowSummaryPosition extends TFlowSummaryPosition {
   ReturnKind rk;
 
   FlowSummaryPosition() { this = TFlowSummaryPosition(rk) }
 
-  override string toString() { result = "write to: " + rk.toString() }
+  string toString() { result = "write to: " + rk.toString() }
 
-  override int getArgumentIndex() { none() }
+  int getArgumentIndex() { none() }
 
-  final override int getIndirectionIndex() { result = rk.getIndirectionIndex() }
+  final int getIndirectionIndex() { result = rk.getIndirectionIndex() }
+}
+
+class Position extends TPosition {
+  /** Gets a textual representation of this position. */
+  string toString() {
+    result = this.(SourcePosition).toString() or result = this.(FlowSummaryPosition).toString()
+  }
+
+  /**
+   * Gets the argument index of this position. The qualifier of a call has
+   * argument index `-1`.
+   */
+  int getArgumentIndex() {
+    result = this.(SourcePosition).getArgumentIndex() or
+    result = this.(FlowSummaryPosition).getArgumentIndex()
+  }
+
+  /** Gets the indirection index of this position. */
+  int getIndirectionIndex() {
+    result = this.(SourcePosition).getIndirectionIndex() or
+    result = this.(FlowSummaryPosition).getIndirectionIndex()
+  }
 }
 
 newtype TPosition =
