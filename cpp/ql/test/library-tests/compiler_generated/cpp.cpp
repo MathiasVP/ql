@@ -15,3 +15,8 @@ void g1(void) {
     delete m;
 }
 
+void predefined_macros() {
+    // These are predefined variables that has initializers inside any function that uses them.
+    auto a = __PRETTY_FUNCTION__;
+    auto b = __func__;
+}
