@@ -17,7 +17,11 @@
 | cpp.cpp:15:12:15:12 | reuse of m | Expr |
 | cpp.cpp:16:1:16:1 | return ... | Stmt |
 | cpp.cpp:20:14:20:32 | array to pointer conversion | Expr |
+| cpp.cpp:20:14:20:32 | initializer for __PRETTY_FUNCTION__ | Initializer |
+| cpp.cpp:20:14:20:32 | void predefined_macros() | Expr |
 | cpp.cpp:21:14:21:21 | array to pointer conversion | Expr |
+| cpp.cpp:21:14:21:21 | initializer for __func__ | Initializer |
+| cpp.cpp:21:14:21:21 | predefined_macros | Expr |
 | cpp.cpp:22:1:22:1 | return ... | Stmt |
 | file://:0:0:0:0 | operator delete | Function |
 | file://:0:0:0:0 | operator new | Function |
