@@ -7,25 +7,49 @@ using uint32_t = unsigned int;
 
 namespace std
 {
-  template<typename T, typename U>
-  struct pair {
-    T first;
-    U second;
-  };
+	template <class T1, class T2>
+	struct pair {
+		typedef T1 first_type;
+		typedef T2 second_type;
 
-  class string
-  {
-  public:
-    string();
-    string(const char *);
-    ~string();
-  };
+		T1 first;
+		T2 second;
+		pair();
+		pair(const T1& x, const T2& y);
+		template<class U, class V> pair(const pair<U, V> &p);
+
+		void swap(pair& p) /*noexcept(...)*/;
+	};
+
+	template<class charT> struct char_traits;
+
+	typedef size_t streamsize;
+
+	template <class T> class allocator {
+	public:
+		allocator() throw();
+		typedef size_t size_type;
+	};
+
+	template<class charT, class traits = char_traits<charT>, class Allocator = allocator<charT> >
+	class basic_string {
+	public:
+		using value_type = charT;
+		using reference = value_type&;
+		using const_reference = const value_type&;
+		typedef typename Allocator::size_type size_type;
+
+    basic_string(const charT* s, const Allocator& a = Allocator());
+	};
+
+	typedef basic_string<char> string;
 
   template <typename K, typename V>
   class map
   {
   public:
     using key_type = K;
+    using value_type = pair<const K, V>;
     map();
     ~map();
 
@@ -57,6 +81,8 @@ namespace Azure
   template <typename T>
     class Nullable
     {
+      T m_value;
+
     public:
       Nullable();
       Nullable(const T);
@@ -291,6 +317,7 @@ void test_RawResponse(Azure::Core::Http::RawResponse& resp) {
 }
 
 void test_GetHeader() {
+  std::pair<std::string, std::string>();
   Azure::Core::Http::Request request(Azure::Core::Http::Get, Azure::Core::Url("http://example.com"));
   {
     auto headerValue = request.GetHeader("Content-Type").Value();

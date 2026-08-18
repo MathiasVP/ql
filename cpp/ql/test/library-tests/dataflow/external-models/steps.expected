@@ -1,9 +1,8 @@
 | asio_streams.cpp:100:64:100:71 | *send_str | asio_streams.cpp:100:44:100:62 | call to buffer |
-| azure.cpp:252:79:252:98 | call to string | azure.cpp:252:62:252:99 | call to Url |
-| azure.cpp:257:5:257:8 | *resp | azure.cpp:257:16:257:21 | Read output argument |
-| azure.cpp:262:5:262:8 | *resp | azure.cpp:262:23:262:28 | ReadToCount output argument |
-| azure.cpp:287:79:287:98 | call to string | azure.cpp:287:62:287:99 | call to Url |
-| azure.cpp:289:24:289:56 | call to GetHeader | azure.cpp:289:63:289:65 | call to Value |
+| azure.cpp:285:79:285:98 | call to basic_string | azure.cpp:285:62:285:99 | call to Url |
+| azure.cpp:290:5:290:8 | *resp | azure.cpp:290:16:290:21 | Read output argument |
+| azure.cpp:295:5:295:8 | *resp | azure.cpp:295:23:295:28 | ReadToCount output argument |
+| azure.cpp:321:79:321:98 | call to basic_string | azure.cpp:321:62:321:99 | call to Url |
 | test.cpp:17:24:17:24 | x | test.cpp:17:10:17:22 | call to ymlStepManual |
 | test.cpp:21:27:21:27 | x | test.cpp:21:10:21:25 | call to ymlStepGenerated |
 | test.cpp:25:35:25:35 | x | test.cpp:25:11:25:33 | call to ymlStepManual_with_body |

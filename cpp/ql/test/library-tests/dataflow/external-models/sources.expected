@@ -1,10 +1,7 @@
 | asio_streams.cpp:87:34:87:44 | read_until output argument | remote |
-| azure.cpp:253:48:253:60 | *call to GetBodyStream | remote |
-| azure.cpp:273:62:273:64 | call to GetHeaders | remote |
-| azure.cpp:277:45:277:47 | call to GetBody | remote |
-| azure.cpp:281:68:281:84 | *call to ExtractBodyStream | remote |
-| azure.cpp:289:32:289:40 | call to GetHeader | remote |
-| azure.cpp:293:58:293:67 | call to GetHeaders | remote |
+| azure.cpp:286:48:286:60 | *call to GetBodyStream | remote |
+| azure.cpp:310:45:310:47 | call to GetBody | remote |
+| azure.cpp:314:68:314:84 | *call to ExtractBodyStream | remote |
 | test.cpp:10:10:10:18 | call to ymlSource | local |
 | test.cpp:56:8:56:16 | call to ymlSource | local |
 | test.cpp:94:10:94:18 | call to ymlSource | local |

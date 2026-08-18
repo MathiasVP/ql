@@ -564,3 +564,53 @@ void test_string_return_assign() {
 		sink(f); // $ SPURIOUS: ast,ir
 	}
 }
+
+void test_string_reverse_flow() {
+	{
+		std::string s("aa");
+		(s = "bb") += source();
+		sink(s); // $ ir
+	}
+
+	{
+		std::string s("aa");
+		s.front() = ns_char::source();
+		sink(s); // $ ir
+	}
+
+	{
+		std::string s("aa");
+		s.back() = ns_char::source();
+		sink(s); // $ ir
+	}
+
+	{
+		std::string s("aa");
+		s.data()[0] = ns_char::source();
+		sink(s); // $ ir
+	}
+
+	{
+		std::string s("aa");
+		s.insert(0, "bb") = source();
+		sink(s); // $ ir
+	}
+
+	{
+		std::string s("aa");
+		s.append("bb") = source();
+		sink(s); // $ ir
+	}
+
+	{
+		std::string s("aa");
+		(s += "bb") = source();
+		sink(s); // $ ir
+	}
+
+	{
+		std::string s("aa");
+		s.replace(0, 1, "bb") = source();
+		sink(s); // $ ir
+	}
+}
