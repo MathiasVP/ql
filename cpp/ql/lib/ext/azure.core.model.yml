@@ -7,7 +7,7 @@ extensions:
       - ["Azure::Core::Http", "RawResponse", True, "GetBody", "", "", "ReturnValue[*]", "remote", "manual"]
       - ["Azure::Core::Http", "RawResponse", True, "ExtractBodyStream", "", "", "ReturnValue[*]", "remote", "manual"]
       - ["Azure::Core::Http", "Request", True, "GetHeaders", "", "", "ReturnValue.Element.Field[std::pair::second]", "remote", "manual"]
-      - ["Azure::Core::Http", "Request", True, "GetHeader", "", "", "ReturnValue", "remote", "manual"]
+      - ["Azure::Core::Http", "Request", True, "GetHeader", "", "", "ReturnValue.Field[Azure::Nullable::m_value]", "remote", "manual"]
       - ["Azure::Core::Http", "Request", True, "GetBodyStream", "", "", "ReturnValue[*]", "remote", "manual"]
 
   - addsTo:
@@ -34,8 +34,8 @@ extensions:
       - ["Azure::Core::IO", "BodyStream", True, "Read", "", "", "Argument[-1]", "Argument[*0]", "taint", "manual"]
       - ["Azure::Core::IO", "BodyStream", True, "ReadToCount", "", "", "Argument[-1]", "Argument[*0]", "taint", "manual"]
       - ["Azure::Core::IO", "BodyStream", True, "ReadToEnd", "", "", "Argument[-1]", "ReturnValue.Element", "taint", "manual"]
-      - ["Azure", "Nullable", True, "Nullable", "", "", "Argument[0]", "Argument[-1]", "taint", "manual"]
+      - ["Azure", "Nullable", True, "Nullable", "", "", "Argument[@0]", "Argument[-1].Field[@Azure::Nullable::m_value]", "value", "manual"]
       - ["Azure", "Nullable", True, "operator=", "", "", "Argument[*0]", "Argument[-1]", "value", "manual"]
-      - ["Azure", "Nullable", True, "Value", "", "", "Argument[-1]", "ReturnValue[*]", "taint", "manual"]
-      - ["Azure", "Nullable", True, "operator->", "", "", "Argument[-1]", "ReturnValue[*]", "taint", "manual"]
-      - ["Azure", "Nullable", True, "operator*", "", "", "Argument[-1]", "ReturnValue[*]", "taint", "manual"]
+      - ["Azure", "Nullable", True, "Value", "", "", "Argument[-1].Field[@Azure::Nullable::m_value]", "ReturnValue[*@]", "value", "manual"]
+      - ["Azure", "Nullable", True, "operator->", "", "", "Argument[-1].Field[@Azure::Nullable::m_value]", "ReturnValue[*@]", "value", "manual"]
+      - ["Azure", "Nullable", True, "operator*", "", "", "Argument[-1].Field[@Azure::Nullable::m_value]", "ReturnValue[*@]", "value", "manual"]
