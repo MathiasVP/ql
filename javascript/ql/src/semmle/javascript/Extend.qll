@@ -117,6 +117,7 @@ private class ExtendCallShallow extends ExtendCall {
       callee = DataFlow::moduleImport("defaults") or
       callee = DataFlow::moduleImport("extend-shallow") or
       callee = DataFlow::moduleImport("merge") or
+      callee = DataFlow::moduleImport("merge-descriptors") or
       callee = DataFlow::moduleImport("mixin-object") or
       callee = DataFlow::moduleImport("object-assign") or
       callee = DataFlow::moduleImport("object.assign") or
