@@ -198,12 +198,7 @@ private module Cached {
       not exists(node.asOperand()) and
       SsaImpl::hasRawIndirectInstruction(node.asInstruction(), indirectionIndex)
     } or
-    TFinalParameterNode(Parameter p, int indirectionIndex) {
-      exists(SsaImpl::FinalParameterUse use |
-        use.getParameter() = p and
-        use.getIndirectionIndex() = indirectionIndex
-      )
-    } or
+    TFinalParameterNode(SsaImpl::FinalParameterUse use) or
     TFinalGlobalValue(SsaImpl::GlobalUse globalUse) or
     TInitialGlobalValue(SsaImpl::GlobalDef globalUse) or
     TBodyLessParameterNodeImpl(Parameter p, int indirectionIndex) {
@@ -670,7 +665,7 @@ module Public {
      */
     predicate isFinalValueOfParameter(Parameter p, int indirectionIndex) {
       exists(FinalParameterNode n | n = this |
-        p = n.getParameter() and
+        p = n.getElement() and
         indirectionIndex = n.getIndirectionIndex()
       )
     }
@@ -1621,38 +1616,37 @@ class IndirectReturnNode extends Node {
  * just before reaching the end of a function.
  */
 class FinalParameterNode extends Node, TFinalParameterNode {
-  Parameter p;
-  int indirectionIndex;
+  SsaImpl::FinalParameterUse u;
 
-  FinalParameterNode() { this = TFinalParameterNode(p, indirectionIndex) }
+  FinalParameterNode() { this = TFinalParameterNode(u) }
 
   /** Gets the parameter associated with this final use. */
-  Parameter getParameter() { result = p }
+  Element getElement() { result = u.getElement() }
 
   /** Gets the underlying indirection index. */
-  int getIndirectionIndex() { result = indirectionIndex }
+  int getIndirectionIndex() { result = u.getIndirectionIndex() }
 
   /** Gets the argument index associated with this final use. */
-  final int getArgumentIndex() { result = p.getIndex() }
+  final int getArgumentIndex() { result = u.getArgumentIndex() }
 
-  override Declaration getFunction() { result = p.getFunction() }
+  override Declaration getFunction() { result = u.getFunction() }
 
   override DataFlowCallable getEnclosingCallable() {
     result.asSourceCallable() = this.getFunction()
   }
 
-  override Type getType() { result = getTypeImpl(p.getUnderlyingType(), indirectionIndex) }
+  override Type getType() { result = u.getType() }
 
   final override Location getLocationImpl() {
     // Parameters can have multiple locations. When there's a unique location we use
     // that one, but if multiple locations exist we default to an unknown location.
-    result = unique( | | p.getLocation())
+    result = unique( | | u.getLocation())
     or
-    not exists(unique( | | p.getLocation())) and
+    not exists(unique( | | u.getLocation())) and
     result instanceof UnknownLocation
   }
 
-  override string toStringImpl() { result = stars(this) + p.toString() }
+  override string toStringImpl() { result = stars(this) + u.toString() }
 }
 
 abstract private class AbstractParameterNode extends Node {

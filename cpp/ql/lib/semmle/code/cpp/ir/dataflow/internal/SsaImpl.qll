@@ -251,6 +251,57 @@ private predicate hasBeforePostCrementUseImpl(
   )
 }
 
+class FinalUseElement extends Cpp::Element {
+  IRVariable v;
+
+  FinalUseElement() {
+    underlyingTypeIsModifiableAt(this.(Parameter).getUnderlyingType(), _)
+    or
+    exists(Cpp::MemberFunction mf |
+      this = mf and
+      not mf.hasSpecifier("const")
+    )
+  }
+
+  predicate hasDefinition() {
+    this.(Parameter).getFunction().hasDefinition()
+    or
+    this.(Cpp::MemberFunction).hasDefinition()
+  }
+
+  predicate underlyingTypeIsModifiableAt(int indirectionIndex) {
+    underlyingTypeIsModifiableAt(this.(Parameter).getUnderlyingType(), indirectionIndex)
+    or
+    this instanceof Cpp::MemberFunction and
+    indirectionIndex = 1
+  }
+
+  int getArgumentIndex() {
+    result = this.(Parameter).getIndex()
+    or
+    this instanceof Cpp::MemberFunction and
+    result = -1
+  }
+
+  Cpp::Function getFunction() {
+    result = this.(Parameter).getFunction()
+    or
+    result = this
+  }
+
+  Cpp::Type getUnderlyingType() {
+    result = this.(Parameter).getUnderlyingType()
+    or
+    result = this.(Cpp::MemberFunction).getTypeOfThis()
+  }
+
+  IRVariable getIRVariable() {
+    result.getAst().(Parameter) = this
+    or
+    result.(IRThisVariable).getEnclosingFunction() = this
+  }
+}
+
 cached
 private newtype TUseImpl =
   TDirectUseImpl(Operand operand, int indirectionIndex) {
@@ -266,12 +317,12 @@ private newtype TUseImpl =
     // the assignment to a global variable isn't ruled out as dead.
     isGlobalUse(v, f, _, indirectionIndex)
   } or
-  TFinalParameterUse(Parameter p, int indirectionIndex) {
-    underlyingTypeIsModifiableAt(p.getUnderlyingType(), indirectionIndex) and
+  TFinalParameterUse(FinalUseElement e, int indirectionIndex) {
+    e.underlyingTypeIsModifiableAt(indirectionIndex) and
     // Only create an SSA read for the final use of a parameter if there's
     // actually a body of the enclosing function. If there's no function body
     // then we'll never need to flow out of the function anyway.
-    p.getFunction().hasDefinition()
+    e.hasDefinition()
   }
 
 private predicate isGlobalUse(
@@ -625,9 +676,9 @@ private class SavedPostfixCrementUseImpl extends UseImpl, TSavedPostfixCrementUs
 
 pragma[nomagic]
 private predicate finalParameterNodeHasParameterAndIndex(
-  FinalParameterNode n, Parameter p, int indirectionIndex
+  FinalParameterNode n, FinalUseElement e, int indirectionIndex
 ) {
-  n.getParameter() = p and
+  n.getElement() = e and
   n.getIndirectionIndex() = indirectionIndex
 }
 
@@ -643,18 +694,18 @@ private predicate hasReturnPosition(IRFunction f, IRBlock block, int index) {
 }
 
 class FinalParameterUse extends UseImpl, TFinalParameterUse {
-  Parameter p;
+  FinalUseElement e;
 
-  FinalParameterUse() { this = TFinalParameterUse(p, indirectionIndex) }
+  FinalParameterUse() { this = TFinalParameterUse(e, indirectionIndex) }
 
-  override string toString() { result = "Use of " + p.toString() }
+  override string toString() { result = "Use of " + e.toString() }
 
-  Parameter getParameter() { result = p }
+  Cpp::Element getElement() { result = e }
 
-  int getArgumentIndex() { result = p.getIndex() }
+  int getArgumentIndex() { result = e.getArgumentIndex() }
 
   override FinalParameterNode getNode() {
-    finalParameterNodeHasParameterAndIndex(result, p, indirectionIndex)
+    finalParameterNodeHasParameterAndIndex(result, e, indirectionIndex)
   }
 
   override int getIndirection() { result = indirectionIndex + 1 }
@@ -674,22 +725,24 @@ class FinalParameterUse extends UseImpl, TFinalParameterUse {
     // performance, however.
     exists(IRFunction f |
       hasReturnPosition(f, block, index) and
-      f.getFunction() = p.getFunction()
+      f.getFunction() = e.getFunction()
     )
   }
+
+  Function getFunction() { result = e.getFunction() }
 
   override Cpp::Location getLocation() {
     // Parameters can have multiple locations. When there's a unique location we use
     // that one, but if multiple locations exist we default to an unknown location.
-    result = unique( | | p.getLocation())
+    result = unique( | | e.getLocation())
     or
-    not exists(unique( | | p.getLocation())) and
+    not exists(unique( | | e.getLocation())) and
     result instanceof UnknownLocation
   }
 
   pragma[nomagic]
   private predicate hasBaseSourceVariableAndIndirection(BaseIRVariable v, int indirection) {
-    v.getIRVariable().getAst() = p and
+    v.getIRVariable() = e.getIRVariable() and
     indirection = this.getIndirection()
   }
 
@@ -699,6 +752,8 @@ class FinalParameterUse extends UseImpl, TFinalParameterUse {
       this.hasBaseSourceVariableAndIndirection(v, indirection)
     )
   }
+
+  Type getType() { result = getTypeImpl(e.getUnderlyingType(), indirectionIndex) }
 }
 
 /**

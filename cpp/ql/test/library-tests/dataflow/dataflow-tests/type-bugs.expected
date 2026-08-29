@@ -1,5 +1,15 @@
 astTypeBugs
 irTypeBugs
+| lambdas.cpp:13:11:13:11 | lambdas.cpp:13:11:13:11 | lambdas.cpp:13:11:13:11 | *Use of (unnamed constructor) |
+| lambdas.cpp:13:11:13:11 | lambdas.cpp:13:11:13:11 | lambdas.cpp:13:11:13:11 | *Use of operator= |
+| lambdas.cpp:20:11:20:11 | lambdas.cpp:20:11:20:11 | lambdas.cpp:20:11:20:11 | *Use of (unnamed constructor) |
+| lambdas.cpp:20:11:20:11 | lambdas.cpp:20:11:20:11 | lambdas.cpp:20:11:20:11 | *Use of operator= |
+| lambdas.cpp:28:11:28:11 | lambdas.cpp:28:11:28:11 | lambdas.cpp:28:11:28:11 | *Use of (unnamed constructor) |
+| lambdas.cpp:28:11:28:11 | lambdas.cpp:28:11:28:11 | lambdas.cpp:28:11:28:11 | *Use of operator= |
+| lambdas.cpp:34:11:34:11 | lambdas.cpp:34:11:34:11 | lambdas.cpp:34:11:34:11 | *Use of (unnamed constructor) |
+| lambdas.cpp:34:11:34:11 | lambdas.cpp:34:11:34:11 | lambdas.cpp:34:11:34:11 | *Use of operator= |
+| lambdas.cpp:40:11:40:11 | lambdas.cpp:40:11:40:11 | lambdas.cpp:40:11:40:11 | *Use of (unnamed constructor) |
+| lambdas.cpp:40:11:40:11 | lambdas.cpp:40:11:40:11 | lambdas.cpp:40:11:40:11 | *Use of operator= |
 incorrectBaseType
 | clang.cpp:22:8:22:20 | *& ... | Expected 'Node.getType()' to be int, but it was int * |
 | clang.cpp:23:17:23:29 | *& ... | Expected 'Node.getType()' to be int, but it was int * |

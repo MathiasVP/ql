@@ -238,18 +238,15 @@ module ModelGeneratorCommonInput implements ModelGeneratorCommonInputSig<Cpp::Lo
     result = DataFlowImplCommon::getNodeEnclosingCallable(ret).asSourceCallable()
   }
 
-  /** Holds if this instance access is to an enclosing instance of type `t`. */
-  pragma[nomagic]
-  private predicate isEnclosingInstanceAccess(DataFlowPrivate::ReturnNode n, Cpp::Class t) {
-    n.getKind().isIndirectReturn(-1) and
-    t = n.getType().stripType() and
-    t != n.getEnclosingCallable().asSourceCallable().(Cpp::Function).getDeclaringType()
-  }
-
   pragma[nomagic]
   predicate isOwnInstanceAccessNode(DataFlowPrivate::ReturnNode node) {
-    node.getKind().isIndirectReturn(-1) and
-    not isEnclosingInstanceAccess(node, _)
+    exists(ReturnValueInstruction return |
+      return.getReturnAddressOperand() = node.asIndirectOperand(1) and
+      node.getKind().isNormalReturn() and
+      node.getKind().getIndirectionIndex() = 1 and
+      return.getReturnValue().(StoreInstruction).getSourceValue().getUnconvertedResultExpression()
+        instanceof Cpp::ThisExpr
+    )
   }
 
   DataFlowPrivate::ParameterPosition getReturnKindParamPosition(DataFlowPrivate::ReturnKind k) {

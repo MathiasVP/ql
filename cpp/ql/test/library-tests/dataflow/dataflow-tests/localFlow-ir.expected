@@ -29,8 +29,8 @@
 | example.c:17:11:17:16 | {...} | example.c:17:11:17:16 | *definition of coords |
 | example.c:17:19:17:22 | {...} | example.c:17:19:17:22 | {...} |
 | example.c:17:21:17:21 | 0 | example.c:17:21:17:21 | 0 |
-| example.c:19:6:19:6 | *b | example.c:15:37:15:37 | *b |
-| example.c:19:6:19:6 | *b [post update] | example.c:15:37:15:37 | *b |
+| example.c:19:6:19:6 | *b | example.c:15:37:15:37 | *Use of b |
+| example.c:19:6:19:6 | *b [post update] | example.c:15:37:15:37 | *Use of b |
 | example.c:24:2:24:7 | *coords | example.c:26:18:26:24 | *& ... |
 | example.c:24:2:24:7 | *coords [post update] | example.c:26:18:26:24 | *& ... |
 | example.c:24:2:24:7 | coords | example.c:26:18:26:24 | & ... |
@@ -177,8 +177,8 @@
 | test.cpp:488:21:488:21 | s [post update] | test.cpp:489:20:489:20 | s |
 | test.cpp:488:24:488:30 | *content | test.cpp:488:21:488:30 | *content |
 | test.cpp:488:24:488:30 | content | test.cpp:488:21:488:30 | content |
-| test.cpp:489:20:489:20 | *s | test.cpp:487:67:487:67 | *s |
-| test.cpp:489:20:489:20 | *s [post update] | test.cpp:487:67:487:67 | *s |
+| test.cpp:489:20:489:20 | *s | test.cpp:487:67:487:67 | *Use of s |
+| test.cpp:489:20:489:20 | *s [post update] | test.cpp:487:67:487:67 | *Use of s |
 | test.cpp:489:23:489:29 | *content | test.cpp:489:23:489:29 | *content |
 | test.cpp:489:23:489:29 | *content | test.cpp:490:8:490:17 | * ... |
 | test.cpp:489:23:489:29 | content | test.cpp:489:23:489:29 | content |
