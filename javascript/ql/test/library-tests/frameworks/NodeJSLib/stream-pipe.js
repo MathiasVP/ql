@@ -9,7 +9,7 @@ class DirectDestination extends Writable {
 
 class PipedDestination extends Writable {
   write(chunk) {
-    consumeChunk(chunk); // $ MISSING: flow=piped flow=piped-second
+    consumeChunk(chunk); // $ flow=piped flow=piped-second
     return true;
   }
 }
@@ -20,7 +20,7 @@ Readable.from([source("piped"), source("piped-second")]).pipe(new PipedDestinati
 
 class SetDestination extends Writable {
   write(chunk) {
-    consumeChunk(chunk); // $ MISSING: flow=set
+    consumeChunk(chunk); // $ flow=set
     return true;
   }
 }
@@ -29,7 +29,7 @@ Readable.from(new Set([source("set")])).pipe(new SetDestination());
 
 class GeneratorDestination extends Writable {
   write(chunk) {
-    consumeChunk(chunk); // $ MISSING: flow=generator
+    consumeChunk(chunk); // $ flow=generator
     return true;
   }
 }
@@ -58,14 +58,14 @@ class ReceiverDestination extends Writable {
   }
 
   write(chunk) {
-    consumeChunk(this.value); // $ MISSING: flow=receiver
+    consumeChunk(this.value); // $ flow=receiver
     return true;
   }
 }
 
 const returnedDestination =
   Readable.from(["clean"]).pipe(new ReceiverDestination(source("receiver")));
-consumeChunk(returnedDestination.value); // $ MISSING: flow=receiver
+consumeChunk(returnedDestination.value); // $ flow=receiver
 
 class UncalledDestination extends Writable {
   constructor(value) {
