@@ -1072,7 +1072,11 @@ module NodeJSLib {
         )
         or
         node instanceof ReadableFromCall and
-        tag = "nodejs.readable.from.chunk"
+        tag =
+          [
+            "nodejs.readable.from.chunk", "nodejs.readable.from.map-key",
+            "nodejs.readable.from.map-value"
+          ]
       ) and
       container.asSourceCallable() = node.getContainer()
     }
@@ -1105,14 +1109,19 @@ module NodeJSLib {
     override predicate readStep(
       DataFlow::Node pred, DataFlow::ContentSet contents, DataFlow::Node succ
     ) {
-      exists(ReadableFromCall call |
-        pred = call.getArgument(0).flow() and
+      exists(ReadableFromCall call | pred = call.getArgument(0).flow() |
         contents =
           [
             DataFlow::ContentSet::arrayElement(), DataFlow::ContentSet::setElement(),
             DataFlow::ContentSet::iteratorElement()
           ] and
         succ = getSynthesizedNode(call, "nodejs.readable.from.chunk")
+        or
+        contents = DataFlow::ContentSet::mapKey() and
+        succ = getSynthesizedNode(call, "nodejs.readable.from.map-key")
+        or
+        contents = DataFlow::ContentSet::mapValueAll() and
+        succ = getSynthesizedNode(call, "nodejs.readable.from.map-value")
       )
       or
       exists(PipeCall call |
@@ -1129,6 +1138,16 @@ module NodeJSLib {
         pred = getSynthesizedNode(call, "nodejs.readable.from.chunk") and
         contents = DataFlow::ContentSet::iteratorElement() and
         succ = call.flow()
+      )
+      or
+      exists(ReadableFromCall call |
+        pred = getSynthesizedNode(call, "nodejs.readable.from.map-key") and
+        contents.asSingleton().asArrayIndex() = 0
+        or
+        pred = getSynthesizedNode(call, "nodejs.readable.from.map-value") and
+        contents.asSingleton().asArrayIndex() = 1
+      |
+        succ = getSynthesizedNode(call, "nodejs.readable.from.chunk")
       )
       or
       exists(PipeHookCall hook, DataFlow::CallNode callback |
