@@ -919,6 +919,43 @@ module NodeJSLib {
   private predicate isWriteHook(string name) { name = "_write" }
 
   overlay[local?]
+  private predicate builtinStreamCreation(NewExpr creation, string kind) {
+    exists(EarlyStageNode constructor |
+      kind = ["Writable", "Duplex", "Transform"] and
+      memberRead(getAStreamModuleNode(), kind, constructor) and
+      DataFlow::localFlowStep*(constructor, TValueNode(creation.getCallee())) and
+      not creation.getTopLevel().isExterns()
+    )
+  }
+
+  overlay[local?]
+  private Expr streamOptionValue(NewExpr creation, string name) {
+    exists(ObjectExpr options |
+      DataFlow::localFlowStep*(TValueNode(options), TValueNode(creation.getArgument(0))) and
+      result = options.getPropertyByName(name).getInit()
+    )
+  }
+
+  overlay[local?]
+  private predicate hasStreamWriteOption(NewExpr creation) {
+    DataFlow::localFlowStep*(TValueNode(any(Function callback)),
+      TValueNode(streamOptionValue(creation, "write")))
+  }
+
+  overlay[local?]
+  private class StreamConstructorHookStep extends PreCallGraphStep {
+    override predicate step(DataFlow::Node pred, DataFlow::Node succ) {
+      exists(PipeCall pipe, NewExpr creation, string name |
+        builtinStreamCreation(creation, _) and
+        DataFlow::localFlowStep*(TValueNode(creation), TValueNode(pipe.getArgument(0))) and
+        name = ["write", "transform"] and
+        pred = streamOptionValue(creation, name).flow() and
+        succ = getSynthesizedNode(pipe, pipeHookTag("_" + name, "member"))
+      )
+    }
+  }
+
+  overlay[local?]
   private ClassDefinition instantiatedClassWithoutWriteOverride(NewExpr creation) {
     DataFlow::localFlowStep*(TValueNode(result), TValueNode(creation.getCallee())) and
     not StreamMethodOverride<isWriteMethod/1>::overridesStreamMethod(result)
@@ -949,6 +986,25 @@ module NodeJSLib {
           StreamMethodOverride<isWriteHook/1>::overridesStreamInstanceMethod(creation)
         ) and
         hook = "_write"
+      )
+    )
+    or
+    exists(NewExpr creation, string kind |
+      builtinStreamCreation(creation, kind) and
+      creation = pipeDestinationCreation(pipe)
+    |
+      kind = ["Writable", "Duplex"] and hook = "_write"
+      or
+      kind = "Transform" and
+      (
+        (
+          hasStreamWriteOption(creation) or
+          StreamMethodOverride<isWriteHook/1>::overridesStreamInstanceMethod(creation)
+        ) and
+        hook = "_write"
+        or
+        not hasStreamWriteOption(creation) and
+        hook = "_transform"
       )
     )
   }
