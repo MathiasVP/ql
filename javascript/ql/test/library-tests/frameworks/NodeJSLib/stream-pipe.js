@@ -173,7 +173,7 @@ class HookTransform extends Transform {
 
 Readable.from([source("transform-hook")]).pipe(new HookTransform()).pipe({
   write(chunk) {
-    consumeChunk(chunk); // $ MISSING: flow=transform-hook
+    consumeChunk(chunk); // $ flow=transform-hook
     return true;
   }
 });
@@ -382,7 +382,7 @@ const { Transform: ImportedTransform } = require("node:stream");
 const optionsTransform = new ImportedTransform(transformOptionsAlias);
 Readable.from([source("options-transform")]).pipe(optionsTransform).pipe({
   write(chunk) {
-    consumeChunk(chunk); // $ MISSING: flow=options-transform flow=options-transform-2
+    consumeChunk(chunk); // $ flow=options-transform flow=options-transform-2
     return true;
   }
 });
@@ -432,7 +432,7 @@ class PushingTransform extends Transform {
 }
 Readable.from([source("transform-push")]).pipe(new PushingTransform()).pipe({
   write(chunk) {
-    consumeChunk(chunk); // $ MISSING: flow=transform-push
+    consumeChunk(chunk); // $ flow=transform-push
     return true;
   }
 });
@@ -454,7 +454,7 @@ Readable.from([source("replaced-transform-input")]).pipe(new Transform({
   }
 })).pipe({
   write(chunk) {
-    consumeChunk(chunk); // $ MISSING: flow=replacement-output
+    consumeChunk(chunk); // $ flow=replacement-output
     return true;
   }
 });
