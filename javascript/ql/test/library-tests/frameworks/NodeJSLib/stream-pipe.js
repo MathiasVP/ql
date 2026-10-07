@@ -93,7 +93,7 @@ function directStringInput() {
 
   Readable.from(source("string")).pipe({
     write(chunk) {
-      consumeChunk(chunk); // $ MISSING: flow=string
+      consumeChunk(chunk); // $ flow=string
       return true;
     }
   });
@@ -108,7 +108,7 @@ function directBufferInput() {
   const alias = buffer;
   Readable.from(alias).pipe({
     write(chunk) {
-      consumeChunk(chunk); // $ MISSING: flow=buffer
+      consumeChunk(chunk); // $ flow=buffer
       return true;
     }
   });
@@ -132,7 +132,7 @@ function importedBufferInput() {
 
   Readable.from(source("imported-buffer")).pipe({
     write(chunk) {
-      consumeChunk(chunk); // $ MISSING: flow=imported-buffer
+      consumeChunk(chunk); // $ flow=imported-buffer
       return true;
     }
   });
