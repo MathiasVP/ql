@@ -258,7 +258,7 @@ async function latePublicWriteOverride() {
   const destination = new Writable({
     objectMode: true,
     write(chunk, encoding, callback) {
-      consumeChunk(chunk); // $ MISSING: flow=late-public-write
+      consumeChunk(chunk); // $ flow=late-public-write
       callback();
     }
   });
@@ -289,14 +289,14 @@ function conditionalSubclassWriteHook(condition) {
 function conditionalOptionsWriteHook(condition) {
   const destination = new Transform({
     transform(chunk, encoding, callback) {
-      consumeChunk(chunk); // $ MISSING: flow=conditional-options-hook
+      consumeChunk(chunk); // $ flow=conditional-options-hook
       callback(null, chunk);
     }
   });
 
   if (condition) {
     destination._write = function(chunk, encoding, callback) {
-      consumeChunk(chunk); // $ MISSING: flow=conditional-options-hook
+      consumeChunk(chunk); // $ flow=conditional-options-hook
       callback();
     };
   }
@@ -306,7 +306,7 @@ function conditionalOptionsWriteHook(condition) {
 function unreachablePublicWriteOverride() {
   const destination = new Writable({
     write(chunk, encoding, callback) {
-      consumeChunk(chunk); // $ MISSING: flow=unreachable-public-write
+      consumeChunk(chunk); // $ flow=unreachable-public-write
       callback();
     }
   });
@@ -320,7 +320,7 @@ function unreachablePublicWriteOverride() {
 function ambiguousPublicWriteOverride(condition, otherDestination) {
   const destination = new Writable({
     write(chunk, encoding, callback) {
-      consumeChunk(chunk); // $ MISSING: flow=ambiguous-public-write
+      consumeChunk(chunk); // $ flow=ambiguous-public-write
       callback();
     }
   });
@@ -336,14 +336,14 @@ function ambiguousPublicWriteOverride(condition, otherDestination) {
 function definiteWriteHookOverride() {
   const destination = new Transform({
     transform(chunk, encoding, callback) {
-      consumeChunk(chunk); // $ MISSING: flow=definite-write-hook
+      consumeChunk(chunk); // $ flow=definite-write-hook
       callback(null, chunk);
     }
   });
 
   const alias = destination;
   alias._write = function(chunk, encoding, callback) {
-    consumeChunk(chunk); // $ MISSING: flow=definite-write-hook
+    consumeChunk(chunk); // $ flow=definite-write-hook
     callback();
   };
   Readable.from([source("definite-write-hook")]).pipe(destination);
@@ -353,8 +353,8 @@ function definiteWriteHookOverride() {
 const writableOptions = {
   objectMode: true,
   write(chunk, encoding, callback) {
-    consumeChunk(chunk); // $ MISSING: flow=options-write
-    consumeChunk(this.value); // $ MISSING: flow=options-receiver
+    consumeChunk(chunk); // $ flow=options-write
+    consumeChunk(this.value); // $ flow=options-receiver
     consumeChunk(encoding);
     consumeChunk(callback);
     callback();
@@ -366,7 +366,7 @@ Readable.from([source("options-write")]).pipe(optionsDestination);
 
 const transformOptions = {
   transform(chunk, encoding, callback) {
-    consumeChunk(chunk); // $ MISSING: flow=options-transform
+    consumeChunk(chunk); // $ flow=options-transform flow=options-transform-2
     consumeChunk(encoding);
     consumeChunk(callback);
     callback(null, chunk);
@@ -387,14 +387,14 @@ Readable.from([source("options-transform-2")]).pipe(optionsTransform);
 const optionsDuplex = new Duplex({
   read() {},
   write(chunk, encoding, callback) {
-    consumeChunk(chunk); // $ MISSING: flow=options-duplex
+    consumeChunk(chunk); // $ flow=options-duplex
     callback();
   }
 });
 Readable.from([source("options-duplex")]).pipe(optionsDuplex);
 
 function writeTransformOption(chunk, encoding, callback) {
-  consumeChunk(chunk); // $ MISSING: flow=options-transform-write
+  consumeChunk(chunk); // $ flow=options-transform-write
   callback();
 }
 const writeTransformAlias = writeTransformOption;
@@ -409,7 +409,7 @@ Readable.from([source("options-transform-write")]).pipe(optionsTransformWrite);
 
 const overriddenOptionsDestination = new Writable({
   write(chunk, encoding, callback) {
-    consumeChunk(chunk); // $ MISSING: flow=options-public-write
+    consumeChunk(chunk); // $ flow=options-public-write
     callback();
   }
 });
