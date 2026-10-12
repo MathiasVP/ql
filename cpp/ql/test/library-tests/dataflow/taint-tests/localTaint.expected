@@ -5747,6 +5747,65 @@ WARNING: module 'TaintTracking' has been deprecated and may be removed in future
 | string.cpp:686:12:686:16 | ref arg clean | string.cpp:688:7:688:11 | clean |  |
 | string.cpp:687:7:687:10 | view | string.cpp:687:7:687:10 | call to basic_string_view |  |
 | string.cpp:688:7:688:11 | clean | string.cpp:688:7:688:11 | call to basic_string_view |  |
+| string.cpp:694:17:694:20 | aa | string.cpp:694:17:694:21 | call to basic_string | TAINT |
+| string.cpp:695:4:695:4 | s | string.cpp:695:4:695:11 | ... = ... |  |
+| string.cpp:695:4:695:11 | ... = ... | string.cpp:695:4:695:4 | s [inner post update] |  |
+| string.cpp:695:4:695:11 | ref arg ... = ... | string.cpp:695:4:695:4 | s [inner post update] |  |
+| string.cpp:695:4:695:11 | ref arg ... = ... | string.cpp:696:8:696:8 | s |  |
+| string.cpp:695:8:695:11 | bb | string.cpp:695:8:695:11 | call to basic_string | TAINT |
+| string.cpp:695:8:695:11 | call to basic_string | string.cpp:695:4:695:11 | ... = ... |  |
+| string.cpp:695:8:695:11 | call to basic_string | string.cpp:696:8:696:8 | s |  |
+| string.cpp:695:17:695:22 | call to source | string.cpp:695:14:695:14 | call to operator+= | TAINT |
+| string.cpp:700:17:700:20 | aa | string.cpp:700:17:700:21 | call to basic_string | TAINT |
+| string.cpp:700:17:700:21 | call to basic_string | string.cpp:701:3:701:3 | s |  |
+| string.cpp:700:17:700:21 | call to basic_string | string.cpp:702:8:702:8 | s |  |
+| string.cpp:701:3:701:3 | ref arg s | string.cpp:702:8:702:8 | s |  |
+| string.cpp:701:3:701:31 | ... = ... | string.cpp:701:5:701:9 | call to front [post update] |  |
+| string.cpp:701:15:701:29 | call to source | string.cpp:701:3:701:31 | ... = ... |  |
+| string.cpp:706:17:706:20 | aa | string.cpp:706:17:706:21 | call to basic_string | TAINT |
+| string.cpp:706:17:706:21 | call to basic_string | string.cpp:707:3:707:3 | s |  |
+| string.cpp:706:17:706:21 | call to basic_string | string.cpp:708:8:708:8 | s |  |
+| string.cpp:707:3:707:3 | ref arg s | string.cpp:708:8:708:8 | s |  |
+| string.cpp:707:3:707:30 | ... = ... | string.cpp:707:5:707:8 | call to back [post update] |  |
+| string.cpp:707:14:707:28 | call to source | string.cpp:707:3:707:30 | ... = ... |  |
+| string.cpp:712:17:712:20 | aa | string.cpp:712:17:712:21 | call to basic_string | TAINT |
+| string.cpp:712:17:712:21 | call to basic_string | string.cpp:713:3:713:3 | s |  |
+| string.cpp:712:17:712:21 | call to basic_string | string.cpp:714:8:714:8 | s |  |
+| string.cpp:713:3:713:3 | ref arg s | string.cpp:714:8:714:8 | s |  |
+| string.cpp:713:3:713:13 | access to array [post update] | string.cpp:713:5:713:8 | call to data [inner post update] |  |
+| string.cpp:713:3:713:33 | ... = ... | string.cpp:713:3:713:13 | access to array [post update] |  |
+| string.cpp:713:5:713:8 | call to data | string.cpp:713:3:713:13 | access to array | TAINT |
+| string.cpp:713:12:713:12 | 0 | string.cpp:713:3:713:13 | access to array | TAINT |
+| string.cpp:713:17:713:31 | call to source | string.cpp:713:3:713:33 | ... = ... |  |
+| string.cpp:718:17:718:20 | aa | string.cpp:718:17:718:21 | call to basic_string | TAINT |
+| string.cpp:718:17:718:21 | call to basic_string | string.cpp:719:3:719:3 | s |  |
+| string.cpp:718:17:718:21 | call to basic_string | string.cpp:720:8:720:8 | s |  |
+| string.cpp:719:3:719:3 | ref arg s | string.cpp:720:8:720:8 | s |  |
+| string.cpp:719:3:719:30 | ... = ... | string.cpp:719:5:719:10 | call to insert [post update] |  |
+| string.cpp:719:23:719:28 | call to source | string.cpp:719:23:719:30 | call to basic_string | TAINT |
+| string.cpp:719:23:719:30 | call to basic_string | string.cpp:719:3:719:30 | ... = ... |  |
+| string.cpp:724:17:724:20 | aa | string.cpp:724:17:724:21 | call to basic_string | TAINT |
+| string.cpp:724:17:724:21 | call to basic_string | string.cpp:725:3:725:3 | s |  |
+| string.cpp:724:17:724:21 | call to basic_string | string.cpp:726:8:726:8 | s |  |
+| string.cpp:725:3:725:3 | ref arg s | string.cpp:726:8:726:8 | s |  |
+| string.cpp:725:3:725:27 | ... = ... | string.cpp:725:5:725:10 | call to append [post update] |  |
+| string.cpp:725:20:725:25 | call to source | string.cpp:725:20:725:27 | call to basic_string | TAINT |
+| string.cpp:725:20:725:27 | call to basic_string | string.cpp:725:3:725:27 | ... = ... |  |
+| string.cpp:730:17:730:20 | aa | string.cpp:730:17:730:21 | call to basic_string | TAINT |
+| string.cpp:730:17:730:21 | call to basic_string | string.cpp:731:4:731:4 | s |  |
+| string.cpp:730:17:730:21 | call to basic_string | string.cpp:732:8:732:8 | s |  |
+| string.cpp:731:3:731:24 | ... = ... | string.cpp:731:6:731:6 | call to operator+= [post update] |  |
+| string.cpp:731:4:731:4 | ref arg s | string.cpp:732:8:732:8 | s |  |
+| string.cpp:731:17:731:22 | call to source | string.cpp:731:17:731:24 | call to basic_string | TAINT |
+| string.cpp:731:17:731:24 | call to basic_string | string.cpp:731:3:731:24 | ... = ... |  |
+| string.cpp:736:17:736:20 | aa | string.cpp:736:17:736:21 | call to basic_string | TAINT |
+| string.cpp:736:17:736:21 | call to basic_string | string.cpp:737:3:737:3 | s |  |
+| string.cpp:736:17:736:21 | call to basic_string | string.cpp:738:8:738:8 | s |  |
+| string.cpp:737:3:737:3 | ref arg s | string.cpp:738:8:738:8 | s |  |
+| string.cpp:737:3:737:34 | ... = ... | string.cpp:737:5:737:11 | call to replace [post update] |  |
+| string.cpp:737:19:737:22 | bb | string.cpp:737:19:737:22 | call to basic_string | TAINT |
+| string.cpp:737:27:737:32 | call to source | string.cpp:737:27:737:34 | call to basic_string | TAINT |
+| string.cpp:737:27:737:34 | call to basic_string | string.cpp:737:3:737:34 | ... = ... |  |
 | stringstream.cpp:26:35:26:40 | amount | stringstream.cpp:64:46:64:51 | amount |  |
 | stringstream.cpp:28:20:28:22 | call to basic_stringstream | stringstream.cpp:31:7:31:9 | ss1 |  |
 | stringstream.cpp:28:20:28:22 | call to basic_stringstream | stringstream.cpp:37:7:37:9 | ss1 |  |
