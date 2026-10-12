@@ -564,3 +564,73 @@ void test_string_return_assign() {
 		sink(f); // $ SPURIOUS: ir
 	}
 }
+
+void test_string_reverse_flow() {
+	{
+		std::string s("aa");
+		(s = "bb") += source();
+		sink(s); // $ ir
+	}
+
+	{
+		std::string s("aa");
+		s.front() = ns_char::source();
+		sink(s); // $ ir
+	}
+
+	{
+		std::string s("aa");
+		s.back() = ns_char::source();
+		sink(s); // $ ir
+	}
+
+	{
+		std::string s("aa");
+		s.data()[0] = ns_char::source();
+		sink(s); // $ ir
+	}
+
+	{
+		std::string s("aa");
+		s.insert(0, "bb") = source();
+		sink(s); // $ ir
+	}
+
+	{
+		std::string s("aa");
+		s.append("bb") = source();
+		sink(s); // $ ir
+	}
+
+	{
+		std::string s("aa");
+		(s += "bb") = source();
+		sink(s); // $ ir
+	}
+
+	{
+		std::string s("aa");
+		s.replace(0, 1, "bb") = source();
+		sink(s); // $ ir
+	}
+}
+
+namespace ns_string_view {
+	std::string_view source();
+}
+
+void test_string_view_like() {
+	std::string_view view = ns_string_view::source();
+	std::string constructed(view), sliced(view, 0, 1);
+	sink(constructed); // $ ir
+	sink(sliced); // $ ir
+
+	std::string assigned, appended, inserted, replaced;
+	sink(assigned.assign(view)); // $ ir
+	sink(appended.append(view, 0, 1)); // $ ir
+	sink(inserted.insert(0, view)); // $ ir
+	sink(replaced.replace(0, 0, view)); // $ ir
+
+	char tainted = ns_char::source();
+	sink(tainted + std::string("clean")); // $ ir
+}
