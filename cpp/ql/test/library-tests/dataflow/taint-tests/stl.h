@@ -245,6 +245,12 @@ namespace std
 
 	template<class charT, class traits, class Allocator> basic_string<charT, traits, Allocator> operator+(const basic_string<charT, traits, Allocator>& lhs, const basic_string<charT, traits, Allocator>& rhs);
 	template<class charT, class traits, class Allocator> basic_string<charT, traits, Allocator> operator+(const basic_string<charT, traits, Allocator>& lhs, const charT* rhs);
+	
+	template<class charT, class traits, class Allocator>
+	basic_string<charT, traits, Allocator> operator+(charT, const basic_string<charT, traits, Allocator>&);
+	
+	template<class charT, class traits, class Allocator>
+	basic_string<charT, traits, Allocator> operator+(charT, basic_string<charT, traits, Allocator>&&);
 
 	typedef basic_string<char> string;
 }
