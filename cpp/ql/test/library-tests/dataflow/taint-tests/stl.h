@@ -135,6 +135,25 @@ namespace std
 		typedef size_t size_type;
 	};
 
+	template<bool, class T = void>
+	struct enable_if {};
+	
+	template<class T>
+	struct enable_if<true, T> { typedef T type; };
+	
+	template<class CharT, class Traits>
+	class basic_string_view;
+	
+	template<class T>
+	struct is_string_view_like {
+		static const bool value = false; 
+	};
+	
+	template<class CharT, class Traits>
+	struct is_string_view_like<basic_string_view<CharT, Traits>> {
+		static const bool value = true;
+	};
+
 	template<class charT, class traits = char_traits<charT>, class Allocator = allocator<charT> >
 	class basic_string {
 	public:
@@ -147,6 +166,12 @@ namespace std
 		explicit basic_string(const Allocator& a = Allocator());
 		basic_string(const charT* s, const Allocator& a = Allocator());
 		template<class InputIterator> basic_string(InputIterator begin, InputIterator end, const Allocator& a = Allocator());
+		
+		template<class StringViewLike, typename enable_if<is_string_view_like<StringViewLike>::value>::type* = nullptr>
+		explicit basic_string(const StringViewLike&, const Allocator& = Allocator());
+		
+		template<class StringViewLike, typename enable_if<is_string_view_like<StringViewLike>::value>::type* = nullptr>
+		basic_string(const StringViewLike&, size_type, size_type, const Allocator& = Allocator());
 
 		const charT* c_str() const;
 		charT* data() noexcept;
@@ -176,18 +201,41 @@ namespace std
 		template<class T> basic_string& operator+=(const T& t);
 		basic_string& operator+=(const charT* s);
 		basic_string& append(const basic_string& str);
+		
+		template<class StringViewLike, typename enable_if<is_string_view_like<StringViewLike>::value>::type* = nullptr>
+		basic_string& append(const StringViewLike&); template<class StringViewLike, typename enable_if<is_string_view_like<StringViewLike>::value>::type* = nullptr> basic_string& append(const StringViewLike&, size_type, size_type);
+		
 		basic_string& append(const charT* s);
 		basic_string& append(size_type n, charT c);
 		template<class InputIterator> basic_string& append(InputIterator first, InputIterator last); 
 		basic_string& assign(const basic_string& str);
+		
+		template<class StringViewLike, typename enable_if<is_string_view_like<StringViewLike>::value>::type* = nullptr>
+		basic_string& assign(const StringViewLike&); template<class StringViewLike, typename enable_if<is_string_view_like<StringViewLike>::value>::type* = nullptr>
+		
+		basic_string& assign(const StringViewLike&, size_type, size_type);
+		
 		basic_string& assign(size_type n, charT c);
 		template<class InputIterator> basic_string& assign(InputIterator first, InputIterator last);
 		basic_string& insert(size_type pos, const basic_string& str);
+		
+		template<class StringViewLike, typename enable_if<is_string_view_like<StringViewLike>::value>::type* = nullptr>
+		basic_string& insert(size_type, const StringViewLike&); template<class StringViewLike, typename enable_if<is_string_view_like<StringViewLike>::value>::type* = nullptr>
+		basic_string& insert(size_type, const StringViewLike&, size_type, size_type);
+
 		basic_string& insert(size_type pos, size_type n, charT c);
 		basic_string& insert(size_type pos, const charT* s);
 		iterator insert(const_iterator p, size_type n, charT c);
 		template<class InputIterator> iterator insert(const_iterator p, InputIterator first, InputIterator last); 
 		basic_string& replace(size_type pos1, size_type n1, const basic_string& str);
+
+		template<class StringViewLike, typename enable_if<is_string_view_like<StringViewLike>::value>::type* = nullptr>
+		basic_string& replace(size_type, size_type, const StringViewLike&); template<class StringViewLike, typename enable_if<is_string_view_like<StringViewLike>::value>::type* = nullptr>
+		
+		basic_string& replace(const_iterator, const_iterator, const StringViewLike&);
+		
+		template<class StringViewLike, typename enable_if<is_string_view_like<StringViewLike>::value>::type* = nullptr>
+		basic_string& replace(size_type, size_type, const StringViewLike&, size_type, size_type);
 		basic_string& replace(size_type pos1, size_type n1, size_type n2, charT c);
 		size_type copy(charT* s, size_type n, size_type pos = 0) const;
 		void clear() noexcept;
