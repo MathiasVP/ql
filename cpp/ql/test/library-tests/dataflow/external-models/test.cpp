@@ -379,6 +379,7 @@ void forward_test() {
 
 template<typename T>
 struct Container {
+	using value_type = T;
   template<typename... Args>
   void emplace(int pos, Args&&... args);
 
