@@ -463,7 +463,7 @@ namespace std {
 
 namespace std {
 	template<class T = void> struct less;
-
+	template<class Key, class T, class Compare = less<Key>, class Allocator = allocator<pair<const Key, T>>> class multimap;
 	template<class Key, class T, class Compare = less<Key>, class Allocator = allocator<pair<const Key, T>>>
 	class map {
 	public:
@@ -474,6 +474,11 @@ namespace std {
 		using const_iterator = std::iterator<random_access_iterator_tag, const value_type >;
 
 		map() /*: map(Compare()) { }*/;
+		template<class InputIt> map(InputIt, InputIt);
+		
+		template<class InputIt> map(InputIt, InputIt, const Compare&);
+		
+		template<class InputIt> map(InputIt, InputIt, const Compare&, const Allocator&);
 		map(const map& x);
 		map(map&& x);
 		~map();
@@ -488,6 +493,7 @@ namespace std {
 
 		T& operator[](const key_type& x);
 		T& operator[](key_type&& x);
+		template<class K> T& operator[](K&& x);
 		T& at(const key_type& x);
 		const T& at(const key_type& x) const;
 
@@ -496,9 +502,10 @@ namespace std {
 
 		pair<iterator, bool> insert(const value_type& x);
 		pair<iterator, bool> insert(value_type&& x);
+		template<class P> pair<iterator, bool> insert(P&& x);
 		iterator insert(const_iterator position, const value_type& x);
 		iterator insert(const_iterator position, value_type&& x);
-
+		template<class P> iterator insert(const_iterator position, P&& x);
 		template<class... Args> pair<iterator, bool> try_emplace(const key_type& k, Args&&... args);
 		template<class... Args> pair<iterator, bool> try_emplace(key_type&& k, Args&&... args);
 		template<class... Args> iterator try_emplace(const_iterator hint, const key_type& k, Args&&... args);
@@ -516,7 +523,8 @@ namespace std {
 
 		template<class C2> void merge(map<Key, T, C2, Allocator>& source);
 		template<class C2> void merge(map<Key, T, C2, Allocator>&& source);
-
+		template<class C2> void merge(multimap<Key, T, C2, Allocator>& source);
+		template<class C2> void merge(multimap<Key, T, C2, Allocator>&& source);
 		iterator find(const key_type& x);
 		const_iterator find(const key_type& x) const;
 
@@ -531,6 +539,13 @@ namespace std {
 
 	template<class T> struct hash;
 	template<class T = void> struct equal_to;
+
+	template<class T> class initializer_list {
+		public:
+		const T* begin() const;
+		const T* end() const;
+		size_t size() const;
+	};
 
 	template<class Key, class T, class Hash = hash<Key>, class Pred = equal_to<Key>, class Allocator = allocator<pair<const Key, T>>>
 	class unordered_map {
@@ -566,6 +581,7 @@ namespace std {
 		pair<iterator, bool> insert(value_type&& obj);
 		iterator insert(const_iterator hint, const value_type& obj);
 		iterator insert(const_iterator hint, value_type&& obj);
+		void insert(initializer_list<value_type>);
 
 		template<class... Args> pair<iterator, bool> try_emplace(const key_type& k, Args&&... args);
 		template<class... Args> pair<iterator, bool> try_emplace(key_type&& k, Args&&... args);
