@@ -328,3 +328,10 @@ void test_GetHeader() {
     sink(contentType); // $ ir
   }
 }
+
+void test_QueryParameters() {
+  Azure::Core::Http::Request request(Azure::Core::Http::Get, Azure::Core::Url("http://example.com"));
+  Azure::Core::Url url;
+  url.SetQueryParameters(request.GetHeaders());
+  sink(url.GetQueryParameters()["query"]); // $ ir
+}
