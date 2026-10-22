@@ -246,7 +246,13 @@ private module Cached {
 
   /** Holds if `node` should be an `IndirectOperand` that maps `node.asExpr()` to `e`. */
   private predicate exprNodeShouldBeIndirectOperand(IndirectOperand node, Expr e, int n) {
-    exists(ArgumentOperand operand |
+    exists(ArgumentOperand operand | isIndirectOperandOfArgument(node, operand, e, n) |
+      // If `x` has type `Foo` in a call such `x.f()` the `VariableAddress`
+      // instruction (which is of type `glvalue<Foo>`) is the qualifier.
+      // So the `DataFlow::Node` we want to represent `x` is the indirection of
+      // the qualifier (which will then have type `Foo`).
+      operand.isGLValue() and operand instanceof ThisArgumentOperand
+      or
       // When an argument (qualifier or positional) is a prvalue and the
       // parameter (qualifier or positional) is a (const) reference, IR
       // construction introduces a temporary `IRVariable`. The `VariableAddress`
@@ -254,7 +260,6 @@ private module Cached {
       // result. However, the instruction actually represents the _address_ of
       // the argument. So to fix this mismatch, we have the indirection of the
       // `VariableAddressInstruction` map to the expression.
-      isIndirectOperandOfArgument(node, operand, e, n) and
       irTempOperandConversionFlows(operand)
     )
   }
