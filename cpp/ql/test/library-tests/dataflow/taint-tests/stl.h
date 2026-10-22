@@ -704,14 +704,43 @@ namespace std {
 	class basic_string_view {
 	public:
 		using size_type = size_t;
+		using const_iterator = const CharT*;
 
 		basic_string_view() noexcept;
 		basic_string_view(const basic_string_view&) noexcept;
 		basic_string_view(const CharT*, size_type);
 		basic_string_view(const CharT*);
 		template<class It, class End> basic_string_view(It, End);
-		template<class R> explicit basic_string_view(R&&);
+		template<class R, typename enable_if<!is_string_view_like<remove_const_t<remove_reference_t<R>>>::value>::type* = nullptr>
+		explicit basic_string_view(R&&);
 		basic_string_view& operator=(const basic_string_view&) noexcept;
+
+		const_iterator begin() const;
+		const_iterator end() const;
+		const_iterator cbegin() const;
+		const_iterator cend() const;
+		const CharT& operator[](size_type) const;
+		const CharT& at(size_type) const;
+		const CharT& front() const;
+		const CharT& back() const;
+		const CharT* data() const;
+		void remove_prefix(size_type);
+		void remove_suffix(size_type);
+		void swap(basic_string_view&);
+		size_type copy(CharT*, size_type, size_type = 0) const;
+		basic_string_view substr(size_type = 0, size_type = -1) const;
+		basic_string_view subview(size_type = 0, size_type = -1) const;
+
+		size_type size() const;
+		size_type length() const;
+		size_type max_size() const;
+		bool empty() const;
+		int compare(basic_string_view) const;
+		bool starts_with(basic_string_view) const;
+		bool ends_with(basic_string_view) const;
+		bool contains(basic_string_view) const;
+		size_type find(basic_string_view) const;
+		size_type rfind(basic_string_view) const;
 	};
 
 	using string_view = basic_string_view<char>;

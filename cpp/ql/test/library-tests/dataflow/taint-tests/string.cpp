@@ -19,6 +19,7 @@ void sink(const std::string &s);
 void sink(const char *filename, const char *mode);
 void sink(char);
 void sink(std::string::iterator);
+void sink(std::string_view);
 
 void test_string()
 {
@@ -563,4 +564,127 @@ void test_string_return_assign() {
 		sink(e); // $ ast,ir
 		sink(f); // $ SPURIOUS: ast,ir
 	}
+}
+
+namespace ns_string_view {
+	std::string_view source();
+}
+
+void test_string_view_like() {
+	std::string_view view = ns_string_view::source();
+	std::string constructed(view), sliced(view, 0, 1);
+	sink(constructed); // $ ir
+	sink(sliced); // $ ir
+
+	std::string assigned, appended, inserted, replaced;
+	sink(assigned.assign(view)); // $ ir
+	sink(appended.append(view, 0, 1)); // $ ir
+	sink(inserted.insert(0, view)); // $ ir
+	sink(replaced.replace(0, 0, view)); // $ ir
+
+	char tainted = ns_char::source();
+	sink(tainted + std::string("clean")); // $ ir
+}
+
+namespace string_view_tests {
+
+namespace iterators {
+struct Iterator {};
+Iterator source();
+}
+
+namespace ranges {
+	struct Range {};
+	Range source();
+}
+
+void constructors() {
+	const char* data = source();
+	std::string_view terminated(data);
+	sink(terminated); // $ ast,ir
+	sink(terminated.data()); // $ MISSING: ir
+
+	std::string_view counted(data, 5);
+	sink(counted); // $ MISSING: ir
+	sink(counted.data()); // $ MISSING: ir
+
+	std::string_view iterators(data, data + 5);
+	sink(iterators); // $ MISSING: ir
+}
+
+void copy_and_assignment() {
+	const auto original = ns_string_view::source();
+	std::string_view copied(original);
+	sink(copied); // $ ast,ir
+	sink(copied.data()); // $ MISSING: ir
+	std::string_view moved(static_cast<const std::string_view&&>(original));
+	sink(moved); // $ ast,ir
+
+	std::string_view assigned;
+	sink(assigned = original); // $ ast,ir
+	sink(assigned); // $ ast,ir
+
+	const std::string_view clean;
+	std::string_view chained;
+	(chained = clean) = original;
+	sink(chained); // $ MISSING: ast,ir
+
+	copied = clean;
+	sink(copied); // $ SPURIOUS: ast
+}
+
+void iterator_and_range_constructors() {
+	iterators::Iterator it = iterators::source();
+	std::string_view iterators(it, it);
+	sink(iterators); // $ MISSING: ir
+
+	ranges::Range range = ranges::source();
+	std::string_view from_range(range);
+	sink(from_range); // $ MISSING: ir
+
+	std::vector<char> container;
+	container.push_back(ns_char::source());
+	std::string_view from_container(container);
+	sink(from_container); // $ MISSING: ir
+	std::string_view from_container_iterators(container.begin(), container.end());
+	sink(from_container_iterators); // $ MISSING: ir
+}
+
+void accessors() {
+	auto view = ns_string_view::source();
+	sink(view.data()); // $ MISSING: ir
+	sink(view[0]); // $ MISSING: ir
+	sink(view.at(0)); // $ MISSING: ir
+	sink(view.front()); // $ MISSING: ir
+	sink(view.back()); // $ MISSING: ir
+	sink(*view.begin()); // $ ast,ir
+	sink(*view.cbegin()); // $ ast,ir
+}
+
+void trimming() {
+	auto prefix = ns_string_view::source();
+	prefix.remove_prefix(1);
+	sink(prefix); // $ ast,ir
+	sink(prefix.data()); // $ MISSING: ir
+
+	auto suffix = ns_string_view::source();
+	suffix.remove_suffix(1);
+	sink(suffix); // $ ast,ir
+	sink(suffix.data()); // $ MISSING: ir
+}
+
+void operations() {
+	auto view = ns_string_view::source();
+	sink(view.substr(1, 2)); // $ MISSING: ast,ir
+	sink(view.subview(1, 2)); // $ MISSING: ir
+
+	char buffer[10] = {};
+	sink(view.copy(buffer, 2));
+	sink(buffer); // $ MISSING: ir
+
+	std::string_view clean;
+	view.swap(clean);
+	sink(view); // $ SPURIOUS: ast
+	sink(clean); // $ ir MISSING: ast
+}
 }
