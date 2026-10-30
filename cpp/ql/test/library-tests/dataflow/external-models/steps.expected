@@ -68,6 +68,9 @@
 | azure.cpp:295:5:295:8 | *resp | azure.cpp:295:23:295:28 | ReadToCount output argument |
 | azure.cpp:320:79:320:98 | call to basic_string | azure.cpp:320:62:320:99 | call to Url |
 | azure.cpp:322:24:322:56 | call to GetHeader | azure.cpp:322:63:322:65 | call to Value |
+| azure.cpp:333:79:333:98 | call to basic_string | azure.cpp:333:62:333:99 | call to Url |
+| azure.cpp:335:26:335:45 | call to GetHeaders | azure.cpp:335:3:335:5 | SetQueryParameters output argument |
+| azure.cpp:336:8:336:10 | *url | azure.cpp:336:12:336:29 | call to GetQueryParameters |
 | bal.cpp:132:17:132:18 | *sb | bal.cpp:132:21:132:24 | decode output argument |
 | bal.cpp:141:17:141:19 | ** ... | bal.cpp:141:22:141:25 | decode output argument |
 | bal.cpp:150:20:150:21 | *sb | bal.cpp:150:24:150:27 | decodeAny output argument |
