@@ -393,45 +393,37 @@ edges
 | asio_streams.cpp:195:45:195:56 | service_view | asio_streams.cpp:195:16:195:22 | call to resolve | provenance | MaD:261 |
 | asio_streams.cpp:196:45:196:56 | service_view | asio_streams.cpp:196:16:196:22 | call to resolve | provenance | MaD:262 |
 | asio_streams.cpp:197:45:197:56 | service_view | asio_streams.cpp:197:16:197:22 | call to resolve | provenance | MaD:263 |
-| azure.cpp:253:48:253:60 | *call to GetBodyStream | azure.cpp:257:5:257:8 | *resp | provenance |  |
-| azure.cpp:253:48:253:60 | *call to GetBodyStream | azure.cpp:262:5:262:8 | *resp | provenance |  |
-| azure.cpp:253:48:253:60 | *call to GetBodyStream | azure.cpp:266:38:266:41 | *resp | provenance |  |
-| azure.cpp:253:48:253:60 | call to GetBodyStream | azure.cpp:253:48:253:60 | *call to GetBodyStream | provenance | Src:MaD:53  |
-| azure.cpp:257:5:257:8 | *resp | azure.cpp:257:16:257:21 | Read output argument | provenance | MaD:95 |
-| azure.cpp:257:16:257:21 | Read output argument | azure.cpp:258:10:258:16 | * ... | provenance |  |
-| azure.cpp:262:5:262:8 | *resp | azure.cpp:262:23:262:28 | ReadToCount output argument | provenance | MaD:96 |
-| azure.cpp:262:23:262:28 | ReadToCount output argument | azure.cpp:263:10:263:16 | * ... | provenance |  |
-| azure.cpp:266:38:266:41 | *resp | azure.cpp:266:44:266:52 | call to ReadToEnd [element] | provenance | MaD:97 |
-| azure.cpp:266:44:266:52 | call to ReadToEnd [element] | azure.cpp:266:44:266:52 | call to ReadToEnd [element] | provenance |  |
-| azure.cpp:266:44:266:52 | call to ReadToEnd [element] | azure.cpp:267:10:267:12 | vec [element] | provenance |  |
-| azure.cpp:267:10:267:12 | vec [element] | azure.cpp:267:10:267:12 | vec | provenance |  |
-| azure.cpp:273:52:273:61 | call to GetHeaders | azure.cpp:273:62:273:64 | call to GetHeaders | provenance | Src:MaD:52  |
-| azure.cpp:273:62:273:64 | call to GetHeaders | azure.cpp:274:14:274:29 | call to operator[] | provenance | TaintFunction |
-| azure.cpp:273:62:273:64 | call to GetHeaders | azure.cpp:274:14:274:29 | call to operator[] | provenance | TaintFunction |
-| azure.cpp:273:62:273:64 | call to GetHeaders | azure.cpp:274:14:274:29 | call to operator[] | provenance | TaintFunction |
-| azure.cpp:274:14:274:29 | call to operator[] | azure.cpp:274:10:274:29 | call to operator[] | provenance |  |
-| azure.cpp:274:14:274:29 | call to operator[] | azure.cpp:274:14:274:29 | call to operator[] | provenance |  |
-| azure.cpp:277:38:277:44 | call to GetBody | azure.cpp:277:45:277:47 | call to GetBody | provenance | Src:MaD:51  |
-| azure.cpp:277:45:277:47 | call to GetBody | azure.cpp:278:10:278:13 | body | provenance |  |
-| azure.cpp:277:45:277:47 | call to GetBody | azure.cpp:278:10:278:13 | body | provenance |  |
-| azure.cpp:278:10:278:13 | body | azure.cpp:278:10:278:13 | body | provenance |  |
-| azure.cpp:281:68:281:84 | *call to ExtractBodyStream | azure.cpp:282:21:282:23 | *call to get | provenance |  |
-| azure.cpp:281:68:281:84 | call to ExtractBodyStream | azure.cpp:281:68:281:84 | *call to ExtractBodyStream | provenance | Src:MaD:50  |
-| azure.cpp:282:21:282:23 | *call to get | azure.cpp:282:28:282:36 | call to ReadToEnd [element] | provenance | MaD:97 |
-| azure.cpp:282:28:282:36 | call to ReadToEnd [element] | azure.cpp:282:10:282:38 | call to ReadToEnd | provenance |  |
-| azure.cpp:282:28:282:36 | call to ReadToEnd [element] | azure.cpp:282:28:282:36 | call to ReadToEnd [element] | provenance |  |
-| azure.cpp:289:24:289:56 | call to GetHeader | azure.cpp:289:63:289:65 | call to Value | provenance | MaD:98 |
-| azure.cpp:289:32:289:40 | call to GetHeader | azure.cpp:289:24:289:56 | call to GetHeader | provenance |  |
-| azure.cpp:289:32:289:40 | call to GetHeader | azure.cpp:289:32:289:40 | call to GetHeader | provenance | Src:MaD:54  |
-| azure.cpp:289:63:289:65 | call to Value | azure.cpp:289:63:289:65 | call to Value | provenance |  |
-| azure.cpp:289:63:289:65 | call to Value | azure.cpp:290:10:290:20 | headerValue | provenance |  |
-| azure.cpp:289:63:289:65 | call to Value | azure.cpp:290:10:290:20 | headerValue | provenance |  |
-| azure.cpp:290:10:290:20 | headerValue | azure.cpp:290:10:290:20 | headerValue | provenance |  |
-| azure.cpp:293:58:293:67 | call to GetHeaders | azure.cpp:293:58:293:67 | call to GetHeaders | provenance | Src:MaD:55  |
-| azure.cpp:293:58:293:67 | call to GetHeaders | azure.cpp:294:38:294:53 | call to operator[] | provenance | TaintFunction |
-| azure.cpp:294:38:294:53 | call to operator[] | azure.cpp:295:10:295:20 | contentType | provenance |  |
-| azure.cpp:294:38:294:53 | call to operator[] | azure.cpp:295:10:295:20 | contentType | provenance |  |
-| azure.cpp:295:10:295:20 | contentType | azure.cpp:295:10:295:20 | contentType | provenance |  |
+| azure.cpp:286:48:286:60 | *call to GetBodyStream | azure.cpp:290:5:290:8 | *resp | provenance |  |
+| azure.cpp:286:48:286:60 | *call to GetBodyStream | azure.cpp:295:5:295:8 | *resp | provenance |  |
+| azure.cpp:286:48:286:60 | *call to GetBodyStream | azure.cpp:299:38:299:41 | *resp | provenance |  |
+| azure.cpp:286:48:286:60 | call to GetBodyStream | azure.cpp:286:48:286:60 | *call to GetBodyStream | provenance | Src:MaD:53  |
+| azure.cpp:290:5:290:8 | *resp | azure.cpp:290:16:290:21 | Read output argument | provenance | MaD:95 |
+| azure.cpp:290:16:290:21 | Read output argument | azure.cpp:291:10:291:16 | * ... | provenance |  |
+| azure.cpp:295:5:295:8 | *resp | azure.cpp:295:23:295:28 | ReadToCount output argument | provenance | MaD:96 |
+| azure.cpp:295:23:295:28 | ReadToCount output argument | azure.cpp:296:10:296:16 | * ... | provenance |  |
+| azure.cpp:299:38:299:41 | *resp | azure.cpp:299:44:299:52 | call to ReadToEnd [element] | provenance | MaD:97 |
+| azure.cpp:299:44:299:52 | call to ReadToEnd [element] | azure.cpp:299:44:299:52 | call to ReadToEnd [element] | provenance |  |
+| azure.cpp:299:44:299:52 | call to ReadToEnd [element] | azure.cpp:300:10:300:12 | vec [element] | provenance |  |
+| azure.cpp:300:10:300:12 | vec [element] | azure.cpp:300:10:300:12 | vec | provenance |  |
+| azure.cpp:306:52:306:61 | call to GetHeaders | azure.cpp:306:62:306:64 | call to GetHeaders | provenance | Src:MaD:52  |
+| azure.cpp:306:62:306:64 | call to GetHeaders | azure.cpp:307:14:307:29 | call to operator[] | provenance | TaintFunction |
+| azure.cpp:310:38:310:44 | call to GetBody | azure.cpp:310:45:310:47 | call to GetBody | provenance | Src:MaD:51  |
+| azure.cpp:310:45:310:47 | call to GetBody | azure.cpp:311:10:311:13 | body | provenance |  |
+| azure.cpp:310:45:310:47 | call to GetBody | azure.cpp:311:10:311:13 | body | provenance |  |
+| azure.cpp:311:10:311:13 | body | azure.cpp:311:10:311:13 | body | provenance |  |
+| azure.cpp:314:68:314:84 | *call to ExtractBodyStream | azure.cpp:315:21:315:23 | *call to get | provenance |  |
+| azure.cpp:314:68:314:84 | call to ExtractBodyStream | azure.cpp:314:68:314:84 | *call to ExtractBodyStream | provenance | Src:MaD:50  |
+| azure.cpp:315:21:315:23 | *call to get | azure.cpp:315:28:315:36 | call to ReadToEnd [element] | provenance | MaD:97 |
+| azure.cpp:315:28:315:36 | call to ReadToEnd [element] | azure.cpp:315:10:315:38 | call to ReadToEnd | provenance |  |
+| azure.cpp:315:28:315:36 | call to ReadToEnd [element] | azure.cpp:315:28:315:36 | call to ReadToEnd [element] | provenance |  |
+| azure.cpp:322:24:322:56 | call to GetHeader | azure.cpp:322:63:322:65 | call to Value | provenance | MaD:98 |
+| azure.cpp:322:32:322:40 | call to GetHeader | azure.cpp:322:24:322:56 | call to GetHeader | provenance |  |
+| azure.cpp:322:32:322:40 | call to GetHeader | azure.cpp:322:32:322:40 | call to GetHeader | provenance | Src:MaD:54  |
+| azure.cpp:322:63:322:65 | call to Value | azure.cpp:322:63:322:65 | call to Value | provenance |  |
+| azure.cpp:322:63:322:65 | call to Value | azure.cpp:323:10:323:20 | headerValue | provenance |  |
+| azure.cpp:326:58:326:67 | call to GetHeaders | azure.cpp:326:58:326:67 | call to GetHeaders | provenance | Src:MaD:55  |
+| azure.cpp:326:58:326:67 | call to GetHeaders | azure.cpp:327:38:327:53 | call to operator[] | provenance | TaintFunction |
+| azure.cpp:327:38:327:53 | call to operator[] | azure.cpp:328:10:328:20 | contentType | provenance |  |
 | bal.cpp:128:19:128:26 | call to source | bal.cpp:129:23:129:51 | *call to data | provenance | TaintFunction |
 | bal.cpp:129:23:129:51 | *call to data | bal.cpp:132:17:132:18 | *sb | provenance |  |
 | bal.cpp:132:17:132:18 | *sb | bal.cpp:132:21:132:24 | decode output argument | provenance | MaD:99 |
@@ -1743,50 +1735,43 @@ nodes
 | asio_streams.cpp:196:45:196:56 | service_view | semmle.label | service_view |
 | asio_streams.cpp:197:16:197:22 | call to resolve | semmle.label | call to resolve |
 | asio_streams.cpp:197:45:197:56 | service_view | semmle.label | service_view |
-| azure.cpp:253:48:253:60 | *call to GetBodyStream | semmle.label | *call to GetBodyStream |
-| azure.cpp:253:48:253:60 | call to GetBodyStream | semmle.label | call to GetBodyStream |
-| azure.cpp:257:5:257:8 | *resp | semmle.label | *resp |
-| azure.cpp:257:16:257:21 | Read output argument | semmle.label | Read output argument |
-| azure.cpp:258:10:258:16 | * ... | semmle.label | * ... |
-| azure.cpp:262:5:262:8 | *resp | semmle.label | *resp |
-| azure.cpp:262:23:262:28 | ReadToCount output argument | semmle.label | ReadToCount output argument |
-| azure.cpp:263:10:263:16 | * ... | semmle.label | * ... |
-| azure.cpp:266:38:266:41 | *resp | semmle.label | *resp |
-| azure.cpp:266:44:266:52 | call to ReadToEnd [element] | semmle.label | call to ReadToEnd [element] |
-| azure.cpp:266:44:266:52 | call to ReadToEnd [element] | semmle.label | call to ReadToEnd [element] |
-| azure.cpp:267:10:267:12 | vec | semmle.label | vec |
-| azure.cpp:267:10:267:12 | vec [element] | semmle.label | vec [element] |
-| azure.cpp:273:52:273:61 | call to GetHeaders | semmle.label | call to GetHeaders |
-| azure.cpp:273:62:273:64 | call to GetHeaders | semmle.label | call to GetHeaders |
-| azure.cpp:274:10:274:29 | call to operator[] | semmle.label | call to operator[] |
-| azure.cpp:274:14:274:29 | call to operator[] | semmle.label | call to operator[] |
-| azure.cpp:274:14:274:29 | call to operator[] | semmle.label | call to operator[] |
-| azure.cpp:274:14:274:29 | call to operator[] | semmle.label | call to operator[] |
-| azure.cpp:277:38:277:44 | call to GetBody | semmle.label | call to GetBody |
-| azure.cpp:277:45:277:47 | call to GetBody | semmle.label | call to GetBody |
-| azure.cpp:278:10:278:13 | body | semmle.label | body |
-| azure.cpp:278:10:278:13 | body | semmle.label | body |
-| azure.cpp:278:10:278:13 | body | semmle.label | body |
-| azure.cpp:281:68:281:84 | *call to ExtractBodyStream | semmle.label | *call to ExtractBodyStream |
-| azure.cpp:281:68:281:84 | call to ExtractBodyStream | semmle.label | call to ExtractBodyStream |
-| azure.cpp:282:10:282:38 | call to ReadToEnd | semmle.label | call to ReadToEnd |
-| azure.cpp:282:21:282:23 | *call to get | semmle.label | *call to get |
-| azure.cpp:282:28:282:36 | call to ReadToEnd [element] | semmle.label | call to ReadToEnd [element] |
-| azure.cpp:282:28:282:36 | call to ReadToEnd [element] | semmle.label | call to ReadToEnd [element] |
-| azure.cpp:289:24:289:56 | call to GetHeader | semmle.label | call to GetHeader |
-| azure.cpp:289:32:289:40 | call to GetHeader | semmle.label | call to GetHeader |
-| azure.cpp:289:32:289:40 | call to GetHeader | semmle.label | call to GetHeader |
-| azure.cpp:289:63:289:65 | call to Value | semmle.label | call to Value |
-| azure.cpp:289:63:289:65 | call to Value | semmle.label | call to Value |
-| azure.cpp:290:10:290:20 | headerValue | semmle.label | headerValue |
-| azure.cpp:290:10:290:20 | headerValue | semmle.label | headerValue |
-| azure.cpp:290:10:290:20 | headerValue | semmle.label | headerValue |
-| azure.cpp:293:58:293:67 | call to GetHeaders | semmle.label | call to GetHeaders |
-| azure.cpp:293:58:293:67 | call to GetHeaders | semmle.label | call to GetHeaders |
-| azure.cpp:294:38:294:53 | call to operator[] | semmle.label | call to operator[] |
-| azure.cpp:295:10:295:20 | contentType | semmle.label | contentType |
-| azure.cpp:295:10:295:20 | contentType | semmle.label | contentType |
-| azure.cpp:295:10:295:20 | contentType | semmle.label | contentType |
+| azure.cpp:286:48:286:60 | *call to GetBodyStream | semmle.label | *call to GetBodyStream |
+| azure.cpp:286:48:286:60 | call to GetBodyStream | semmle.label | call to GetBodyStream |
+| azure.cpp:290:5:290:8 | *resp | semmle.label | *resp |
+| azure.cpp:290:16:290:21 | Read output argument | semmle.label | Read output argument |
+| azure.cpp:291:10:291:16 | * ... | semmle.label | * ... |
+| azure.cpp:295:5:295:8 | *resp | semmle.label | *resp |
+| azure.cpp:295:23:295:28 | ReadToCount output argument | semmle.label | ReadToCount output argument |
+| azure.cpp:296:10:296:16 | * ... | semmle.label | * ... |
+| azure.cpp:299:38:299:41 | *resp | semmle.label | *resp |
+| azure.cpp:299:44:299:52 | call to ReadToEnd [element] | semmle.label | call to ReadToEnd [element] |
+| azure.cpp:299:44:299:52 | call to ReadToEnd [element] | semmle.label | call to ReadToEnd [element] |
+| azure.cpp:300:10:300:12 | vec | semmle.label | vec |
+| azure.cpp:300:10:300:12 | vec [element] | semmle.label | vec [element] |
+| azure.cpp:306:52:306:61 | call to GetHeaders | semmle.label | call to GetHeaders |
+| azure.cpp:306:62:306:64 | call to GetHeaders | semmle.label | call to GetHeaders |
+| azure.cpp:307:14:307:29 | call to operator[] | semmle.label | call to operator[] |
+| azure.cpp:310:38:310:44 | call to GetBody | semmle.label | call to GetBody |
+| azure.cpp:310:45:310:47 | call to GetBody | semmle.label | call to GetBody |
+| azure.cpp:311:10:311:13 | body | semmle.label | body |
+| azure.cpp:311:10:311:13 | body | semmle.label | body |
+| azure.cpp:311:10:311:13 | body | semmle.label | body |
+| azure.cpp:314:68:314:84 | *call to ExtractBodyStream | semmle.label | *call to ExtractBodyStream |
+| azure.cpp:314:68:314:84 | call to ExtractBodyStream | semmle.label | call to ExtractBodyStream |
+| azure.cpp:315:10:315:38 | call to ReadToEnd | semmle.label | call to ReadToEnd |
+| azure.cpp:315:21:315:23 | *call to get | semmle.label | *call to get |
+| azure.cpp:315:28:315:36 | call to ReadToEnd [element] | semmle.label | call to ReadToEnd [element] |
+| azure.cpp:315:28:315:36 | call to ReadToEnd [element] | semmle.label | call to ReadToEnd [element] |
+| azure.cpp:322:24:322:56 | call to GetHeader | semmle.label | call to GetHeader |
+| azure.cpp:322:32:322:40 | call to GetHeader | semmle.label | call to GetHeader |
+| azure.cpp:322:32:322:40 | call to GetHeader | semmle.label | call to GetHeader |
+| azure.cpp:322:63:322:65 | call to Value | semmle.label | call to Value |
+| azure.cpp:322:63:322:65 | call to Value | semmle.label | call to Value |
+| azure.cpp:323:10:323:20 | headerValue | semmle.label | headerValue |
+| azure.cpp:326:58:326:67 | call to GetHeaders | semmle.label | call to GetHeaders |
+| azure.cpp:326:58:326:67 | call to GetHeaders | semmle.label | call to GetHeaders |
+| azure.cpp:327:38:327:53 | call to operator[] | semmle.label | call to operator[] |
+| azure.cpp:328:10:328:20 | contentType | semmle.label | contentType |
 | bal.cpp:128:19:128:26 | call to source | semmle.label | call to source |
 | bal.cpp:129:23:129:51 | *call to data | semmle.label | *call to data |
 | bal.cpp:132:17:132:18 | *sb | semmle.label | *sb |
