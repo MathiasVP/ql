@@ -94,6 +94,8 @@ class ExpectedType extends Type {
  * are promoted to `int` (or `unsigned int`, as appropriate) and `float`s
  * are converted to `double`.
  */
+bindingset[expected, actual]
+pragma[inline_late]
 predicate trivialConversion(ExpectedType expected, Type actual) {
   exists(Type exp, Type act |
     (

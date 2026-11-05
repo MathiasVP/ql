@@ -55,14 +55,13 @@ module Config implements DataFlow::ConfigSig {
     )
     or
     // Block flow through calls to pure functions if two or more operands are non-constant
-    exists(Instruction iFrom1, Instruction iFrom2, CallInstruction iTo |
+    exists(CallInstruction iTo |
       iTo = node.asInstruction() and
       isPureFunction(iTo.getStaticCallTarget().getName()) and
-      iFrom1 = iTo.getAnArgument() and
-      iFrom2 = iTo.getAnArgument() and
-      not constantInstruction(iFrom1) and
-      not constantInstruction(iFrom2) and
-      iFrom1 != iFrom2
+      strictcount(Instruction iFrom |
+        iFrom = iTo.getAnArgument() and
+        not constantInstruction(iFrom)
+      ) >= 2
     )
   }
 

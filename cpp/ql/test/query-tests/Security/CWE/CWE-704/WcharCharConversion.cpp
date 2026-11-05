@@ -140,3 +140,26 @@ void test_str_len(const wchar_t *wstr, const char *str) {
 	  wrong_str_len(wstr) +
 	  wrong_str_len(str);
 }
+
+typedef char payload_byte;
+typedef const payload_byte *PayloadBuffer;
+using PayloadBufferAlias = PayloadBuffer;
+
+typedef CHAR TextCharacter;
+typedef const TextCharacter *TextBuffer;
+using TextBufferAlias = TextBuffer;
+
+using UnicodeBuffer = LPTSTR;
+typedef const UnicodeBuffer UnicodeBufferAlias;
+
+void test_nested_aliases(PayloadBufferAlias bytes, TextBufferAlias text,
+                        UnicodeBufferAlias unicode, unsigned flags) {
+  fconstWChar((LPCWSTR)bytes);
+  fconstWChar((LPCWSTR)text); // $ Alert
+
+  if (flags & UNICODE) {
+    fconstWChar((LPCWSTR)unicode);
+  } else {
+    fconstWChar((LPCWSTR)unicode); // $ Alert
+  }
+}

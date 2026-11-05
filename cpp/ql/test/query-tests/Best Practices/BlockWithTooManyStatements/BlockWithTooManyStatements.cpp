@@ -84,3 +84,47 @@ void not_complex_block() {
     int e = 5;
   }
 }
+
+void step();
+
+void three_complex_statements(int n) {
+  while (n) {
+    step(); step(); step(); step(); step(); step(); step();
+  }
+  while (n) {
+    step(); step(); step(); step(); step(); step(); step();
+  }
+  while (n) {
+    step(); step(); step(); step(); step(); step(); step();
+  }
+}
+
+void four_complex_statements(int n) {
+  while (n) {
+    step(); step(); step(); step(); step(); step(); step();
+  }
+  while (n) {
+    step(); step(); step(); step(); step(); step(); step();
+  }
+  while (n) {
+    step(); step(); step(); step(); step(); step(); step();
+  }
+  while (n) {
+    step(); step(); step(); step(); step(); step(); step();
+  }
+} // $ Alert
+
+void four_simple_statements(int n) {
+  while (n) {
+    step(); step(); step(); step(); step(); step();
+  }
+  while (n) {
+    step(); step(); step(); step(); step(); step();
+  }
+  while (n) {
+    step(); step(); step(); step(); step(); step();
+  }
+  while (n) {
+    step(); step(); step(); step(); step(); step();
+  }
+}

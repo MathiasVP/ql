@@ -146,13 +146,12 @@ class BlamedElement extends Element {
   BlamedElement() { getInsecureEncryptionEvidence(_, this, description) }
 
   /**
-   * Holds if this is the `num`-th `BlamedElement` in `f`.
+   * Holds if this is the first `BlamedElement` in `f`.
    */
-  predicate hasFileRank(File f, int num) {
+  predicate isFirstInFile(File f) {
     exists(int loc |
       this.getLocation().charLoc(f, loc, _) and
-      loc =
-        rank[num](BlamedElement other, int loc2 | other.getLocation().charLoc(f, loc2, _) | loc2)
+      loc = min(BlamedElement other, int loc2 | other.getLocation().charLoc(f, loc2, _) | loc2)
     )
   }
 
@@ -161,8 +160,8 @@ class BlamedElement extends Element {
 
 from File f, BlamedElement firstResult, BlamedElement thisResult
 where
-  firstResult.hasFileRank(f, 1) and
-  thisResult.hasFileRank(f, _)
+  firstResult.isFirstInFile(f) and
+  thisResult.getLocation().charLoc(f, _, _)
 select firstResult,
   "This file makes use of a broken or weak cryptographic algorithm (specified by $@).", thisResult,
   thisResult.getDescription()

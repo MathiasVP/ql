@@ -129,3 +129,51 @@ void test3()
 	int j = myRound2(2.5); // GOOD
 	int k = myRound3(3.5); // GOOD
 }
+
+double nestedRound(double v)
+{
+	return myRound2(v);
+}
+
+double recursiveRound(double v, int n)
+{
+	if (n <= 0)
+		return round(v);
+	return recursiveRound(v, n - 1);
+}
+
+double mutuallyRecursiveRound1(double v, int n);
+
+double mutuallyRecursiveRound2(double v, int n)
+{
+	if (n <= 0)
+		return round(v);
+	return mutuallyRecursiveRound1(v, n - 1);
+}
+
+double mutuallyRecursiveRound1(double v, int n)
+{
+	return mutuallyRecursiveRound2(v, n);
+}
+
+double integerBasePower(double v)
+{
+	double result = pow(2, v);
+	return result;
+}
+
+double sometimesRounded(double v)
+{
+	if (v > 0)
+		return round(v);
+	return getDouble();
+}
+
+void test4()
+{
+	int nested = nestedRound(1.5); // GOOD
+	int recursive = recursiveRound(2.5, 3); // GOOD
+	int mutual = mutuallyRecursiveRound1(3.5, 4); // GOOD
+	int power = integerBasePower(5); // GOOD
+	int mixed = sometimesRounded(-1.5); // GOOD
+}

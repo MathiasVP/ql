@@ -25,9 +25,12 @@ import semmle.code.cpp.headers.MultipleInclusion
 from HeaderFile hf, PreprocessorDirective ifndef, string macroName, int num
 where
   hasIncludeGuard(hf, ifndef, _, macroName) and
-  exists(HeaderFile other |
-    hasIncludeGuard(other, _, _, macroName) and hf.getShortName() != other.getShortName()
-  ) and
+  exists(hf.getShortName()) and
+  strictcount(string name |
+    exists(HeaderFile other |
+      hasIncludeGuard(other, _, _, macroName) and name = other.getShortName()
+    )
+  ) > 1 and
   num = strictcount(HeaderFile other | hasIncludeGuard(other, _, _, macroName)) and
   correctIncludeGuard(_, _, _, _, macroName)
 select ifndef,

@@ -161,3 +161,19 @@ void NegativeCases()
     }
 
 }
+
+bool merged_copy_results(bool choose, char *dest, const char *source) {
+    char *result;
+    if (choose) {
+        result = strcpy(dest, source);
+    } else {
+        result = strcpy(dest, "fallback");
+    }
+    return result; // $ Alert
+}
+
+bool overwritten_copy_result(char *dest, const char *source, char *replacement) {
+    char *result = strcpy(dest, source);
+    result = replacement;
+    return result;
+}

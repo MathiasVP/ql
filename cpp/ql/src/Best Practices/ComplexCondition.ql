@@ -27,9 +27,16 @@ predicate nontrivialLogicalOperator(Operation e) {
   not e.isInMacroExpansion()
 }
 
+// Keep the root-expression filter inside the relation being counted.
+pragma[noinline]
+private predicate nontrivialLogicalOperatorInRoot(Expr root, Operation op) {
+  not root.getParent() instanceof Expr and
+  op.getParent*() = root and
+  nontrivialLogicalOperator(op)
+}
+
 from Expr e, int operators
 where
-  not e.getParent() instanceof Expr and
-  operators = count(Operation op | op.getParent*() = e and nontrivialLogicalOperator(op)) and
+  operators = strictcount(Operation op | nontrivialLogicalOperatorInRoot(e, op)) and
   operators > 5
 select e, "Complex condition: too many logical operations in this expression."

@@ -14,15 +14,20 @@
 
 import cpp
 
-predicate isInCatch(Expr e) {
-  e.getEnclosingStmt().getParent*() instanceof CatchBlock // Lexically enclosing catch blocks will cause there to be a current exception,
+predicate isInCatch(Expr e) { e.getEnclosingStmt().getParent*() instanceof CatchBlock }
+
+private predicate isCalledInCatch(Function f) {
+  // We assume that rethrows are intended when the function is called *exception*.
+  f.getName().toLowerCase().matches("%exception%")
   or
-  exists(Function f | f = e.getEnclosingFunction() |
-    isInCatch(f.getACallToThisFunction()) or // as will dynamically enclosing catch blocks.
-    f.getName().toLowerCase().matches("%exception%") // We assume that rethrows are intended when the function is called *exception*.
+  exists(FunctionCall call | call = f.getACallToThisFunction() |
+    isInCatch(call) or
+    isCalledInCatch(call.getEnclosingFunction())
   )
 }
 
 from ReThrowExpr e
-where not isInCatch(e)
+where
+  not isInCatch(e) and
+  not isCalledInCatch(e.getEnclosingFunction())
 select e, "As there is no current exception, this rethrow expression will terminate the program."

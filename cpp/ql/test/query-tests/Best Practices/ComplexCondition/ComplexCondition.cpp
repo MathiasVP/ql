@@ -8,3 +8,13 @@ void not_complex_condition(bool a, bool b, bool c, bool d, bool e, bool f) {
   if (a && b || c && d || e && f) {
   }
 }
+
+void threshold_conditions(bool a, bool b, bool c, bool d, bool e, bool f, bool g, bool h,
+    bool i, bool j) {
+  if (a) {
+  }
+  if (a && b || c && d || e && f || g && h) {
+  }
+  if (a && b || c && d || e && f || g && h || i && j) { // $ Alert
+  }
+}

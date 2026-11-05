@@ -25,13 +25,25 @@ Expr getAChildWithConversions(Expr e) {
   not result = any(Call c).getAnArgument()
 }
 
+private predicate normalizationCandidate(Expr e) {
+  exists(CommaExpr ce | e = [ce.getLeftOperand(), ce.getRightOperand()].getFullyConverted())
+  or
+  exists(Expr parent |
+    normalizationCandidate(parent) and
+    e = getAChildWithConversions(parent)
+  )
+}
+
 /**
- * Gets the left-most column position of any transitive child of `e` (including
- * conversions but excluding call arguments).
+ * Gets a candidate starting column in the comma operand containing `e`,
+ * including conversions but excluding call arguments.
  */
 int getCandidateColumn(Expr e) {
-  result = e.getLocation().getStartColumn() or
-  result = getCandidateColumn(getAChildWithConversions(e))
+  normalizationCandidate(e) and
+  (
+    result = e.getLocation().getStartColumn() or
+    result = getCandidateColumn(getAChildWithConversions(e))
+  )
 }
 
 /**

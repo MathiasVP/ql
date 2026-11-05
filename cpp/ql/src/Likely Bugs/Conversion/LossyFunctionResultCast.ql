@@ -35,10 +35,18 @@ predicate whiteListWrapped(FunctionCall fc) {
   or
   whitelistPow(fc)
   or
-  exists(Expr e, ReturnStmt rs |
-    whiteListWrapped(e) and
-    DataFlow::localExprFlow(e, rs.getExpr()) and
+  exists(ReturnStmt rs |
+    whiteListFlowsToExpr(rs.getExpr()) and
     fc.getTarget() = rs.getEnclosingFunction()
+  )
+}
+
+private predicate whiteListFlowsToExpr(Expr e) {
+  whiteListWrapped(e)
+  or
+  exists(Expr prev |
+    whiteListFlowsToExpr(prev) and
+    DataFlow::localExprFlowStep(prev, e)
   )
 }
 

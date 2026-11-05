@@ -109,3 +109,12 @@ void test9()
 	wcsxfrm_l(buf1, buf2, sizeof(buf2), nullptr);					// $ Alert // BAD
 	wcsxfrm_l(buf1, buf2, sizeof(buf2) / sizeof(wchar_t), nullptr); // $ Alert // BAD
 }
+
+void testNestedSize(char *dest, char *src)
+{
+	strncpy(dest, src, 1 + strlen(src)); // $ Alert
+	strncpy(dest, src, (strlen(src) + 3) - 2); // $ Alert
+	strncpy(dest, src, strlen(src) - 1);
+	strncpy(dest, src, (strlen(dest) + 3) - 2);
+	strncpy(dest, src, strlen(src) * 2);
+}

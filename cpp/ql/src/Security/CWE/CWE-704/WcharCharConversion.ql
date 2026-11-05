@@ -20,16 +20,10 @@ class WideCharPointerType extends PointerType {
   WideCharPointerType() { this.getBaseType() instanceof WideCharType }
 }
 
-/**
- * Given type `t`, recurses through and returns all
- * intermediate base types, including `t`.
- */
-Type getABaseType(Type t) {
-  result = t
+private Type getAnImmediateBaseType(Type t) {
+  result = t.(DerivedType).getBaseType()
   or
-  result = getABaseType(t.(DerivedType).getBaseType())
-  or
-  result = getABaseType(t.(TypedefType).getBaseType())
+  result = t.(TypedefType).getBaseType()
 }
 
 /**
@@ -37,12 +31,13 @@ Type getABaseType(Type t) {
  */
 class UnlikelyToBeAStringType extends Type {
   UnlikelyToBeAStringType() {
-    exists(Type targ | getABaseType(this) = targ |
-      // NOTE: not using CharType isUnsigned, but rather look for any explicitly declared unsigned
-      // char types. Assuming these are used for buffers, not strings.
-      targ.(CharType).getName().toLowerCase().matches("unsigned%") or
-      targ.getName().toLowerCase().matches(["uint8_t", "%byte%"])
-    )
+    // NOTE: not using CharType isUnsigned, but rather look for any explicitly declared unsigned
+    // char types. Assuming these are used for buffers, not strings.
+    this.(CharType).getName().toLowerCase().matches("unsigned%")
+    or
+    this.getName().toLowerCase().matches(["uint8_t", "%byte%"])
+    or
+    getAnImmediateBaseType(this) instanceof UnlikelyToBeAStringType
   }
 }
 
@@ -50,16 +45,16 @@ class UnlikelyToBeAStringType extends Type {
 // see https://learn.microsoft.com/en-us/windows/win32/winprog/windows-data-types
 class UnicodeMacroDependentWidthType extends Type {
   UnicodeMacroDependentWidthType() {
-    exists(Type targ | getABaseType(this) = targ |
-      targ.getName() in [
-          "LPCTSTR",
-          "LPTSTR",
-          "PCTSTR",
-          "PTSTR",
-          "TBYTE",
-          "TCHAR"
-        ]
-    )
+    this.getName() in [
+        "LPCTSTR",
+        "LPTSTR",
+        "PCTSTR",
+        "PTSTR",
+        "TBYTE",
+        "TCHAR"
+      ]
+    or
+    getAnImmediateBaseType(this) instanceof UnicodeMacroDependentWidthType
   }
 }
 

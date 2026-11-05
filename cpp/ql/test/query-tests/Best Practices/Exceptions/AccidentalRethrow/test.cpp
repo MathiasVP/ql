@@ -32,3 +32,54 @@ void triggersFromCatch() {
     calledFromCatch();
   }
 }
+
+void caughtCycleFirst();
+
+void caughtCycleSecond() {
+  caughtCycleFirst();
+  throw;
+}
+
+void caughtCycleFirst() {
+  caughtCycleSecond();
+  throw;
+}
+
+void entersCaughtCycle() {
+  try {
+  } catch (...) {
+    caughtCycleFirst();
+  }
+}
+
+void uncaughtCycleFirst();
+
+void uncaughtCycleSecond() {
+  uncaughtCycleFirst();
+  throw; // $ Alert
+}
+
+void uncaughtCycleFirst() {
+  uncaughtCycleSecond();
+  throw; // $ Alert
+}
+
+void calledFromExceptionHelper() {
+  throw;
+}
+
+void handlesEXCEPTION() {
+  calledFromExceptionHelper();
+}
+
+void alsoCalledOutsideCatch() {
+  calledFromCatch();
+}
+
+void catchDoesNotGuardWholeFunction() {
+  try {
+  } catch (...) {
+    calledFromCatch();
+  }
+  throw; // $ Alert
+}

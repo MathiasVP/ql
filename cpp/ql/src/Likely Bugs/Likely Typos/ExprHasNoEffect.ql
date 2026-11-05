@@ -30,29 +30,18 @@ predicate accessInInitOfForStmt(Expr e) {
 
 /**
  * Holds if the function `f`, or a function called by it, contains
- * code excluded by the preprocessor.
+ * code excluded by the preprocessor or is defined in a preprocessor
+ * branch that may have code in another arm.
  */
-predicate functionContainsDisabledCodeRecursive(Function f) {
+predicate functionHasPreprocessorCodeRecursive(Function f) {
   functionContainsDisabledCode(f)
   or
-  // recurse into function calls
-  exists(FunctionCall fc |
-    fc.getEnclosingFunction() = f and
-    functionContainsDisabledCodeRecursive(fc.getTarget())
-  )
-}
-
-/**
- * Holds if the function `f`, or a function called by it, is inside a
- * preprocessor branch that may have code in another arm
- */
-predicate functionDefinedInIfDefRecursive(Function f) {
   functionDefinedInIfDef(f)
   or
   // recurse into function calls
   exists(FunctionCall fc |
     fc.getEnclosingFunction() = f and
-    functionDefinedInIfDefRecursive(fc.getTarget())
+    functionHasPreprocessorCodeRecursive(fc.getTarget())
   )
 }
 
@@ -89,8 +78,7 @@ where
   not parent instanceof PureExprInVoidContext and
   not peivc.getEnclosingFunction().isCompilerGenerated() and
   not peivc.getType() instanceof UnknownType and
-  not functionContainsDisabledCodeRecursive(peivc.(FunctionCall).getTarget()) and
-  not functionDefinedInIfDefRecursive(peivc.(FunctionCall).getTarget()) and
+  not functionHasPreprocessorCodeRecursive(peivc.(FunctionCall).getTarget()) and
   not peivc.getFile() instanceof ConfigurationTestFile and // expressions in files generated during configuration are likely false positives
   if peivc instanceof FunctionCall
   then

@@ -94,7 +94,6 @@ where
     else
       exists(Access takenSizeOf, BufferSizeExpr sizeExpr, int plus |
         // Variable sized case
-        sizeExpr = fc.getArgument(argLimit).getAChild*() and
         isSizePlus(fc.getArgument(argLimit), sizeExpr, plus) and
         plus >= 0 and
         takenSizeOf = sizeExpr.getArg() and

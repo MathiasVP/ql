@@ -18,12 +18,11 @@ class VariableAccessInInitializer extends VariableAccess {
   pragma[nomagic]
   VariableAccessInInitializer() {
     init.getDeclaration() = var and
+    var = this.getTarget() and
     init.getExpr().getAChild*() = this
   }
 
-  predicate initializesItself(Variable v, Initializer i) {
-    v = var and i = init and var = this.getTarget()
-  }
+  predicate initializesItself(Variable v, Initializer i) { v = var and i = init }
 }
 
 from Initializer init, Variable v, VariableAccessInInitializer va

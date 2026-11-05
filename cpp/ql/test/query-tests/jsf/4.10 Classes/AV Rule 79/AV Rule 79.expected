@@ -12,6 +12,8 @@
 | DeleteThis.cpp:58:3:58:24 | ... = ... | Resource ptr12 is acquired by class MyClass3 but not released anywhere in this class. |
 | DeleteThis.cpp:60:3:60:24 | ... = ... | Resource ptr14 is acquired by class MyClass3 but not released anywhere in this class. |
 | DeleteThis.cpp:127:3:127:20 | ... = ... | Resource d is acquired by class MyClass9 but not released anywhere in this class. |
+| DestructorReachability.cpp:9:3:9:19 | ... = ... | Resource missing is acquired by class SharedDestructorReachability but not released anywhere in this class. |
+| DestructorReachability.cpp:48:3:48:17 | ... = ... | Resource first is acquired by class UnrelatedDestructorReachability but not released anywhere in this class. |
 | ExternalOwners.cpp:49:3:49:20 | ... = ... | Resource a is acquired by class MyScreen but not released anywhere in this class. |
 | Lambda.cpp:24:3:24:21 | ... = ... | Resource r4 is acquired by class testLambda but not released anywhere in this class. |
 | NoDestructor.cpp:23:3:23:20 | ... = ... | Resource n is acquired by class MyClass5 but not released anywhere in this class. |

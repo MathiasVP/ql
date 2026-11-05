@@ -30,10 +30,17 @@ class PrivateHostName extends string {
   }
 }
 
-pragma[nomagic]
-predicate privateHostNameFlowsToExpr(Expr e) {
-  TaintTracking::localExprTaint(any(StringLiteral p | p.getValue() instanceof PrivateHostName), e)
+private predicate privateHostNameFlowsToNode(DataFlow::Node node) {
+  node = DataFlow::exprNode(any(StringLiteral p | p.getValue() instanceof PrivateHostName))
+  or
+  exists(DataFlow::Node prev |
+    privateHostNameFlowsToNode(prev) and
+    TaintTracking::localTaintStep(prev, node)
+  )
 }
+
+pragma[nomagic]
+predicate privateHostNameFlowsToExpr(Expr e) { privateHostNameFlowsToNode(DataFlow::exprNode(e)) }
 
 private class HttpStringLiteralCandidate extends StringLiteral {
   HttpStringLiteralCandidate() {

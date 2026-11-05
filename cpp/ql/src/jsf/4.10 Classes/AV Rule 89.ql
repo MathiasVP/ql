@@ -33,9 +33,6 @@ predicate derivesNonVirtual(Class c, Class base) {
 }
 
 from Class c, Class base
-where
-  c.getABaseClass+() = base and
-  derivesVirtual(c, base) and
-  derivesNonVirtual(c, base)
+where derivesVirtual(c, base) and derivesNonVirtual(c, base)
 select c,
   "AV Rule 89: The base class " + base.getName() + " is derived both virtual and non-virtual."

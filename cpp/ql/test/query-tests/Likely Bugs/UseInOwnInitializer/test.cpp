@@ -89,3 +89,9 @@ namespace ns3
 	const int v6 = ns1::v6 + 1; // GOOD  [produces INVALID_KEY trap warning]
 	const int v7 = ns3::v7; // $ MISSING: Alert // BAD [NOT DETECTED]
 };
+
+void testMixedInitializer() {
+	int input = 1;
+	int x = input + x; // $ Alert
+	int y = input + x;
+}

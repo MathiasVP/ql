@@ -119,6 +119,21 @@ private predicate exprReleases(Expr e, Expr released, string kind) {
   )
 }
 
+private predicate calledFromDestructor(Class c, Function f) {
+  exists(Resource r |
+    r.getDeclaringType() = c and
+    r.acquisitionWithRequiredKind(_, _)
+  ) and
+  pragma[only_bind_into](f) instanceof Destructor and
+  f.getDeclaringType() = c
+  or
+  exists(Function mid |
+    calledFromDestructor(c, mid) and
+    mid.calls(f) and
+    pragma[only_bind_out](f.getDeclaringType()) = pragma[only_bind_out](c)
+  )
+}
+
 class Resource extends MemberVariable {
   Resource() { not this.isStatic() }
 
@@ -127,19 +142,12 @@ class Resource extends MemberVariable {
     e.getEnclosingFunction().(MemberFunction).getDeclaringType() = this.getDeclaringType()
   }
 
-  private predicate calledFromDestructor(Function f) {
-    pragma[only_bind_into](f) instanceof Destructor and
-    f.getDeclaringType() = this.getDeclaringType()
-    or
-    exists(Function mid |
-      this.calledFromDestructor(mid) and
-      mid.calls(f) and
-      pragma[only_bind_out](f.getDeclaringType()) = pragma[only_bind_out](this.getDeclaringType())
-    )
-  }
-
   predicate inDestructor(Expr e) {
-    exists(Function f | f = e.getEnclosingFunction() | this.calledFromDestructor(f))
+    this.acquisitionWithRequiredKind(_, _) and
+    exists(Function f |
+      f = e.getEnclosingFunction() and
+      calledFromDestructor(this.getDeclaringType(), f)
+    )
   }
 
   predicate acquisitionWithRequiredKind(Assignment acquireAssign, string kind) {

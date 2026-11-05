@@ -93,3 +93,31 @@ void test()
 	fn8();
 	fn9(); // $ Alert // has no effect
 }
+
+int preprocDisabledWrapper()
+{
+	return fn2();
+}
+
+int preprocConditionalWrapper()
+{
+	return fn5();
+}
+
+int preprocMixedWrapper()
+{
+	return preprocDisabledWrapper() + preprocConditionalWrapper();
+}
+
+int preprocPureWrapper()
+{
+	return fn4();
+}
+
+void testPreprocWrappers()
+{
+	preprocDisabledWrapper();
+	preprocConditionalWrapper();
+	preprocMixedWrapper();
+	preprocPureWrapper(); // $ Alert
+}
