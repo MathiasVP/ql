@@ -59,13 +59,10 @@ predicate allocExprOrIndirect(Expr alloc, string kind) {
   exists(ReturnStmt rtn |
     // indirect alloc via function call
     alloc.(FunctionCall).getTarget() = rtn.getEnclosingFunction() and
-    (
-      allocExprOrIndirect(rtn.getExpr(), kind)
-      or
-      exists(Expr e |
-        allocExprOrIndirect(e, kind) and
-        DataFlow::localExprFlow(e, rtn.getExpr())
-      )
+    exists(Expr e |
+      allocExprOrIndirect(e, kind) and
+      // Local flow includes returning the allocation directly.
+      DataFlow::localExprFlow(e, rtn.getExpr())
     )
   )
 }

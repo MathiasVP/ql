@@ -132,15 +132,11 @@ predicate fileNameOperationControlsUse(Expr check, Expr checkPath, Expr use) {
 predicate checkUse(Expr check, Expr checkPath, FunctionCall use, Expr usePath) {
   // `check` is part of a guard that controls `use`
   checkPathControlsUse(check, checkPath, use) and
-  // `check` looks like a check on a filename
-  checksPath(check, checkPath) and
   // `op` looks like an operation on a filename
   use = filenameOperation(usePath)
   or
   // `check` is part of a guard that controls `use`
   fileNameOperationControlsUse(check, checkPath, use) and
-  // another filename operation (null pointers can indicate errors)
-  check = filenameOperation(checkPath) and
   // `op` looks like a sensitive operation on a filename
   use = sensitiveFilenameOperation(usePath)
 }

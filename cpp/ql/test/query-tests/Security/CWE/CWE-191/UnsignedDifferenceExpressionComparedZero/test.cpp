@@ -375,3 +375,33 @@ void test21(unsigned long a)
     if(a - b > 0) { } // GOOD
   }
 }
+
+bool test_guard_chain_and_local_flow(unsigned high, unsigned mid1, unsigned mid2, unsigned low)
+{
+  if (high < mid1) return false;
+  if (mid1 < mid2) return false;
+  if (mid2 < low) return false;
+
+  unsigned copy = low;
+  return high - copy > 0; // GOOD: the guard chain reaches the local-flow copy.
+}
+
+bool test_unrelated_guard(unsigned high, unsigned low, unsigned other1, unsigned other2)
+{
+  if (other1 < other2) return false;
+
+  return high - low > 0; // $ Alert[cpp/unsigned-difference-expression-compared-zero]
+}
+
+bool test_guarded_local_flow_merge(unsigned high, unsigned low, bool choose)
+{
+  if (high < low) return false;
+
+  unsigned copy;
+  if (choose) {
+    copy = low;
+  } else {
+    copy = low;
+  }
+  return high - copy > 0; // GOOD: both branches preserve the guarded value.
+}

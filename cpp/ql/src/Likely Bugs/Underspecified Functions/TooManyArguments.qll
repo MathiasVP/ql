@@ -5,6 +5,7 @@
  */
 
 import cpp
+private import CCompilation
 
 // True if function was ()-declared, but not (void)-declared or K&R-defined
 // or implicitly declared (i.e., lacking a prototype)
@@ -18,9 +19,7 @@ private predicate hasZeroParamDecl(Function f) {
 }
 
 // True if this file (or header) was compiled as a C file
-private predicate isCompiledAsC(File f) {
-  exists(File src | src.compiledAsC() | src.getAnIncludedFile*() = f)
-}
+private predicate isCompiledAsC(File f) { isFileCompiledAsC(f) }
 
 predicate tooManyArguments(FunctionCall fc, Function f) {
   f = fc.getTarget() and

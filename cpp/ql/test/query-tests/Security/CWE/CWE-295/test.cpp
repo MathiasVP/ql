@@ -147,3 +147,17 @@ void test1_3(SSL *ssl)
 		throw 1;
 	}
 }
+
+void test_integer_result_comparisons(SSL *ssl, int other)
+{
+	int result = SSL_get_verify_result(ssl);
+
+	if (result) {}
+	if (result < 0) {}
+	if ((result == 0) || (result == other)) {}
+	if ((result == 3) || (result == 7)) {}
+	if ((result == 0) || (result == 0)) {}
+
+	if ((result == 0) || (result == 7)) {} // $ Alert[cpp/certificate-result-conflation]
+	if ((result != 0) && (result != -7)) {} // $ Alert[cpp/certificate-result-conflation]
+}

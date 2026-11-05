@@ -29,7 +29,11 @@ predicate nontrivialLogicalOperator(Operation e) {
 
 from Expr e, int operators
 where
-  not e.getParent() instanceof Expr and
-  operators = count(Operation op | op.getParent*() = e and nontrivialLogicalOperator(op)) and
+  operators =
+    strictcount(Operation op |
+      not e.getParent() instanceof Expr and
+      op.getParent*() = e and
+      nontrivialLogicalOperator(op)
+    ) and
   operators > 5
 select e, "Complex condition: too many logical operations in this expression."

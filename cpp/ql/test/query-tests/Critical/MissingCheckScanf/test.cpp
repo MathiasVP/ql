@@ -577,3 +577,20 @@ void test_scanf_compared_in_conjunct_left(bool b) {
     use(i); // GOOD
   }
 }
+
+void test_filtered_scanf_calls() {
+  int excludedFirst, excludedSecond;
+  if (scanf("%d %d", &excludedFirst, &excludedSecond) != 0) { // $ Alert[cpp/incorrectly-checked-scanf]
+    use(excludedFirst);
+    use(excludedSecond);
+  }
+
+  int unchecked;
+  scanf("%d", &unchecked); // $ Source[cpp/missing-check-scanf]
+  use(unchecked); // $ Alert[cpp/missing-check-scanf]
+
+  int checked;
+  if (scanf("%d", &checked) == 1) {
+    use(checked);
+  }
+}

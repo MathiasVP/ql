@@ -216,10 +216,6 @@ where
   // If there is any flow that would result in a valid cast then we don't
   // report an alert here. This reduces the number of FPs from infeasible paths
   // significantly.
-  not exists(DataFlow::Node goodSource, Type goodSourceType |
-    isSourceImpl(goodSource, goodSourceType) and
-    isSinkImpl(sinkNode, goodSourceType, sinkType, true) and
-    Flow::flow(goodSource, sinkNode)
-  )
+  not isSinkImpl(sinkNode, _, sinkType, true)
 select sinkNode, source, sink, "Conversion from $@ to $@ is invalid.", badSourceType,
   badSourceType.toString(), sinkType, sinkType.toString()

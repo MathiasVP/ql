@@ -87,7 +87,8 @@ class ExpectedType extends Type {
 
 /**
  * Holds if it is safe to display a value of type `actual` when `printf`
- * expects a value of type `expected`.
+ * expects a value of type `expected`, for a pair of types that occurs at
+ * the same format argument.
  *
  * Note that variadic arguments undergo default argument promotions before
  * they reach `printf`, notably `bool`, `char`, `short` and `enum` types
@@ -95,12 +96,12 @@ class ExpectedType extends Type {
  * are converted to `double`.
  */
 predicate trivialConversion(ExpectedType expected, Type actual) {
-  exists(Type exp, Type act |
+  exists(FormattingFunctionCall ffc, int pos, Type exp, Type act |
     (
-      formattingFunctionCallExpectedType(_, _, exp) or
-      formattingFunctionCallAlternateType(_, _, exp)
+      formattingFunctionCallExpectedType(ffc, pos, exp) or
+      formattingFunctionCallAlternateType(ffc, pos, exp)
     ) and
-    formattingFunctionCallActualType(_, _, _, act) and
+    formattingFunctionCallActualType(ffc, pos, _, act) and
     expected = exp.getUnspecifiedType() and
     actual = act.getUnspecifiedType()
   ) and

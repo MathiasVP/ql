@@ -137,3 +137,5 @@ void test_implicit_function_declaration(int x, double d) {
 
   y = extern_definition(3.0f, &d); // GOOD
 }
+
+#include "c-compilation-root.h"

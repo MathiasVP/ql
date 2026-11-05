@@ -4,3 +4,5 @@ int implicit_declaration_k_and_r(x) int x;
 {
     return x;
 }
+
+#include "c-compilation-root.h"

@@ -1,3 +1,5 @@
+| attributes.cpp:3:12:3:16 | plain | Static variable plain is never read. |
+| attributes.cpp:4:12:4:18 | aligned | Static variable aligned is never read. |
 | test.cpp:7:12:7:21 | staticVar5 | Static variable staticVar5 is never read. |
 | test.cpp:8:12:8:21 | staticVar6 | Static variable staticVar6 is never read. |
 | test.cpp:10:11:10:19 | constVar8 | Static variable constVar8 is never read. |

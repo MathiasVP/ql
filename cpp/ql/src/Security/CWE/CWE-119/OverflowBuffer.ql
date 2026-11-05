@@ -23,10 +23,15 @@ string plural(int num, string singular, string plural) {
   if num = 1 then result = num + singular else result = num + plural
 }
 
-from
+/**
+ * Holds if `ba` has an `accessType` access of `accessSize` that exceeds the `bufferSize` of
+ * the buffer described by `bufferDesc` and `bufferAlloc`, or is a non-positive array access.
+ */
+pragma[noinline]
+private predicate overflowingAccess(
   BufferAccess ba, string bufferDesc, int accessSize, int accessType, Element bufferAlloc,
-  int bufferSize, string message
-where
+  int bufferSize
+) {
   accessType != 4 and
   accessSize = ba.getSize() and
   bufferSize = getBufferSize(ba.getBuffer(bufferDesc, accessType), bufferAlloc) and
@@ -34,7 +39,14 @@ where
     accessSize > bufferSize
     or
     accessSize <= 0 and accessType = 3
-  ) and
+  )
+}
+
+from
+  BufferAccess ba, string bufferDesc, int accessSize, int accessType, Element bufferAlloc,
+  int bufferSize, string message
+where
+  overflowingAccess(ba, bufferDesc, accessSize, accessType, bufferAlloc, bufferSize) and
   if accessType = 1
   then
     message =

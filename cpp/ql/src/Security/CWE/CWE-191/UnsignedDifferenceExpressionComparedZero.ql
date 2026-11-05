@@ -25,7 +25,9 @@ import semmle.code.cpp.valuenumbering.GlobalValueNumbering
  */
 pragma[nomagic]
 predicate isGuarded(SubExpr sub, Expr left, Expr right) {
-  exprIsSubLeftOrLess(pragma[only_bind_into](sub), _) and // Manual magic
+  // Every recursive step preserves `sub`, so its domain is exactly the domain of the base case.
+  // Use that domain directly to avoid making the guard computation recursive.
+  exprIsSubLeftOrLessBase(pragma[only_bind_into](sub), _) and // Manual magic
   exists(GuardCondition guard, int k, BasicBlock bb |
     pragma[only_bind_into](bb) = sub.getBasicBlock() and
     guard.controls(pragma[only_bind_into](bb), _) and
@@ -100,12 +102,17 @@ Expr exprIsLeftOrLessBase(SubExpr sub) {
   )
 }
 
+/** Holds if `n` is a base case for `exprIsSubLeftOrLess` for `sub`. */
+private predicate exprIsSubLeftOrLessBase(SubExpr sub, DataFlow::Node n) {
+  n.asExpr() = exprIsLeftOrLessBase(sub)
+}
+
 /**
  * Holds if `n` is known or suspected to be less than or equal to
  * `sub.getLeftOperand()`.
  */
 predicate exprIsSubLeftOrLess(SubExpr sub, DataFlow::Node n) {
-  n.asExpr() = exprIsLeftOrLessBase(sub)
+  exprIsSubLeftOrLessBase(sub, n)
   or
   exists(DataFlow::Node other |
     // dataflow

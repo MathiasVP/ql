@@ -77,7 +77,8 @@ module NullAppNameCreateProcessFunctionConfig implements DataFlow::ConfigSig {
 module NullAppNameCreateProcessFunction = DataFlow::Global<NullAppNameCreateProcessFunctionConfig>;
 
 /**
- * Dataflow that detects a call to CreateProcess with an unquoted commandLine argument
+ * Dataflow that detects a call to CreateProcess with a potentially NULL
+ * applicationName argument and an unquoted commandLine argument.
  */
 module QuotedCommandInCreateProcessFunctionConfig implements DataFlow::ConfigSig {
   predicate isSource(DataFlow::Node source) {
@@ -89,7 +90,8 @@ module QuotedCommandInCreateProcessFunctionConfig implements DataFlow::ConfigSig
 
   predicate isSink(DataFlow::Node sink) {
     exists(CreateProcessFunctionCall call, Expr val | val = sink.asExpr() |
-      val = call.getArgument(call.getCommandLineArgumentId())
+      val = call.getArgument(call.getCommandLineArgumentId()) and
+      NullAppNameCreateProcessFunction::flowToExpr(call.getArgument(call.getApplicationNameArgumentId()))
     )
   }
 

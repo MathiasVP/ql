@@ -28,7 +28,5 @@ where
   not exists(VariableAccess a | a.getTarget() = v) and
   not v instanceof MemberVariable and
   not declarationHasSideEffects(v) and
-  not v.getAnAttribute().hasName("used") and
-  not v.getAnAttribute().hasName("unused") and
-  not v.getAnAttribute().hasName("maybe_unused")
+  not v.getAnAttribute().hasName(["used", "unused", "maybe_unused"])
 select v, "Static variable " + v.getName() + " is never read."

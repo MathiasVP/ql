@@ -84,10 +84,8 @@ module Config implements DataFlow::ConfigSig {
 
 module Flow = TaintTracking::Global<Config>;
 
-from
-  Expr subexpression, Expr condition, Flow::PathNode source, Flow::PathNode sink, string sourceType
+from Expr condition, Flow::PathNode source, Flow::PathNode sink, string sourceType
 where
-  hardCodedAddressInCondition(subexpression, condition) and
   isSource(source.getNode(), sourceType) and
   Flow::flowPath(source, sink) and
   isSink(sink.getNode(), condition)

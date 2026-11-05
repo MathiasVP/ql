@@ -13,7 +13,6 @@
 import cpp
 import Likely_Bugs.NestedLoopSameVar
 
-pragma[noopt]
 predicate loopModification(ForStmt for, Variable loopVariable, VariableAccess acc) {
   loopVariable = for.getAnIterationVariable() and
   acc = loopVariable.getAnAccess() and
@@ -21,14 +20,10 @@ predicate loopModification(ForStmt for, Variable loopVariable, VariableAccess ac
   exists(Stmt stmt | acc.getEnclosingStmt() = stmt and stmtInForBody(stmt, for))
 }
 
-pragma[noopt]
 predicate stmtInForBody(Stmt stmt, ForStmt forStmt) {
-  (
-    forStmt.getStmt() = stmt
-    or
-    exists(StmtParent parent | parent = stmt.getParent() | stmtInForBody(parent, forStmt))
-  ) and
-  forStmt instanceof ForStmt
+  forStmt.getStmt() = stmt
+  or
+  exists(StmtParent parent | parent = stmt.getParent() | stmtInForBody(parent, forStmt))
 }
 
 from ForStmt for, Variable loopVariable, VariableAccess acc

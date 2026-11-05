@@ -13,6 +13,7 @@
  */
 
 import cpp
+private import CCompilation
 import MistypedFunctionArguments
 import TooFewArguments
 import TooManyArguments
@@ -36,11 +37,7 @@ predicate sameLocation(FunctionDeclarationEntry fde, FunctionCall fc) {
   )
 }
 
-predicate isCompiledAsC(File f) {
-  f.compiledAsC()
-  or
-  exists(File src | isCompiledAsC(src) | src.getAnIncludedFile() = f)
-}
+predicate isCompiledAsC(File f) { isFileCompiledAsC(f) }
 
 from FunctionDeclarationEntry fdeIm, FunctionCall fc
 where

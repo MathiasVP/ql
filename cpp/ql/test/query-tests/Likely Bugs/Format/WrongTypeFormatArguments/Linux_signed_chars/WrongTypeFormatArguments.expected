@@ -2,6 +2,10 @@
 | format.h:16:64:16:64 | i | This format specifier for type 'double' does not match the argument type 'int'. |
 | format.h:16:67:16:67 | d | This format specifier for type 'char *' does not match the argument type 'double'. |
 | linux.cpp:15:24:15:41 | call to get_template_value | This format specifier for type 'int' does not match the argument type 'long'. |
+| linux.cpp:35:16:35:20 | first | This format specifier for type 'char *' does not match the argument type 'FirstFormatPointer *'. |
+| linux.cpp:36:16:36:19 | text | This format specifier for type 'int' does not match the argument type 'char *'. |
+| linux.cpp:37:16:37:20 | width | This format specifier for type 'double' does not match the argument type 'int'. |
+| linux.cpp:39:17:39:22 | number | This format specifier for type 'int' does not match the argument type 'double'. |
 | linux_c.c:11:15:11:18 | str3 | This format specifier for type 'char *' does not match the argument type 'short *'. |
 | pri_macros.h:15:35:15:40 | my_u64 | This format specifier for type 'unsigned int' does not match the argument type 'unsigned long long'. |
 | printf1.h:12:27:12:27 | i | This format specifier for type 'double' does not match the argument type 'int'. |

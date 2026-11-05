@@ -30,12 +30,15 @@ predicate functionsMissingReturnStmt(Function f, ControlFlowNode blame) {
   ) and
   exists(ReturnStmt s |
     f.getAPredecessor() = s and
+    // Each predecessor below has at least `s` as a successor.
     (
       blame = s.getAPredecessor() and
-      count(blame.getASuccessor()) = 1
+      strictcount(blame.getASuccessor()) = 1
       or
       blame = s and
-      exists(ControlFlowNode pred | pred = s.getAPredecessor() | count(pred.getASuccessor()) != 1)
+      exists(ControlFlowNode pred | pred = s.getAPredecessor() |
+        strictcount(pred.getASuccessor()) != 1
+      )
     )
   )
 }

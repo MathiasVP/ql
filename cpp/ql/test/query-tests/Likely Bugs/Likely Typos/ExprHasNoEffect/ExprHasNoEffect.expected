@@ -5,6 +5,7 @@
 | expr.cpp:10:2:10:5 | ... , ... | This expression has no effect. | expr.cpp:10:2:10:5 | ... , ... |  |
 | preproc.c:89:2:89:4 | call to fn4 | This expression has no effect (because $@ has no external side effects). | preproc.c:33:5:33:7 | fn4 | fn4 |
 | preproc.c:94:2:94:4 | call to fn9 | This expression has no effect (because $@ has no external side effects). | preproc.c:78:5:78:7 | fn9 | fn9 |
+| preproc.c:148:2:148:23 | call to pure_transitive_caller | This expression has no effect (because $@ has no external side effects). | preproc.c:125:5:125:26 | pure_transitive_caller | pure_transitive_caller |
 | template.cpp:19:3:19:3 | call to operator++ | This expression has no effect (because $@ has no external side effects). | template.cpp:9:10:9:19 | operator++ | operator++ |
 | templatey.cpp:39:3:39:23 | call to pointless_add_numbers | This expression has no effect (because $@ has no external side effects). | templatey.cpp:29:5:29:25 | pointless_add_numbers | pointless_add_numbers |
 | test.c:7:5:7:5 | 0 | This expression has no effect. | test.c:7:5:7:5 | 0 |  |

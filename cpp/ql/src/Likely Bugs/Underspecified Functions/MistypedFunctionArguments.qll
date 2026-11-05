@@ -5,6 +5,7 @@
  */
 
 import cpp
+private import CCompilation
 
 pragma[inline]
 private predicate arithTypesMatch(Type arg, Type parm) {
@@ -78,9 +79,7 @@ private predicate hasZeroParamDecl(Function f) {
 }
 
 // True if this file (or header) was compiled as a C file
-private predicate isCompiledAsC(File f) {
-  exists(File src | src.compiledAsC() | src.getAnIncludedFile*() = f)
-}
+private predicate isCompiledAsC(File f) { isFileCompiledAsC(f) }
 
 predicate mistypedFunctionArguments(FunctionCall fc, Function f, Parameter p) {
   f = fc.getTarget() and

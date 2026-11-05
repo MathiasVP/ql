@@ -32,10 +32,13 @@ module DoubleFreeParam implements FlowFromFreeParamSig {
 
 module DoubleFree = FlowFromFree<DoubleFreeParam>;
 
-from DoubleFree::PathNode source, DoubleFree::PathNode sink, DeallocationExpr dealloc, Expr e2
+from
+  DoubleFree::PathNode source, DoubleFree::PathNode sink, DataFlow::Node sinkNode,
+  DeallocationExpr dealloc, Expr e2
 where
   DoubleFree::flowPath(source, sink) and
   isFree(source.getNode(), _, _, dealloc) and
-  isFree(sink.getNode(), e2)
-select sink.getNode(), source, sink, "Memory pointed to by $@ may already have been freed by $@.",
-  e2, e2.toString(), dealloc, dealloc.toString()
+  sinkNode = sink.getNode() and
+  isFree(sinkNode, e2)
+select sinkNode, source, sink, "Memory pointed to by $@ may already have been freed by $@.", e2,
+  e2.toString(), dealloc, dealloc.toString()

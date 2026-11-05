@@ -584,3 +584,32 @@ void test_scanf() {
 	char password[256];
 	fscanf(stdin, "%255s", password); // GOOD: this is not a remote source
 }
+
+void test_projected_flow_endpoints()
+{
+	{
+		char password[32];
+		char *data = password; // $ Source[cpp/cleartext-transmission]
+		send(val(), data, 32, val()); // $ Alert[cpp/cleartext-transmission]
+	}
+
+	{
+		char password[32];
+		char *data = password;
+		encrypt_inplace(data);
+		send(val(), data, 32, val()); // GOOD: encryption reaches the aliased sink.
+	}
+
+	{
+		char password[32];
+		char *data = password; // $ Source[cpp/cleartext-transmission]
+		recv(val(), data, 32, val()); // $ Alert[cpp/cleartext-transmission]
+	}
+
+	{
+		char password[32];
+		char *data = password;
+		recv(val(), data, 32, val()); // GOOD: the aliased source reaches decryption.
+		decrypt_inplace(data);
+	}
+}

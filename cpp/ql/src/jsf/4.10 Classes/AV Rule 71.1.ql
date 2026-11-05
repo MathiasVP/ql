@@ -46,7 +46,6 @@ predicate callFromNonVirtual(MemberFunction source, Class c, MemberFunction targ
   nonVirtualMember(source, c)
 }
 
-pragma[noopt]
 predicate indirectlyCallsVirtualFunction(MemberFunction caller, Function target, Class c) {
   exists(FunctionCall fc |
     virtualThisCall(fc, _) and

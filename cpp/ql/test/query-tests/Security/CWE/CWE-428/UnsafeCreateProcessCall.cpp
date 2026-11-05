@@ -428,3 +428,28 @@ void negativeTestCases_AppNameSet()
         (wchar_t*)L"C:\\Program Files\\MyApp",
         NULL, NULL, FALSE, 0, NULL, NULL, NULL, NULL);
 }
+
+void sharedCommandLineWithDifferentApplicationNames()
+{
+    char* commandLine = (char*)"C:\\Program Files\\MyApp";
+
+    CreateProcessA( // $ Alert[cpp/unsafe-create-process-call]
+        NULL, commandLine,
+        NULL, NULL, FALSE, 0, NULL, NULL, NULL, NULL);
+    CreateProcessA(
+        "MyApp.exe", commandLine,
+        NULL, NULL, FALSE, 0, NULL, NULL, NULL, NULL);
+}
+
+void applicationNameAndCommandLineParameters(const char* applicationName, char* commandLine)
+{
+    CreateProcessA( // $ Alert[cpp/unsafe-create-process-call]
+        applicationName, commandLine,
+        NULL, NULL, FALSE, 0, NULL, NULL, NULL, NULL);
+}
+
+void applicationNameAndCommandLineArguments()
+{
+    applicationNameAndCommandLineParameters(NULL, (char*)"C:\\Program Files\\MyApp");
+    applicationNameAndCommandLineParameters("MyApp.exe", (char*)"C:\\Program Files\\MyApp");
+}

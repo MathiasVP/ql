@@ -22,14 +22,18 @@ class SslGetVerifyResultCall extends FunctionCall {
 }
 
 /**
- * Data flow from a call to `SSL_get_verify_result` to a guard condition
- * that references the result.
+ * Data flow from a call to `SSL_get_verify_result` to a comparison of the
+ * result against an integer error code.
  */
 module VerifyResultConfig implements DataFlow::ConfigSig {
   predicate isSource(DataFlow::Node source) { source.asExpr() instanceof SslGetVerifyResultCall }
 
   predicate isSink(DataFlow::Node sink) {
-    exists(GuardCondition guard | guard.(Expr).getAChild*() = sink.asExpr())
+    exists(GuardCondition guard | guard.(Expr).getAChild*() = sink.asExpr()) and
+    exists(GuardCondition guard, Expr constant |
+      guard.comparesEq(sink.asExpr(), constant, 0, false, _) and
+      exists(constant.getValue().toInt())
+    )
   }
 
   predicate observeDiffInformedIncrementalMode() { any() }

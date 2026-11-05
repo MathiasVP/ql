@@ -34,7 +34,7 @@ predicate derivesNonVirtual(Class c, Class base) {
 
 from Class c, Class base
 where
-  c.getABaseClass+() = base and
+  // Each derivation predicate already establishes that `base` is a base class of `c`.
   derivesVirtual(c, base) and
   derivesNonVirtual(c, base)
 select c,

@@ -22,12 +22,21 @@ import semmle.code.cpp.headers.MultipleInclusion
  * to be an include guard.
  */
 
+/** Holds if `macroName` guards headers with at least two different short names. */
+predicate guardsDifferentShortNames(string macroName) {
+  strictcount(string shortName |
+    exists(HeaderFile hf |
+      hasIncludeGuard(hf, _, _, macroName) and
+      shortName = hf.getShortName()
+    )
+  ) > 1
+}
+
 from HeaderFile hf, PreprocessorDirective ifndef, string macroName, int num
 where
   hasIncludeGuard(hf, ifndef, _, macroName) and
-  exists(HeaderFile other |
-    hasIncludeGuard(other, _, _, macroName) and hf.getShortName() != other.getShortName()
-  ) and
+  exists(hf.getShortName()) and
+  guardsDifferentShortNames(macroName) and
   num = strictcount(HeaderFile other | hasIncludeGuard(other, _, _, macroName)) and
   correctIncludeGuard(_, _, _, _, macroName)
 select ifndef,

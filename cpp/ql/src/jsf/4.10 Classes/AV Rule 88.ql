@@ -79,12 +79,13 @@ class InterfaceImplementor extends Class {
   }
 }
 
-from InterfaceImplementor d
+from InterfaceImplementor d, int publicCount, int protectedCount
 where
-  d.getNumPublicImplementations() > 0 or
-  d.getNumProtectedImplementations() > 1
+  publicCount = d.getNumPublicImplementations() and
+  protectedCount = d.getNumProtectedImplementations() and
+  (publicCount > 0 or protectedCount > 1)
 select d,
   "Multiple inheritance should not be used with " + d.getNumInterfaces().toString() +
     " interfaces, " + d.getNumPrivateImplementations().toString() + " private implementations, " +
-    d.getNumProtectedImplementations().toString() + " protected implementations, and " +
-    d.getNumPublicImplementations().toString() + " public implementations."
+    protectedCount.toString() + " protected implementations, and " + publicCount.toString() +
+    " public implementations."

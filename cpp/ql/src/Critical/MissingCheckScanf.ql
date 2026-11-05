@@ -33,7 +33,9 @@ predicate isUninitialized(Node n) {
 
 predicate isSink(ScanfFunctionCall call, int index, Node n, Expr input) {
   input = call.getOutputArgument(index) and
-  n.asIndirectExpr() = input
+  n.asIndirectExpr() = input and
+  // Exclude results from the incorrectly checked scanf query.
+  not incorrectlyCheckedScanf(call)
 }
 
 /**
@@ -69,9 +71,7 @@ module UninitializedToScanfFlow = Global<UninitializedToScanfConfig>;
  * argument that has not been previously initialized.
  */
 predicate isRelevantScanfCall(ScanfFunctionCall call, int index, Expr output) {
-  exists(Node n | UninitializedToScanfFlow::flowTo(n) and isSink(call, index, n, output)) and
-  // Exclude results from incorrectky checked scanf query
-  not incorrectlyCheckedScanf(call)
+  exists(Node n | UninitializedToScanfFlow::flowTo(n) and isSink(call, index, n, output))
 }
 
 /**
@@ -81,7 +81,6 @@ predicate isRelevantScanfCall(ScanfFunctionCall call, int index, Expr output) {
  */
 predicate isSource(ScanfFunctionCall call, int index, Node n, Expr output) {
   isRelevantScanfCall(call, index, output) and
-  output = call.getOutputArgument(index) and
   n.asDefiningArgument() = output
 }
 

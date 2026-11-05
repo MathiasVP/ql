@@ -601,3 +601,19 @@ void test47() {
 	std::remquo(x, y, &quo);
 	use(quo); // GOOD
 }
+
+extern int initializedElsewhere;
+
+struct MixedAccessKinds {
+	int field;
+
+	void test(int parameter) {
+		int local; // $ Source[cpp/uninitialized-local] Sink[cpp/uninitialized-local]
+		static int initialized;
+		use(parameter);
+		use(field);
+		use(initializedElsewhere);
+		use(initialized);
+		use(local); // $ Alert[cpp/uninitialized-local]
+	}
+};

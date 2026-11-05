@@ -298,15 +298,17 @@ module FromEncryptionConfig implements DataFlow::ConfigSig {
 module FromEncryptionFlow = TaintTracking::Global<FromEncryptionConfig>;
 
 from
-  FromSensitiveFlow::PathNode source, FromSensitiveFlow::PathNode sink,
-  NetworkSendRecv networkSendRecv, string msg
+  FromSensitiveFlow::PathNode source, FromSensitiveFlow::PathNode sink, DataFlow::Node sourceNode,
+  DataFlow::Node sinkNode, NetworkSendRecv networkSendRecv, string msg
 where
   // flow from sensitive -> network data
   FromSensitiveFlow::flowPath(source, sink) and
-  isSinkSendRecv(sink.getNode(), networkSendRecv) and
+  sourceNode = source.getNode() and
+  sinkNode = sink.getNode() and
+  isSinkSendRecv(sinkNode, networkSendRecv) and
   // no flow from sensitive -> evidence of encryption
-  not ToEncryptionFlow::flowFrom(source.getNode()) and
-  not FromEncryptionFlow::flowTo(sink.getNode()) and
+  not ToEncryptionFlow::flowFrom(sourceNode) and
+  not FromEncryptionFlow::flowTo(sinkNode) and
   // construct result
   if networkSendRecv instanceof NetworkSend
   then
@@ -317,4 +319,4 @@ where
     msg =
       "This operation receives into '" + sink.toString() +
         "', which may put unencrypted sensitive data into $@."
-select networkSendRecv, source, sink, msg, source.getNode(), source.getNode().toString()
+select networkSendRecv, source, sink, msg, source.getNode(), sourceNode.toString()

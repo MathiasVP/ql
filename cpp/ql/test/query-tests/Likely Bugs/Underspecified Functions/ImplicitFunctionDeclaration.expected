@@ -1,3 +1,4 @@
+| c-compilation-leaf.h:15:3:15:35 | call to implicitly_declared_from_c_header | Function call implicitly declares 'implicitly_declared_from_c_header'. |
 | test.c:28:3:28:12 | call to undeclared | Function call implicitly declares 'undeclared'. |
 | test.c:31:3:31:19 | call to not_yet_declared1 | Function call implicitly declares 'not_yet_declared1'. |
 | test.c:32:3:32:19 | call to not_yet_declared2 | Function call implicitly declares 'not_yet_declared2'. |

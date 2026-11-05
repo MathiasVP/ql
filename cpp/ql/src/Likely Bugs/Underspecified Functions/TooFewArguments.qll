@@ -5,6 +5,7 @@
  */
 
 import cpp
+private import CCompilation
 
 /**
  * Holds if `fde` has a parameter declaration that's clear on the minimum
@@ -27,9 +28,7 @@ private predicate hasZeroParamDecl(Function f) {
 }
 
 /* Holds if this file (or header) was compiled as a C file. */
-private predicate isCompiledAsC(File f) {
-  exists(File src | src.compiledAsC() | src.getAnIncludedFile*() = f)
-}
+private predicate isCompiledAsC(File f) { isFileCompiledAsC(f) }
 
 /** Holds if `fc` is a call to `f` with too few arguments. */
 predicate tooFewArguments(FunctionCall fc, Function f) {

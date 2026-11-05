@@ -27,12 +27,9 @@ predicate macroUseLocation(File f, int start, int end) {
   )
 }
 
-pragma[noopt]
 predicate emptyIf(IfStmt s, BlockStmt b, File f, int start, int end) {
-  s instanceof IfStmt and
   not exists(s.getElse()) and
   b = s.getThen() and
-  b instanceof BlockStmt and
   not exists(b.getAChild()) and
   f = b.getFile() and
   exists(Location l |
