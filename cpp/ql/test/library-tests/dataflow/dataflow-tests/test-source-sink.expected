@@ -201,10 +201,9 @@ irFlow
 | clang.cpp:35:32:35:37 | call to source | clang.cpp:38:10:38:11 | m2 |
 | clang.cpp:40:42:40:47 | call to source | clang.cpp:42:18:42:19 | m2 |
 | clang.cpp:44:35:44:40 | call to source | clang.cpp:46:17:46:18 | m2 |
-| clang.cpp:50:7:50:16 | definition of stackArray | clang.cpp:52:8:52:17 | stackArray |
-| clang.cpp:50:25:50:30 | call to source | clang.cpp:53:17:53:26 | *stackArray |
-| clang.cpp:50:35:50:40 | call to source | clang.cpp:53:17:53:26 | *stackArray |
-| clang.cpp:51:19:51:24 | call to source | clang.cpp:53:17:53:26 | *stackArray |
+| clang.cpp:50:25:50:30 | call to source | clang.cpp:52:8:52:17 | *stackArray |
+| clang.cpp:50:35:50:40 | call to source | clang.cpp:52:8:52:17 | *stackArray |
+| clang.cpp:51:19:51:24 | call to source | clang.cpp:52:8:52:17 | *stackArray |
 | clang.cpp:57:21:57:28 | call to source | clang.cpp:59:8:59:8 | d |
 | dispatch.cpp:16:37:16:42 | call to source | dispatch.cpp:32:16:32:24 | call to isSource2 |
 | dispatch.cpp:16:37:16:42 | call to source | dispatch.cpp:40:15:40:23 | call to isSource2 |
@@ -291,11 +290,11 @@ irFlow
 | test.cpp:417:16:417:20 | intRefSource output argument | test.cpp:418:8:418:12 | local |
 | test.cpp:422:7:422:11 | definition of local | test.cpp:424:8:424:12 | local |
 | test.cpp:423:20:423:25 | intPointerSource output argument | test.cpp:424:8:424:12 | local |
-| test.cpp:433:7:433:11 | definition of local | test.cpp:435:8:435:12 | local |
+| test.cpp:434:20:434:24 | intPointerSource output argument | test.cpp:435:8:435:12 | *local |
 | test.cpp:434:20:434:24 | intPointerSource output argument | test.cpp:436:8:436:13 | * ... |
 | test.cpp:440:7:440:11 | definition of local | test.cpp:442:8:442:12 | local |
 | test.cpp:441:18:441:23 | intArraySource output argument | test.cpp:442:8:442:12 | local |
-| test.cpp:448:7:448:11 | definition of local | test.cpp:450:8:450:12 | local |
+| test.cpp:449:18:449:22 | intArraySource output argument | test.cpp:450:8:450:12 | *local |
 | test.cpp:449:18:449:22 | intArraySource output argument | test.cpp:451:8:451:13 | * ... |
 | test.cpp:456:26:456:32 | source1 | test.cpp:457:9:457:22 | (statement expression) |
 | test.cpp:456:26:456:32 | source1 | test.cpp:468:8:468:12 | local |
@@ -317,7 +316,6 @@ irFlow
 | test.cpp:601:20:601:20 | intPointerSource output argument | test.cpp:603:8:603:9 | * ... |
 | test.cpp:607:20:607:20 | intPointerSource output argument | test.cpp:609:8:609:9 | * ... |
 | test.cpp:614:20:614:20 | intPointerSource output argument | test.cpp:616:8:616:17 | * ... |
-| test.cpp:628:20:628:25 | intPointerSource output argument | test.cpp:629:17:629:22 | *buffer |
 | test.cpp:633:18:633:23 | call to source | test.cpp:634:8:634:8 | x |
 | test.cpp:646:7:646:12 | call to source | test.cpp:645:8:645:8 | x |
 | test.cpp:660:7:660:12 | call to source | test.cpp:658:8:658:8 | x |
@@ -341,14 +339,8 @@ irFlow
 | test.cpp:853:55:853:62 | call to source | test.cpp:854:10:854:36 | * ... |
 | test.cpp:860:54:860:59 | call to source | test.cpp:861:10:861:37 | static_local_pointer_dynamic |
 | test.cpp:872:46:872:51 | call to source | test.cpp:875:10:875:31 | global_pointer_dynamic |
-| test.cpp:880:64:880:83 | indirect_source(1) | test.cpp:883:10:883:45 | static_local_array_static_indirect_1 |
-| test.cpp:881:64:881:83 | *indirect_source(2) | test.cpp:886:19:886:54 | *static_local_array_static_indirect_2 |
-| test.cpp:890:54:890:61 | source | test.cpp:893:10:893:36 | static_local_pointer_static |
-| test.cpp:891:65:891:84 | *indirect_source(1) | test.cpp:895:19:895:56 | *static_local_pointer_static_indirect_1 |
-| test.cpp:901:56:901:75 | indirect_source(1) | test.cpp:907:10:907:39 | global_array_static_indirect_1 |
-| test.cpp:902:56:902:75 | *indirect_source(2) | test.cpp:911:19:911:48 | *global_array_static_indirect_2 |
-| test.cpp:914:46:914:53 | source | test.cpp:919:10:919:30 | global_pointer_static |
-| test.cpp:915:57:915:76 | *indirect_source(1) | test.cpp:921:19:921:50 | *global_pointer_static_indirect_1 |
+| test.cpp:880:64:880:83 | *indirect_source(1) | test.cpp:883:10:883:45 | *static_local_array_static_indirect_1 |
+| test.cpp:901:56:901:75 | *indirect_source(1) | test.cpp:907:10:907:39 | *global_array_static_indirect_1 |
 | test.cpp:932:23:932:28 | call to source | test.cpp:937:10:937:24 | * ... |
 | test.cpp:958:18:958:32 | *call to indirect_source | test.cpp:961:19:961:28 | *translated |
 | test.cpp:973:18:973:32 | *call to indirect_source | test.cpp:977:19:977:28 | *translated |
@@ -362,16 +354,13 @@ irFlow
 | test.cpp:1066:9:1066:14 | call to source | test.cpp:1079:10:1079:10 | i |
 | test.cpp:1069:9:1069:14 | call to source | test.cpp:1074:10:1074:10 | i |
 | test.cpp:1069:9:1069:14 | call to source | test.cpp:1081:10:1081:10 | i |
-| test.cpp:1117:27:1117:34 | call to source | test.cpp:1117:27:1117:34 | call to source |
 | test.cpp:1132:11:1132:16 | call to source | test.cpp:1121:8:1121:8 | x |
 | test.cpp:1138:17:1138:22 | call to source | test.cpp:1140:8:1140:18 | * ... |
 | test.cpp:1165:10:1165:15 | call to source | test.cpp:1170:19:1170:32 | *global_int_ptr |
 | test.cpp:1165:10:1165:15 | call to source | test.cpp:1175:10:1175:24 | * ... |
 | test.cpp:1165:10:1165:15 | call to source | test.cpp:1184:19:1184:32 | *global_int_ptr |
 | test.cpp:1165:10:1165:15 | call to source | test.cpp:1189:10:1189:24 | * ... |
-| test.cpp:1165:10:1165:15 | call to source | test.cpp:1234:19:1234:34 | *global_int_array |
 | test.cpp:1165:10:1165:15 | call to source | test.cpp:1239:10:1239:26 | * ... |
-| test.cpp:1165:10:1165:15 | call to source | test.cpp:1248:19:1248:34 | *global_int_array |
 | test.cpp:1165:10:1165:15 | call to source | test.cpp:1253:10:1253:26 | * ... |
 | test.cpp:1195:10:1195:24 | *call to indirect_source | test.cpp:1200:19:1200:36 | **global_int_ptr_ptr |
 | test.cpp:1195:10:1195:24 | *call to indirect_source | test.cpp:1206:19:1206:37 | ** ... |

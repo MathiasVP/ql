@@ -151,13 +151,18 @@ module IRTest {
     predicate isSink(DataFlow::Node sink) {
       exists(FunctionCall call, Expr e | e = call.getAnArgument() |
         call.getTarget().getName() = "sink" and
-        sink.asExpr() = e
+        (
+          if e.getUnspecifiedType() instanceof ReferenceType
+          then sink.asConvertedExpr() = e.getFullyConverted()
+          else sink.asExpr() = e
+        )
         or
-        call.getTarget().getName() = "indirect_sink" and
-        sink.asIndirectExpr() = e
-        or
-        call.getTarget().getName() = "indirect_sink_const_ref" and
-        sink.asIndirectExpr() = e
+        call.getTarget().getName() = ["indirect_sink", "indirect_sink_const_ref"] and
+        (
+          if e.getUnspecifiedType() instanceof ReferenceType
+          then sink.asIndirectConvertedExpr() = e.getFullyConverted()
+          else sink.asIndirectExpr() = e
+        )
       )
     }
 

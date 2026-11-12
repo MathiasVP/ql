@@ -24,7 +24,11 @@ module IRTest {
       // test sink function
       exists(FunctionCall call |
         call.getTarget().getName() = "sink" and
-        sink.asExpr() = call.getAnArgument()
+        exists(Expr arg | arg = call.getAnArgument() |
+          if arg.getUnspecifiedType() instanceof ReferenceType
+          then sink.asConvertedExpr() = arg.getFullyConverted()
+          else sink.asExpr() = arg
+        )
       )
     }
   }

@@ -37,7 +37,7 @@ void getEnvironment() {
 
     char buf[1024];
     GetEnvironmentVariableA("FOO", buf, sizeof(buf));
-    sink(buf);
+    sink(buf); // $ ir
     sink(*buf); // $ ir
 }
 
@@ -166,7 +166,7 @@ void readFile(HANDLE hFile) {
     DWORD bytesRead;
     OVERLAPPED overlapped;
     BOOL result = ReadFile(hFile, buffer, sizeof(buffer), &bytesRead, &overlapped);
-    sink(buffer);
+    sink(buffer); // $ ir
     sink(*buffer); // $ ir
   }
 
@@ -175,7 +175,7 @@ void readFile(HANDLE hFile) {
     OVERLAPPED overlapped;
     overlapped.hEvent = reinterpret_cast<HANDLE>(buffer);
     ReadFileEx(hFile, buffer, sizeof(buffer) - 1, &overlapped, FileIOCompletionRoutine);
-    sink(buffer);
+    sink(buffer); // $ ir
     sink(*buffer); // $ ir
 
     char* p = reinterpret_cast<char*>(overlapped.hEvent);
@@ -207,7 +207,7 @@ void readFile(HANDLE hFile) {
     LARGE_INTEGER byteOffset;
     ULONG key;
     NTSTATUS status = NtReadFile(hFile, nullptr, nullptr, nullptr, &ioStatusBlock, buffer, sizeof(buffer), &byteOffset, &key);
-    sink(buffer);
+    sink(buffer); // $ ir
     sink(*buffer); // $ ir
   }
 }
@@ -643,21 +643,21 @@ void test_winhttp(HINTERNET hRequest) {
     char buffer[1024];
     DWORD bytesRead;
     BOOL result = WinHttpReadData(hRequest, buffer, sizeof(buffer), &bytesRead);
-    sink(buffer);
+    sink(buffer); // $ ir
     sink(*buffer); // $ ir
   }
   {
     char buffer[1024];
     DWORD bytesRead;
     DWORD result = WinHttpReadDataEx(hRequest, buffer, sizeof(buffer), &bytesRead, 0, 0, nullptr);
-    sink(buffer);
+    sink(buffer); // $ ir
     sink(*buffer); // $ ir
   }
   {
     char buffer[1024];
     DWORD bufferLength = sizeof(buffer);
     WinHttpQueryHeaders(hRequest, 0, nullptr, buffer, &bufferLength, nullptr);
-    sink(buffer);
+    sink(buffer); // $ ir
     sink(*buffer); // $ ir
   }
   {
@@ -667,7 +667,7 @@ void test_winhttp(HINTERNET hRequest) {
     DWORD headersCount;
     PWINHTTP_HEADER_NAME headerName;
     DWORD result = WinHttpQueryHeadersEx(hRequest, 0, 0, 0, nullptr, headerName, buffer, &bufferLength, &headers, &headersCount);
-    sink(buffer);
+    sink(buffer); // $ ir
     sink(*buffer); // $ ir
     sink(headerName->pszName);
     sink(*headerName->pszName); // $ ir
@@ -927,7 +927,7 @@ void test_http_server_api(HANDLE hRequestQueue) {
     char buffer[1024];
     ULONG bytesReturned;
     ULONG result = HttpReceiveRequestEntityBody(hRequestQueue, 0, 0, buffer, sizeof(buffer), &bytesReturned, nullptr);
-    sink(buffer);
+    sink(buffer); // $ ir
     sink(*buffer); // $ ir
   }
   {
@@ -1007,14 +1007,14 @@ void test_registry_queries(HKEY hKey) {
     char data[256];
     LONG dataSize = sizeof(data);
     RegQueryValueA(hKey, "value", data, &dataSize);
-    sink(data); // clean
+    sink(data); // $ ir
     sink(*data); // $ ir
   }
   {
     wchar_t data[256];
     LONG dataSize = sizeof(data);
     RegQueryValueW(hKey, L"value", data, &dataSize);
-    sink(data); // clean
+    sink(data); // $ ir
     sink(*data); // $ ir
   }
   {
@@ -1022,7 +1022,7 @@ void test_registry_queries(HKEY hKey) {
     DWORD dataSize = sizeof(data);
     DWORD type;
     RegQueryValueExA(hKey, "value", nullptr, &type, data, &dataSize);
-    sink(data); // clean
+    sink(data); // $ ir
     sink(*data); // $ ir
   }
   {
@@ -1030,7 +1030,7 @@ void test_registry_queries(HKEY hKey) {
     DWORD dataSize = sizeof(data);
     DWORD type;
     RegQueryValueExW(hKey, L"value", nullptr, &type, data, &dataSize);
-    sink(data); // clean
+    sink(data); // $ ir
     sink(*data); // $ ir
   }
   {
@@ -1038,7 +1038,7 @@ void test_registry_queries(HKEY hKey) {
     char data[256];
     DWORD dataSize = sizeof(data);
     RegQueryMultipleValuesA(hKey, values, 1, data, &dataSize);
-    sink(data); // clean
+    sink(data); // $ ir
     sink(*data); // $ ir
   }
   {
@@ -1046,7 +1046,7 @@ void test_registry_queries(HKEY hKey) {
     wchar_t data[256];
     DWORD dataSize = sizeof(data);
     RegQueryMultipleValuesW(hKey, values, 1, data, &dataSize);
-    sink(data); // clean
+    sink(data); // $ ir
     sink(*data); // $ ir
   }
   {
@@ -1054,7 +1054,7 @@ void test_registry_queries(HKEY hKey) {
     DWORD dataSize = sizeof(data);
     DWORD type;
     RegGetValueA(hKey, "subkey", "value", 0, &type, data, &dataSize);
-    sink(data); // clean
+    sink(data); // $ ir
     sink(*data); // $ ir
   }
 
@@ -1063,7 +1063,7 @@ void test_registry_queries(HKEY hKey) {
     DWORD dataSize = sizeof(data);
     DWORD type;
     RegGetValueW(hKey, L"subkey", L"value", 0, &type, data, &dataSize);
-    sink(data); // clean
+    sink(data); // $ ir
     sink(*data); // $ ir
   }
   {
@@ -1073,9 +1073,9 @@ void test_registry_queries(HKEY hKey) {
     DWORD dataSize = sizeof(data);
     DWORD type;
     RegEnumValueA(hKey, 0, valueName, &valueNameSize, nullptr, &type, data, &dataSize);
-    sink(data); // clean
+    sink(data); // $ ir
     sink(*data); // $ ir
-    sink(valueName); // clean
+    sink(valueName); // $ ir
     sink(*valueName); // $ ir
   }
   {
@@ -1085,9 +1085,9 @@ void test_registry_queries(HKEY hKey) {
     DWORD dataSize = sizeof(data);
     DWORD type;
     RegEnumValueW(hKey, 0, valueName, &valueNameSize, nullptr, &type, data, &dataSize);
-    sink(data); // clean
+    sink(data); // $ ir
     sink(*data); // $ ir
-    sink(valueName); // clean
+    sink(valueName); // $ ir
     sink(*valueName); // $ ir
   }
 }
@@ -1170,7 +1170,7 @@ void test_com_string_conversions() {
     GUID guid = source();
     char str[256];
     StringFromGUID2(guid, str, 256);
-    sink(str);
+    sink(str); // $ ir
     sink(*str); // $ ir
   }
 }

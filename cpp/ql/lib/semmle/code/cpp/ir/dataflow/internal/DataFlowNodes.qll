@@ -363,7 +363,10 @@ module Public {
      *
      * If this node strictly (in the sense of `asConvertedExpr`) corresponds to
      * a `Conversion`, then the result is the underlying non-`Conversion` base
-     * expression.
+     * expression, unless the conversion dereferences a reference. For an
+     * expression of type `T&`, this predicate represents the reference itself;
+     * use `asIndirectExpr(1)` for the referred-to object, or `asConvertedExpr`
+     * for the converted value.
      */
     Expr asExpr() { result = this.asExpr(_) }
 
@@ -380,6 +383,8 @@ module Public {
     /**
      * Gets the non-conversion expression that's indirectly tracked by this node
      * under `index` number of indirections.
+     * Dereferencing a reference counts as one indirection: for an expression
+     * of type `T*&`, index 1 represents the pointer and index 2 the `T` object.
      */
     Expr asIndirectExpr(int index) { result = this.asIndirectExpr(_, index) }
 
@@ -939,17 +944,17 @@ module Public {
   OperandNode operandNode(Operand operand) { result.getOperand() = operand }
 
   /**
-   * Gets the `Node` corresponding to the value of evaluating `e` or any of its
-   * conversions. There is no result if `e` is a `Conversion`. For data flowing
-   * _out of_ an expression, like when an argument is passed by reference, use
-   * `definitionByReferenceNodeFromArgument` instead.
+   * Gets the `Node` corresponding to the value of evaluating `e`, as defined
+   * by `Node.asExpr`. There is no result if `e` is a `Conversion`. For data
+   * flowing _out of_ an expression, like when an argument is passed by
+   * reference, use `definitionByReferenceNodeFromArgument` instead.
    */
   ExprNode exprNode(Expr e) { result.getExpr(_) = e }
 
   /**
    * Gets the `Node` corresponding to the value after `indirection` number of
-   * dereferences of `e` or any of its conversions. There is no result if `e`
-   * is a `Conversion`. For data flowing _out of_ an expression, like when an
+   * dereferences of `e`, as defined by `Node.asIndirectExpr`. There is no result
+   * if `e` is a `Conversion`. For data flowing _out of_ an expression, like when an
    * argument is passed by reference, use
    * `definitionByReferenceNodeFromArgument` instead.
    */
@@ -957,8 +962,8 @@ module Public {
 
   /**
    * Gets the `Node` corresponding to the value after any number of
-   * dereferences of `e` or any of its conversions. There is no result if `e`
-   * is a `Conversion`. For data flowing _out of_ an expression, like when an
+   * dereferences of `e`, as defined by `Node.asIndirectExpr`. There is no result
+   * if `e` is a `Conversion`. For data flowing _out of_ an expression, like when an
    * argument is passed by reference, use
    * `definitionByReferenceNodeFromArgument` instead.
    */
