@@ -577,3 +577,11 @@ void test_scanf_compared_in_conjunct_left(bool b) {
     use(i); // GOOD
   }
 }
+
+void test_reference_binding()
+{
+	int i;
+	scanf("%d", &i);
+	int &r = i; // GOOD: binding a reference does not read `i`
+	set_by_ref(i); // GOOD: passing `i` by reference does not read `i`
+}

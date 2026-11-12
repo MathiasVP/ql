@@ -434,3 +434,9 @@ void test_receive_array() {
 	int y = receive_array(array);
 	sink(y); // $ ir
 }
+
+void test_qualifier_source_through_pointer(MyClass *p) {
+	p->qualifierSource();
+	sink(*p); // $ ir
+	p->qualifierSink(); // $ ir
+}
