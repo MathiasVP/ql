@@ -68,3 +68,15 @@ void test_mad_converted_arguments(int x, int& r, int* p, int*& rp) {
       sink(*rp); // $ external=int
     }
 }
+
+struct Obj {
+	bool is_clean() const;
+};
+
+void sink(Obj*);
+
+void test_mad_qualifier(Obj x) {
+	if(x.is_clean()) {
+		sink(&x); // $ external=Obj MISSING: external=Obj*
+	}
+}
