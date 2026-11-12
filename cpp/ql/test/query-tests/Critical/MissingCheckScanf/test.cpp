@@ -243,11 +243,11 @@ int main()
 			if (maybe()) {
 				break;
 			}
-			else if (maybe() && (scanf("%5c %d", c, &d) == 1)) { // $ Source[cpp/missing-check-scanf] SPURIOUS: Alert[cpp/missing-check-scanf] // GOOD
+			else if (maybe() && (scanf("%5c %d", c, &d) == 1)) { // $ Source[cpp/missing-check-scanf] // GOOD
 				use(*(int *)c); // GOOD
 				use(d); // $ Alert[cpp/missing-check-scanf] // BAD
 			}
-			else if ((scanf("%5c %d", c, &d) == 1) && maybe()) { // $ Source[cpp/missing-check-scanf] SPURIOUS: Alert[cpp/missing-check-scanf] // GOOD
+			else if ((scanf("%5c %d", c, &d) == 1) && maybe()) { // $ Source[cpp/missing-check-scanf] // GOOD
 				use(*(int *)c); // GOOD
 				use(d); // $ Alert[cpp/missing-check-scanf] // BAD
 			}
@@ -581,7 +581,7 @@ void test_scanf_compared_in_conjunct_left(bool b) {
 void test_reference_binding()
 {
 	int i;
-	scanf("%d", &i); // $ SPURIOUS: Source[cpp/missing-check-scanf]
-	int &r = i; // $ SPURIOUS: Alert[cpp/missing-check-scanf] // GOOD: binding a reference does not read `i`
+	scanf("%d", &i);
+	int &r = i; // GOOD: binding a reference does not read `i`
 	set_by_ref(i); // GOOD: passing `i` by reference does not read `i`
 }
