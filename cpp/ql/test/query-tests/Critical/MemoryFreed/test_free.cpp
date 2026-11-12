@@ -180,9 +180,9 @@ int custom_alloc_func(char ** a);
 void test_reassign(char *a) {
     free(a); // GOOD
     asprintf(&a, "Hello world"); // GOOD
-    free(a); // $ SPURIOUS: Source[cpp/double-free] Source[cpp/use-after-free] //GOOD
-    call_by_reference(a); // $ SPURIOUS: Alert[cpp/use-after-free] // GOOD
-    free(a); // $ SPURIOUS: Alert[cpp/double-free] // GOOD
+    free(a); //GOOD
+    call_by_reference(a); // GOOD
+    free(a); // GOOD
     int v;
     if (v = custom_alloc_func(&a)) return;
     free(a); // GOOD
