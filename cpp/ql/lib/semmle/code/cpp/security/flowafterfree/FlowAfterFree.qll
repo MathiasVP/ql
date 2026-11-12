@@ -85,7 +85,8 @@ module FlowFromFree<FlowFromFreeParamSig P> {
     predicate isBarrierIn(DataFlow::Node n) {
       n.asIndirectExpr() = any(AddressOfExpr aoe)
       or
-      n.asIndirectExpr() = any(Call call).getAnArgument()
+      // The converted argument also covers an argument bound to a reference.
+      n.asIndirectConvertedExpr() = any(Call call).getAnArgument().getFullyConverted()
       or
       exists(Expr e |
         n.asIndirectExpr() = e.(PointerDereferenceExpr).getOperand() or
