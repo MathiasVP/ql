@@ -46,9 +46,9 @@ void test2_4(InputSource &data) {
 }
 
 void test2_5(InputSource &data) {
-	SAXParser p; // $ MISSING: Source
+	SAXParser p; // $ Source
 
-	p.parse(data); // $ MISSING: Alert // BAD (parser not correctly configured)
+	p.parse(data); // $ Alert // BAD (parser not correctly configured)
 }
 
 void test2_6(InputSource &data) {
