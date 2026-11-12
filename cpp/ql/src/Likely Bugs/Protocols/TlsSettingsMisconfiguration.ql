@@ -20,7 +20,7 @@ predicate isSourceImpl(DataFlow::Node source, ConstructorCall cc) {
 predicate isSinkImpl(DataFlow::Node sink, FunctionCall fcSetOptions) {
   exists(BoostorgAsio::SslSetOptionsFunction f |
     f.getACallToThisFunction() = fcSetOptions and
-    fcSetOptions.getQualifier() = sink.asIndirectExpr()
+    fcSetOptions.getQualifier() = [sink.asExpr(), sink.asIndirectExpr()]
   )
 }
 
