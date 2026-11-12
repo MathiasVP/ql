@@ -88,8 +88,9 @@ predicate isSource(ScanfFunctionCall call, int index, Node n, Expr output) {
 }
 
 /**
- * Holds if `n` represents the value of `e`, excluding assignments to `e`
- * and arguments of deallocation expressions.
+ * Holds if `n` represents a read of `e`. Taking the address of `e` (either
+ * with `&` or by binding `e` to a reference), assigning to `e`, or deallocating
+ * `e` does not read its value.
  */
 predicate isSink(Node n, Expr e) {
   (
@@ -98,6 +99,8 @@ predicate isSink(Node n, Expr e) {
     else n.asExpr() = e
   ) and
   not any(DeallocationExpr dealloc).getFreedExpr() = e and
+  not e = any(AddressOfExpr aoe).getOperand() and
+  not e.getFullyConverted() instanceof ReferenceToExpr and
   not e = any(AssignExpr assign).getLValue()
 }
 
