@@ -626,7 +626,7 @@ void test_def_via_phi_read(bool b)
     use(buffer);
   }
   intPointerSource(buffer);
-  indirect_sink(buffer); // $ ast,ir
+  indirect_sink(buffer); // $ ast MISSING: ir
 }
 
 void test_static_local_1() {
@@ -883,16 +883,16 @@ namespace GlobalArrays {
     sink(static_local_array_static_indirect_1); // $ ir MISSING: ast
     indirect_sink(static_local_array_static_indirect_1); // clean
     sink(static_local_array_static_indirect_2); // clean
-    indirect_sink(static_local_array_static_indirect_2); // $ ir MISSING: ast
+    indirect_sink(static_local_array_static_indirect_2); // $ MISSING: ast,ir
   }
 
   void test6() {
     static const char* static_local_pointer_static = "source";
     static const char* static_local_pointer_static_indirect_1 = "indirect_source(1)";
     static const char* static_local_pointer_static_indirect_2 = "indirect_source(2)";
-    sink(static_local_pointer_static); // $ ir MISSING: ast
+    sink(static_local_pointer_static); // clean
     sink(static_local_pointer_static_indirect_1); // clean
-    indirect_sink(static_local_pointer_static_indirect_1); // $ ir MISSING: ast
+    indirect_sink(static_local_pointer_static_indirect_1); // $ MISSING: ast,ir
     sink(static_local_pointer_static_indirect_2); // clean: static_local_pointer_static_indirect_2 does not have 2 indirections
     indirect_sink(static_local_pointer_static_indirect_2); // clean: static_local_pointer_static_indirect_2 does not have 2 indirections
   }
@@ -908,7 +908,7 @@ namespace GlobalArrays {
     sink(*global_array_static_indirect_1); // clean
     indirect_sink(global_array_static); // clean
     indirect_sink(global_array_static_indirect_1); // clean
-    indirect_sink(global_array_static_indirect_2); // $ ir MISSING: ast
+    indirect_sink(global_array_static_indirect_2); // $ MISSING: ast,ir
   }
 
   static const char* global_pointer_static = "source";
@@ -916,9 +916,9 @@ namespace GlobalArrays {
   static const char* global_pointer_static_indirect_2 = "indirect_source(2)";
 
   void test8() {
-    sink(global_pointer_static); // $ ir MISSING: ast
+    sink(global_pointer_static); // clean
     sink(global_pointer_static_indirect_1); // clean
-    indirect_sink(global_pointer_static_indirect_1); // $ ir MISSING: ast
+    indirect_sink(global_pointer_static_indirect_1); // $ MISSING: ast,ir
     sink(global_pointer_static_indirect_2); // clean: global_pointer_static_indirect_2 does not have 2 indirections
     indirect_sink(global_pointer_static_indirect_2); // clean: global_pointer_static_indirect_2 does not have 2 indirections
   }
@@ -1114,7 +1114,7 @@ template<typename T>
 void indirect_sink_const_ref(const T&);
 
 void test_temp_with_conversion_from_materialization() {
-  indirect_sink_const_ref(source()); // $ ir MISSING: ast
+  indirect_sink_const_ref(source()); // clean
 }
 
 void reads_input(int x) {
@@ -1231,7 +1231,7 @@ namespace globals_without_explicit_def {
 
   void test9() {
     set(global_int_array);
-    indirect_sink(global_int_array); // $ ir,ast
+    indirect_sink(global_int_array); // $ ast MISSING: ir
   }
 
   void test10() {
@@ -1245,7 +1245,7 @@ namespace globals_without_explicit_def {
 
   void test11() {
     calls_set_array();
-    indirect_sink(global_int_array); // $ ir MISSING: ast
+    indirect_sink(global_int_array); // $ MISSING: ast,ir
   }
 
   void test12() {

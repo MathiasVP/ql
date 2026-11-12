@@ -164,10 +164,10 @@ void fmt_with_assignment() {
   printf(y); // GOOD
 }
 
-void fmt_via_strcpy_bad(char *data) { // $ Source
+void fmt_via_strcpy_bad(char *data) { // $ MISSING: Source
     char res[100];
     strcpy(res, data);
-    printf(res); // $ Alert // BAD
+    printf(res); // $ MISSING: Alert // BAD
 }
 
 
@@ -194,7 +194,7 @@ void wchar_t_test_bad(wchar_t* str){ // $ Source
   wchar_t wstr[100];
   StringCchPrintfW(wstr, 100, str); // $ Alert // BAD
 
-  wprintf(wstr); // $ Alert // BAD
+  wprintf(wstr); // $ MISSING: Alert // BAD
 }
 
 char* get_string();

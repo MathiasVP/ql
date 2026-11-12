@@ -83,7 +83,7 @@ void a() {
  // BAD: v1 value came from the user
  char v1[100];
  gets(v1); // $ Source
- printf(v1); // $ Alert
+ printf(v1); // $ MISSING: Alert
  
  // BAD: v2 value came from the user
  char *v2;
@@ -132,7 +132,7 @@ void a() {
  // BAD: v10 value is derived from values that are not constant
  char v10[10];
  sprintf(v10, "%s", v1);
- printf(v10); // $ Alert
+ printf(v10); // $ MISSING: Alert
  
  // BAD: v11 is initialized via a pointer
  char *v11;

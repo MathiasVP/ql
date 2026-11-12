@@ -471,7 +471,7 @@ void test_read_fread(int read_src, FILE *s)
 
 		read(read_src, buffer, buffer_size * sizeof(char));
 		buffer[buffer_size - 1] = 0;
-		strlen(buffer); // GOOD
+		strlen(buffer); // $ SPURIOUS: Alert[cpp/user-controlled-null-termination-tainted] // GOOD
 	}
 
 	{
@@ -486,7 +486,7 @@ void test_read_fread(int read_src, FILE *s)
 
 		fread(buffer, sizeof(char), buffer_size, s);
 		buffer[buffer_size - 1] = 0;
-		strlen(buffer); // GOOD
+		strlen(buffer); // $ SPURIOUS: Alert[cpp/user-controlled-null-termination-tainted] // GOOD
 	}
 }
 

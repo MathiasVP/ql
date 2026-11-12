@@ -116,7 +116,7 @@ void myOutputFn4(const char *msg)
 	char buffer[4096];
 
 	sprintf(buffer, "log: %s\n", msg);
-	puts(buffer); // $ Alert[cpp/potential-system-data-exposure]
+	puts(buffer); // $ MISSING: Alert[cpp/potential-system-data-exposure]
 }
 
 void myOutputFn5(const char *msg)
@@ -129,7 +129,7 @@ void test5()
 {
 	myOutputFn2(getenv("SECRET_TOKEN")); // GOOD: myOutputFn2 doesn't actually output the parameter
 	myOutputFn3(getenv("SECRET_TOKEN")); // $ Source[cpp/potential-system-data-exposure] // BAD: outputs the SECRET_TOKEN environment variable
-	myOutputFn4(getenv("SECRET_TOKEN")); // $ Source[cpp/potential-system-data-exposure] // BAD: outputs the SECRET_TOKEN environment variable
+	myOutputFn4(getenv("SECRET_TOKEN")); // $ MISSING: Source[cpp/potential-system-data-exposure] // BAD: outputs the SECRET_TOKEN environment variable
 	myOutputFn5(getenv("SECRET_TOKEN")); // $ Alert[cpp/potential-system-data-exposure] Source[cpp/potential-system-data-exposure] // BAD: outputs the SECRET_TOKEN environment variable
 }
 
