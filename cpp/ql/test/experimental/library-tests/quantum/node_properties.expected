@@ -35,6 +35,8 @@
 | openssl_basic.c:181:49:181:87 | Constant | Description | This is a test message for encryption | openssl_basic.c:181:49:181:87 | openssl_basic.c:181:49:181:87 |
 | openssl_basic.c:218:32:218:33 | Constant | Description | 32 | openssl_basic.c:218:32:218:33 | openssl_basic.c:218:32:218:33 |
 | openssl_basic.c:231:27:231:49 | Constant | Description | Encrypt me with OAEP! | openssl_basic.c:231:27:231:49 | openssl_basic.c:231:27:231:49 |
+| openssl_basic.c:235:51:235:55 | KeyOperationAlgorithm | Name | RSA | openssl_basic.c:235:51:235:55 | openssl_basic.c:235:51:235:55 |
+| openssl_basic.c:235:51:235:55 | KeyOperationAlgorithm | RawName | RSA | openssl_basic.c:235:51:235:55 | openssl_basic.c:235:51:235:55 |
 | openssl_basic.c:237:54:237:57 | Constant | Description | 2048 | openssl_basic.c:237:54:237:57 | openssl_basic.c:237:54:237:57 |
 | openssl_basic.c:238:39:238:43 | Key | KeyType | Asymmetric | openssl_basic.c:238:39:238:43 | openssl_basic.c:238:39:238:43 |
 | openssl_basic.c:243:52:243:55 | Key | KeyType | Unknown | openssl_basic.c:243:52:243:55 | openssl_basic.c:243:52:243:55 |
@@ -103,6 +105,8 @@
 | openssl_signature.c:511:35:511:46 | KeyOperationAlgorithm | RawName | 6 | openssl_signature.c:511:35:511:46 | openssl_signature.c:511:35:511:46 |
 | openssl_signature.c:515:51:515:54 | Constant | Description | 2048 | openssl_signature.c:515:51:515:54 | openssl_signature.c:515:51:515:54 |
 | openssl_signature.c:516:34:516:37 | Key | KeyType | Asymmetric | openssl_signature.c:516:34:516:37 | openssl_signature.c:516:34:516:37 |
+| openssl_signature.c:533:50:533:54 | KeyOperationAlgorithm | Name | DSA | openssl_signature.c:533:50:533:54 | openssl_signature.c:533:50:533:54 |
+| openssl_signature.c:533:50:533:54 | KeyOperationAlgorithm | RawName | dsa | openssl_signature.c:533:50:533:54 | openssl_signature.c:533:50:533:54 |
 | openssl_signature.c:537:55:537:58 | Constant | Description | 2048 | openssl_signature.c:537:55:537:58 | openssl_signature.c:537:55:537:58 |
 | openssl_signature.c:543:32:543:37 | Key | KeyType | Unknown | openssl_signature.c:543:32:543:37 | openssl_signature.c:543:32:543:37 |
 | openssl_signature.c:546:34:546:37 | Key | KeyType | Asymmetric | openssl_signature.c:546:34:546:37 | openssl_signature.c:546:34:546:37 |

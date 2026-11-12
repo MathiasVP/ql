@@ -59,7 +59,7 @@ void testReferencePointer1()
 		char *&dataref = data;
 		char *data2 = dataref;
 
-		system(buffer); // $ MISSING: Alert // BAD
+		system(buffer); // $ Alert // BAD
 		system(data); // $ Alert // BAD
 		system(dataref); // $ Alert // BAD
 		system(data2); // $ Alert // BAD
@@ -73,9 +73,9 @@ void testReferencePointer2()
 	char *&dataref = data;
 	char *data2 = dataref;
 
-	if (fgets(buffer, 1024, stdin) != 0) // $ MISSING: Source
+	if (fgets(buffer, 1024, stdin) != 0) // $ Source
 	{
-		system(buffer); // $ MISSING: Alert // BAD
+		system(buffer); // $ Alert // BAD
 		system(data); // BAD
 		system(dataref); // $ MISSING: Alert // BAD [NOT DETECTED]
 		system(data2); // $ MISSING: Alert // BAD [NOT DETECTED]
@@ -95,16 +95,16 @@ void testAcceptRecv(int socket1, int socket2)
 	{
 		char buffer[1024];
 
-		recv(socket1, buffer, 1024); // $ MISSING: Source
-		LoadLibrary(buffer); // $ MISSING: Alert // BAD: using data from recv
+		recv(socket1, buffer, 1024); // $ Source
+		LoadLibrary(buffer); // $ Alert // BAD: using data from recv
 	}
 
 	{
 		char buffer[1024];
 
 		accept(socket2, 0, 0);
-		recv(socket2, buffer, 1024); // $ MISSING: Source
-		LoadLibrary(buffer); // $ MISSING: Alert // BAD: using data from recv
+		recv(socket2, buffer, 1024); // $ Source
+		LoadLibrary(buffer); // $ Alert // BAD: using data from recv
 	}
 }
 

@@ -1,3 +1,5 @@
+| fopen.cpp:6:30:6:37 | a_file |
+| fopen.cpp:8:26:8:33 | a_file |
 | fopen.cpp:9:26:9:34 | filename1 |
 | fopen.cpp:10:26:10:34 | filename2 |
 | fopen.cpp:18:18:18:25 | filename |

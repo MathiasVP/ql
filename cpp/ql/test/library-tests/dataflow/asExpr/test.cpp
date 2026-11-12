@@ -85,7 +85,7 @@ void test_inner_glvalue_qualifiers(
   Foo arr[2];
   (*&x).f(); // $ asExpr="* ..." asExpr="& ...(* ...)" asIndirectExpr="& ...(* ...)" asExpr="x(* ...)"
   (*&r).f(); // $ asExpr="* ..." asExpr="& ...(* ...)" asIndirectExpr="& ...(* ...)" asExpr="r(* ...)" asIndirectExpr="r(* ...)"
-  (*arr).f(); // $ asExpr="* ..." asExpr="arr(* ...)"
+  (*arr).f(); // $ asExpr="* ..." asExpr="arr(* ...)" asIndirectExpr="arr(* ...)"
 }
 
 void take_ptr(char*);
@@ -99,10 +99,10 @@ struct HasField {
 
 void test_glvalues(Foo x, HasField h, int* ip) { // $ asParameter=x parameterNode=x asParameter=h parameterNode=h asParameter=ip parameterNode=ip
   char buf[10];
-  take_ptr(buf); // $ asExpr=buf(*buf)
-  take_const_ptr("abc"); // $ asExpr=abc(*abc)
+  take_ptr(buf); // $ asExpr=buf(*buf) asIndirectExpr=buf
+  take_const_ptr("abc"); // $ asExpr=abc(*abc) asIndirectExpr=abc
   char* ptrs[2];
-  take_ptr_ptr(ptrs); // $ asExpr=ptrs(*ptrs) asIndirectExpr=ptrs
+  take_ptr_ptr(ptrs); // $ asExpr=ptrs(*ptrs) asIndirectExpr=ptrs numberOfIndirectNodes="ptrs: 2"
   int i = h.field; // $ asExpr=h asExpr=field
   take_foo_ref(x); // $ asExpr=x(*x)
   Foo* q = &x; // $ asExpr="& ..." asIndirectExpr="& ..." asExpr="x(*& ...)"
