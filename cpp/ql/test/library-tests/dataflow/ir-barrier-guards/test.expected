@@ -1,1 +1,0 @@
-| test.cpp:83:15:83:32 | // $ external=int* | Missing result: external=int* |
