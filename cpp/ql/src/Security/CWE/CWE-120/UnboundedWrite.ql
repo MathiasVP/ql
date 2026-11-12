@@ -64,6 +64,11 @@ predicate isSource(FS::FlowSource source, string sourceType) { source.getSourceT
 predicate isSink(DataFlow::Node sink, BufferWrite bw, boolean qualifier) {
   unboundedWriteSource(sink.asIndirectExpr(), bw, qualifier)
   or
+  // A qualifier that is not a pointer (such as `s` in `s.buf`) denotes the object itself.
+  exists(Expr e | e = sink.asExpr() and not e.getUnspecifiedType() instanceof PointerType |
+    unboundedWriteSource(e, bw, true) and qualifier = true
+  )
+  or
   // `gets` and `scanf` reads from stdin so there's no real input.
   // The `BufferWrite` library models this as the call itself being
   // the source. In this case we mark the output argument as being

@@ -1,8 +1,11 @@
 edges
+| test_qualifier.cpp:12:13:12:14 | recv output argument | test_qualifier.cpp:13:15:13:15 | s | provenance |  |
 | tests.c:16:26:16:29 | **argv | tests.c:28:22:28:28 | *access to array | provenance |  |
 | tests.c:16:26:16:29 | **argv | tests.c:29:28:29:34 | *access to array | provenance |  |
 | tests.c:16:26:16:29 | **argv | tests.c:34:10:34:16 | *access to array | provenance |  |
 nodes
+| test_qualifier.cpp:12:13:12:14 | recv output argument | semmle.label | recv output argument |
+| test_qualifier.cpp:13:15:13:15 | s | semmle.label | s |
 | tests.c:16:26:16:29 | **argv | semmle.label | **argv |
 | tests.c:28:22:28:28 | *access to array | semmle.label | *access to array |
 | tests.c:29:28:29:34 | *access to array | semmle.label | *access to array |
@@ -11,11 +14,9 @@ nodes
 | tests.c:34:10:34:16 | *access to array | semmle.label | *access to array |
 subpaths
 #select
+| test_qualifier.cpp:13:2:13:7 | call to strcpy | test_qualifier.cpp:12:13:12:14 | recv output argument | test_qualifier.cpp:13:15:13:15 | s | This 'call to strcpy' with input from $@ may overflow the destination. | test_qualifier.cpp:12:13:12:14 | recv output argument | buffer read by recv |
 | tests.c:28:3:28:9 | call to sprintf | tests.c:16:26:16:29 | **argv | tests.c:28:22:28:28 | *access to array | This 'call to sprintf' with input from $@ may overflow the destination. | tests.c:16:26:16:29 | **argv | a command-line argument |
 | tests.c:29:3:29:9 | call to sprintf | tests.c:16:26:16:29 | **argv | tests.c:29:28:29:34 | *access to array | This 'call to sprintf' with input from $@ may overflow the destination. | tests.c:16:26:16:29 | **argv | a command-line argument |
 | tests.c:31:15:31:23 | buffer100 | tests.c:31:15:31:23 | scanf output argument | tests.c:31:15:31:23 | scanf output argument | This 'scanf string argument' with input from $@ may overflow the destination. | tests.c:31:15:31:23 | scanf output argument | value read by scanf |
 | tests.c:33:21:33:29 | buffer100 | tests.c:33:21:33:29 | scanf output argument | tests.c:33:21:33:29 | scanf output argument | This 'scanf string argument' with input from $@ may overflow the destination. | tests.c:33:21:33:29 | scanf output argument | value read by scanf |
 | tests.c:34:25:34:33 | buffer100 | tests.c:16:26:16:29 | **argv | tests.c:34:10:34:16 | *access to array | This 'sscanf string argument' with input from $@ may overflow the destination. | tests.c:16:26:16:29 | **argv | a command-line argument |
-testFailures
-| test_qualifier.cpp:12:32:12:63 | // $ Source[cpp/unbounded-write] | Missing result: Source[cpp/unbounded-write] |
-| test_qualifier.cpp:13:23:13:60 | // $ Alert[cpp/unbounded-write] // BAD | Missing result: Alert[cpp/unbounded-write] |
