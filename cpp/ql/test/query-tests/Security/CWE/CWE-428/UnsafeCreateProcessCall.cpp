@@ -118,7 +118,7 @@ void positiveTestCases()
         NULL, NULL, FALSE, 0, NULL, NULL, NULL, NULL);
 
     // lpCommandLine as hardcoded variable
-    CreateProcess(                              // $ MISSING: Alert //BUG
+    CreateProcess(                              // $ Alert //BUG
         NULL,
         (wchar_t*)lpCommandLine,
         NULL, NULL, FALSE, 0, NULL, NULL, NULL, NULL);
@@ -173,7 +173,7 @@ void positiveTestCases()
 void PositiveTestCasesWithCmdLineParameter(wchar_t* lpCommandLine)
 {
     // lpCommandLine as variable
-    CreateProcess(                              // $ MISSING: Alert //BUG - Depends on the caller
+    CreateProcess(                              // $ Alert //BUG - Depends on the caller
         NULL,
         lpCommandLine,
         NULL, NULL, FALSE, 0, NULL, NULL, NULL, NULL);
