@@ -36,6 +36,7 @@
 | openssl_basic.c:181:49:181:87 | Constant |
 | openssl_basic.c:218:32:218:33 | Constant |
 | openssl_basic.c:231:27:231:49 | Constant |
+| openssl_basic.c:235:51:235:55 | KeyOperationAlgorithm |
 | openssl_basic.c:237:54:237:57 | Constant |
 | openssl_basic.c:238:9:238:25 | KeyGeneration |
 | openssl_basic.c:238:39:238:43 | Key |
@@ -118,15 +119,18 @@
 | openssl_signature.c:428:11:428:21 | KeyOperationAlgorithm |
 | openssl_signature.c:428:11:428:21 | SignOperation |
 | openssl_signature.c:428:11:428:21 | SignatureOutput |
+| openssl_signature.c:428:23:428:28 | Message |
 | openssl_signature.c:428:43:428:49 | Key |
 | openssl_signature.c:484:15:484:27 | KeyOperationAlgorithm |
 | openssl_signature.c:484:15:484:27 | VerifyOperation |
+| openssl_signature.c:484:29:484:34 | Message |
 | openssl_signature.c:484:49:484:51 | SignatureInput |
 | openssl_signature.c:484:54:484:60 | Key |
 | openssl_signature.c:511:35:511:46 | KeyOperationAlgorithm |
 | openssl_signature.c:515:51:515:54 | Constant |
 | openssl_signature.c:516:9:516:23 | KeyGeneration |
 | openssl_signature.c:516:34:516:37 | Key |
+| openssl_signature.c:533:50:533:54 | KeyOperationAlgorithm |
 | openssl_signature.c:537:55:537:58 | Constant |
 | openssl_signature.c:543:32:543:37 | Key |
 | openssl_signature.c:546:9:546:23 | KeyGeneration |

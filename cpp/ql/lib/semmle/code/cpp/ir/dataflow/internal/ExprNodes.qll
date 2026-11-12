@@ -213,7 +213,7 @@ private module Cached {
     exists(Instruction def, int nodeIndex |
       node.hasOperandAndIndirectionIndex(getExprOperand(def), nodeIndex) and
       exprHasIndirection(def, e, n, ind) and
-      indirectionIndex = nodeIndex - ind and
+      indirectionIndex = nodeIndex - ind + getArrayDecayAdjustment(e, ind) and
       indirectionIndex > 0
     )
   }
@@ -235,6 +235,16 @@ private module Cached {
   private predicate exprHasIndirection(Instruction def, Expr e, int n, int ind) {
     e = getConvertedResultExpression(def, n) and
     if getConvertedResultInstruction(def, n).isGLValue() then ind = 1 else ind = 0
+  }
+
+  /**
+   * Gets `1` if `e` is an array whose value is obtained after `ind > 0` loads,
+   * and `0` otherwise. Dereferencing an array first converts it to a pointer to
+   * its first element, so `*buf` is the contents of `buf` (just like `buf`).
+   */
+  bindingset[e, ind]
+  private int getArrayDecayAdjustment(Expr e, int ind) {
+    if ind > 0 and e.getUnspecifiedType() instanceof ArrayType then result = 1 else result = 0
   }
 
   /**
@@ -334,7 +344,7 @@ private module Cached {
     exists(Instruction instr, int nodeIndex |
       node.hasInstructionAndIndirectionIndex(instr, nodeIndex) and
       exprHasIndirection(instr, e, n, ind) and
-      indirectionIndex = nodeIndex - ind and
+      indirectionIndex = nodeIndex - ind + getArrayDecayAdjustment(e, ind) and
       indirectionIndex > 0
     )
   }
