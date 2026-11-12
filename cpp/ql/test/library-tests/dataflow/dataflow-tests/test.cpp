@@ -626,7 +626,7 @@ void test_def_via_phi_read(bool b)
     use(buffer);
   }
   intPointerSource(buffer);
-  indirect_sink(buffer); // $ ast MISSING: ir
+  indirect_sink(buffer); // $ ast,ir
 }
 
 void test_static_local_1() {
@@ -880,8 +880,8 @@ namespace GlobalArrays {
     static const char static_local_array_static_indirect_1[] = "indirect_source(1)";
     static const char static_local_array_static_indirect_2[] = "indirect_source(2)";
     sink(static_local_array_static); // $ ir MISSING: ast
-    sink(static_local_array_static_indirect_1); // $ MISSING: ast,ir
-    indirect_sink(static_local_array_static_indirect_1); // $ MISSING: ast,ir
+    sink(static_local_array_static_indirect_1); // $ ir MISSING: ast
+    indirect_sink(static_local_array_static_indirect_1); // $ ir MISSING: ast
     sink(static_local_array_static_indirect_2); // clean
     indirect_sink(static_local_array_static_indirect_2); // clean: static_local_array_static_indirect_2 does not have 2 indirections
   }
@@ -892,7 +892,7 @@ namespace GlobalArrays {
     static const char* static_local_pointer_static_indirect_2 = "indirect_source(2)";
     sink(static_local_pointer_static); // clean
     sink(static_local_pointer_static_indirect_1); // clean
-    indirect_sink(static_local_pointer_static_indirect_1); // $ MISSING: ast,ir
+    indirect_sink(static_local_pointer_static_indirect_1); // $ ir MISSING: ast
     sink(static_local_pointer_static_indirect_2); // clean: static_local_pointer_static_indirect_2 does not have 2 indirections
     indirect_sink(static_local_pointer_static_indirect_2); // clean: static_local_pointer_static_indirect_2 does not have 2 indirections
   }
@@ -904,10 +904,10 @@ namespace GlobalArrays {
   void test7() {
     sink(global_array_static); // $ ir MISSING: ast
     sink(*global_array_static); // $ MISSING: ast,ir // Missing in IR because the expression is constant-folded to 's'
-    sink(global_array_static_indirect_1); // $ MISSING: ast,ir
+    sink(global_array_static_indirect_1); // $ ir MISSING: ast
     sink(*global_array_static_indirect_1); // $ MISSING: ast,ir // Missing in IR because the expression is constant-folded to 'i'
-    indirect_sink(global_array_static); // $ MISSING: ast,ir
-    indirect_sink(global_array_static_indirect_1); // $ MISSING: ast,ir
+    indirect_sink(global_array_static); // $ ir MISSING: ast
+    indirect_sink(global_array_static_indirect_1); // $ ir MISSING: ast
     indirect_sink(global_array_static_indirect_2); // clean: global_array_static_indirect_2 does not have 2 indirections
   }
 
@@ -918,7 +918,7 @@ namespace GlobalArrays {
   void test8() {
     sink(global_pointer_static); // clean
     sink(global_pointer_static_indirect_1); // clean
-    indirect_sink(global_pointer_static_indirect_1); // $ MISSING: ast,ir
+    indirect_sink(global_pointer_static_indirect_1); // $ ir MISSING: ast
     sink(global_pointer_static_indirect_2); // clean: global_pointer_static_indirect_2 does not have 2 indirections
     indirect_sink(global_pointer_static_indirect_2); // clean: global_pointer_static_indirect_2 does not have 2 indirections
   }
@@ -1231,7 +1231,7 @@ namespace globals_without_explicit_def {
 
   void test9() {
     set(global_int_array);
-    indirect_sink(global_int_array); // $ ast MISSING: ir
+    indirect_sink(global_int_array); // $ ir,ast
   }
 
   void test10() {
@@ -1245,7 +1245,7 @@ namespace globals_without_explicit_def {
 
   void test11() {
     calls_set_array();
-    indirect_sink(global_int_array); // $ MISSING: ast,ir
+    indirect_sink(global_int_array); // $ ir MISSING: ast
   }
 
   void test12() {
@@ -1352,6 +1352,6 @@ void uninitialized_scalar_address() {
 
 void local_array() {
   char local_array_indirect_1[] = "indirect_source(1)";
-  sink(local_array_indirect_1); // $ MISSING: ast,ir
-  indirect_sink(local_array_indirect_1); // $ MISSING: ast,ir
+  sink(local_array_indirect_1); // $ ir MISSING: ast
+  indirect_sink(local_array_indirect_1); // $ ir MISSING: ast
 }
