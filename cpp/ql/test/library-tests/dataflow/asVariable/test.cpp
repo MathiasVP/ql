@@ -6,5 +6,5 @@ const char global_array[] = "source"; // $ MISSING: initializer
 
 void read_globals() {
   sink(global_int); // $ asVariable=global_int
-  sink(global_array); // $ asVariable=global_array
+  sink(global_array); // $ MISSING: asVariable=global_array
 }

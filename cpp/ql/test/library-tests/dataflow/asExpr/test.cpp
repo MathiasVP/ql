@@ -2,7 +2,7 @@ void take_const_ref_int(const int &);
 
 void test_materialize_temp_int()
 {
-  take_const_ref_int(42); // $ asExpr=42 asIndirectExpr=42
+  take_const_ref_int(42); // $ asExpr=42(*42)
 }
 
 struct A {};
@@ -11,7 +11,7 @@ A get();
 void take_const_ref(const A &);
 
 void test1(){
-  take_const_ref(get()); // $ asExpr="call to get" asIndirectExpr="call to get"
+  take_const_ref(get()); // $ asExpr="call to get(*call to get)"
 }
 
 void take_ref(A &);
@@ -69,21 +69,21 @@ void test_qualifiers(
   Foo *&rp, // $ asParameter=rp(*rp) parameterNode=rp(*rp)
   Derived d, // $ asParameter=d parameterNode=d
   Derived &rd) { // $ asParameter=rd(*rd) parameterNode=rd(*rd)
-  x.f(); // $ asExpr=x asIndirectExpr=x
+  x.f(); // $ asExpr=x
   r.f(); // $ asExpr=r asIndirectExpr=r
   p->f(); // $ asExpr=p asIndirectExpr=p
-  (*p).f(); // $ asExpr="* ..." asExpr="p(* ...)" asIndirectExpr="* ..." asIndirectExpr="p(** ...)"
-  rp->f(); // $ asExpr=rp asIndirectExpr=rp numberOfNodes="rp: 2" numberOfIndirectNodes="rp: 2"
-  (*rp).f(); // $ asExpr="* ..." asExpr="rp(* ...)" asIndirectExpr="* ..." asIndirectExpr="rp(** ...)" numberOfIndirectNodes="rp: 2" asIndirectExpr=rp
-  d.f(); // $ asExpr=d asIndirectExpr=d
+  (*p).f(); // $ asExpr="* ..." asExpr="p(* ...)" asIndirectExpr="p(* ...)"
+  rp->f(); // $ asExpr=rp asIndirectExpr=rp numberOfIndirectNodes="rp: 2"
+  (*rp).f(); // $ asExpr="* ..." asExpr=rp asIndirectExpr="rp(* ...)" asIndirectExpr=rp numberOfIndirectNodes="rp: 2"
+  d.f(); // $ asExpr=d
   rd.f(); // $ asExpr=rd asIndirectExpr=rd
 }
 
 void test_inner_glvalue_qualifiers(
   Foo x, // $ asParameter=x parameterNode=x
   Foo &r) { // $ asParameter=r(*r) parameterNode=r(*r)
-  (*&x).f(); // $ asExpr="* ..." asExpr="& ...(* ...)" asExpr="x(* ...)" asIndirectExpr="* ..." asIndirectExpr="& ...(** ...)" asIndirectExpr="x(** ...)"
-  (*&r).f(); // $ asExpr="* ..." asExpr="& ...(* ...)" asExpr="r(* ...)" asIndirectExpr="* ..." asIndirectExpr="& ...(** ...)" asIndirectExpr="r(** ...)"
+  (*&x).f(); // $ asExpr="* ..." asExpr="& ...(* ...)" asIndirectExpr="& ...(* ...)" asExpr="x(* ...)"
+  (*&r).f(); // $ asExpr="* ..." asExpr="& ...(* ...)" asIndirectExpr="& ...(* ...)" asExpr="r(* ...)" asIndirectExpr="r(* ...)"
 }
 
 void take_foo_ref(Foo&);
@@ -93,10 +93,10 @@ struct HasField {
 };
 
 void test_glvalues(Foo x, HasField h, int* ip) { // $ asParameter=x parameterNode=x asParameter=h parameterNode=h asParameter=ip parameterNode=ip
-  int i = h.field; // $ asExpr=h asExpr=field asIndirectExpr=h
-  take_foo_ref(x); // $ asExpr=x asIndirectExpr=x
-  Foo* q = &x; // $ asExpr="& ..." asIndirectExpr="& ..." asExpr="x(& ...)" asIndirectExpr="x(*& ...)"
-  *ip = 1; // $ asExpr="* ..." asExpr="ip(* ...)" asExpr=1 asIndirectExpr="* ..." asIndirectExpr="ip(** ...)"
+  int i = h.field; // $ asExpr=h asExpr=field
+  take_foo_ref(x); // $ asExpr=x(*x)
+  Foo* q = &x; // $ asExpr="& ..." asIndirectExpr="& ..." asExpr="x(*& ...)"
+  *ip = 1; // $ asExpr="* ..." asExpr="ip(* ...)" asIndirectExpr="ip(* ...)" asExpr=1
 }
 
 struct C {
@@ -106,4 +106,14 @@ struct C {
 void test_constructor_calls() {
   C c; // $ asExpr="call to C"
   C *p = new C; // $ asExpr="call to C" asExpr=new asIndirectExpr=new
+}
+
+Foo *&get_ptr_ref();
+
+void test_reference_values(int &r, Foo *&rp, Foo *&&rrp) { // $ asParameter=r(*r) parameterNode=r(*r) asParameter=rp(*rp) parameterNode=rp(*rp) asParameter=rrp(*rrp) parameterNode=rrp(*rrp)
+  int value = r; // $ asExpr=r asIndirectExpr=r referenceMapping="r:0:int &:1" referenceMapping=r:1:int:1
+  Foo *ptr = rp; // $ asExpr=rp asIndirectExpr=rp numberOfIndirectNodes="rp: 2" referenceMapping="rp:0:Foo *&:1" referenceMapping="rp:1:Foo *:1" referenceMapping=rp:2:Foo:1
+  Foo *cast = (Foo *)rp; // $ asExpr=rp asIndirectExpr=rp numberOfIndirectNodes="rp: 2" referenceMapping="rp:0:Foo *&:1" referenceMapping="rp:1:Foo *:1" referenceMapping=rp:2:Foo:1
+  Foo *rvalue = rrp; // $ asExpr=rrp asIndirectExpr=rrp numberOfIndirectNodes="rrp: 2" referenceMapping="rrp:0:Foo *&&:1" referenceMapping="rrp:1:Foo *:1" referenceMapping=rrp:2:Foo:1
+  Foo *returned = get_ptr_ref(); // $ asExpr="call to get_ptr_ref" asIndirectExpr="call to get_ptr_ref" numberOfIndirectNodes="call to get_ptr_ref: 2" referenceMapping="call to get_ptr_ref:0:Foo *&:1" referenceMapping="call to get_ptr_ref:1:Foo *:1" referenceMapping="call to get_ptr_ref:2:Foo:1"
 }

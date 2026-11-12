@@ -77,6 +77,6 @@ void sink(Obj*);
 
 void test_mad_qualifier(Obj x) {
 	if(x.is_clean()) {
-		sink(&x); // $ external=Obj MISSING: external=Obj*
+		sink(&x); // $ external=Obj* external=Obj
 	}
 }

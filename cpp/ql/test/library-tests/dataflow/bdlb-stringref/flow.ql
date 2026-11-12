@@ -8,8 +8,12 @@ module Config implements DataFlow::ConfigSig {
   }
 
   predicate isSink(DataFlow::Node node) {
-    exists(FunctionCall call |
-      call.getTarget().hasName("sink") and node.asExpr() = call.getArgument(0)
+    exists(FunctionCall call, Expr arg |
+      call.getTarget().hasName("sink") and arg = call.getArgument(0)
+    |
+      if arg.getUnspecifiedType() instanceof ReferenceType
+      then node.asConvertedExpr() = arg.getFullyConverted()
+      else node.asExpr() = arg
     )
   }
 }

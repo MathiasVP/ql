@@ -13,8 +13,16 @@ string formatNumberOfNodesForParameter(Parameter p) {
   exists(int n | n = strictcount(Node node | node.asParameter() = p) | n > 1 and result = ": " + n)
 }
 
+Node referenceNode(Expr e, int index) {
+  index = 0 and result.asExpr() = e
+  or
+  index > 0 and result.asIndirectExpr(index) = e
+}
+
 module AsExprTest implements TestSig {
-  string getARelevantTag() { result = ["asExpr", "numberOfNodes", "asParameter", "parameterNode"] }
+  string getARelevantTag() {
+    result = ["asExpr", "numberOfNodes", "asParameter", "parameterNode", "referenceMapping"]
+  }
 
   predicate hasActualResult(Location location, string element, string tag, string value) {
     exists(Node n, Expr e, string exprString |
@@ -60,6 +68,18 @@ module AsExprTest implements TestSig {
       if paramString = element
       then value = quote(paramString)
       else value = quote(paramString + "(" + element + ")")
+    )
+    or
+    exists(Expr e, int index, Node n |
+      e.getEnclosingFunction().hasName("test_reference_values") and
+      not e instanceof Conversion and
+      e.getUnspecifiedType() instanceof ReferenceType and
+      n = referenceNode(e, index) and
+      location = e.getLocation() and
+      element = e.toString() and
+      tag = "referenceMapping" and
+      value =
+        quote(e.toString() + ":" + index + ":" + n.getType() + ":" + count(referenceNode(e, index)))
     )
   }
 }

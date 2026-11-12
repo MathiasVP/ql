@@ -1691,19 +1691,19 @@ bool data_killer(WORD *d){
 }
 
 void interproc_data_killer1(tm timeinfo, WORD delta){
-	WORD year = delta + 1;
+	WORD year = delta + 1; // $ SPURIOUS: Source[cpp/leap-year/unchecked-after-arithmetic-year-modification]
 
 	if(data_killer(&year)){
-		timeinfo.tm_year = year;
+		timeinfo.tm_year = year; // $ SPURIOUS: Alert[cpp/leap-year/unchecked-after-arithmetic-year-modification]
 	}
 }
 
 
 void leap_year_check_after_normalization(tm timeinfo, WORD delta){
-	WORD year = delta + 1;
+	WORD year = delta + 1; // $ SPURIOUS: Source[cpp/leap-year/unchecked-after-arithmetic-year-modification]
 
 	if(data_killer(&year)){
-		timeinfo.tm_year = year;
+		timeinfo.tm_year = year; // $ SPURIOUS: Alert[cpp/leap-year/unchecked-after-arithmetic-year-modification]
 	}
 }
 

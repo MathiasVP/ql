@@ -31,9 +31,12 @@ module IrTest {
   }
 
   query predicate incorrectBaseType(Node n, string msg) {
-    exists(PointerType pointerType, Type nodeType, Type baseType |
+    exists(Expr e, PointerType pointerType, Type nodeType, Type baseType |
       not n.isGLValue() and
-      pointerType = n.asIndirectExpr(1).getActualType() and
+      e = n.asIndirectExpr(1) and
+      // Reference indirections are relative to the reference, not its converted type.
+      not e.getUnspecifiedType() instanceof ReferenceType and
+      pointerType = e.getActualType() and
       baseType = pointerType.getBaseType() and
       nodeType = n.getType() and
       nodeType != baseType and

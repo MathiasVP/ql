@@ -35,7 +35,7 @@ predicate isUninitialized(Node n) {
 
 predicate isSink(ScanfFunctionCall call, int index, Node n, Expr input) {
   input = call.getOutputArgument(index) and
-  n.asIndirectExpr() = input
+  n.asIndirectConvertedExpr() = input.getFullyConverted()
 }
 
 /**
@@ -88,12 +88,17 @@ predicate isSource(ScanfFunctionCall call, int index, Node n, Expr output) {
 }
 
 /**
- * Holds if `n` is a node such that `n.asExpr() = e` and `e` is not an
- * argument of a deallocation expression.
+ * Holds if `n` represents the value of `e`, excluding assignments to `e`
+ * and arguments of deallocation expressions.
  */
 predicate isSink(Node n, Expr e) {
-  n.asExpr() = e and
-  not any(DeallocationExpr dealloc).getFreedExpr() = e
+  (
+    if e.getUnspecifiedType() instanceof ReferenceType
+    then n.asConvertedExpr() = e.getFullyConverted()
+    else n.asExpr() = e
+  ) and
+  not any(DeallocationExpr dealloc).getFreedExpr() = e and
+  not e = any(AssignExpr assign).getLValue()
 }
 
 /**

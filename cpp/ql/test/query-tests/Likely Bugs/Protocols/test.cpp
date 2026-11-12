@@ -14,7 +14,7 @@ void TestProperConfiguration_inter_CorrectUsage01()
 
 void TestProperConfiguration_inter_CorrectUsage02()
 {
-	boost::asio::ssl::context ctx(boost::asio::ssl::context::sslv23); // GOOD
+	boost::asio::ssl::context ctx(boost::asio::ssl::context::sslv23); // $ SPURIOUS: Alert[cpp/boost/tls-settings-misconfiguration] // GOOD
 	ctx.set_options(boost::asio::ssl::context::no_tlsv1 |
 		boost::asio::ssl::context::no_tlsv1_1 |
 		boost::asio::ssl::context::no_sslv3);
@@ -38,7 +38,7 @@ void TestProperConfiguration_IncorrectUsage02()
 
 void TestProperConfiguration_IncorrectUsage03()
 {
-	boost::asio::ssl::context ctx(boost::asio::ssl::context::tls);	// $ Alert[cpp/boost/tls-settings-misconfiguration] // BAD
+	boost::asio::ssl::context ctx(boost::asio::ssl::context::tls);	// $ MISSING: Alert[cpp/boost/tls-settings-misconfiguration] // BAD
 	SetOptionsNoOldTls(ctx);
 	ctx.set_options(boost::asio::ssl::context::no_tlsv1 |
 		boost::asio::ssl::context::no_tlsv1_2 );			// BUG - disabling TLS 1.2
