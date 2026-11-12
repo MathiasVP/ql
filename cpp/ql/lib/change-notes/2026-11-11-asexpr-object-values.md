@@ -1,0 +1,4 @@
+---
+category: breaking
+---
+* `Node.asExpr` and `Node.asIndirectExpr` now consistently treat an expression that denotes an object (for example, a variable, a field, an array, a string literal, or an expression of reference type) as the object itself rather than its address. For example, if `buf` is an array then `n.asExpr() = buf` holds for the node that represents the contents of `buf`. Dereferencing an array or a string literal first converts it to a pointer to its first element, so `n.asIndirectExpr() = arg` still refers to the data that an argument `arg` points to when `arg` is a pointer, an array, or a string literal. However, `asIndirectExpr` no longer has a result for an object qualifier (such as `x` in `x.f()`) or for an object passed to a reference parameter. Use `asExpr` instead in those cases.
