@@ -1,3 +1,0 @@
-| test.cpp:883:49:883:68 | // $ ir MISSING: ast | Missing result: ir |
-| test.cpp:885:10:885:45 | *static_local_array_static_indirect_2 | Unexpected result: ir |
-| test.cpp:907:43:907:62 | // $ ir MISSING: ast | Missing result: ir |

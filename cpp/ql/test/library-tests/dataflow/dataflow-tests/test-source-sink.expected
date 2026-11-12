@@ -343,10 +343,14 @@ irFlow
 | test.cpp:853:55:853:62 | call to source | test.cpp:854:10:854:36 | * ... |
 | test.cpp:860:54:860:59 | call to source | test.cpp:861:10:861:37 | static_local_pointer_dynamic |
 | test.cpp:872:46:872:51 | call to source | test.cpp:875:10:875:31 | global_pointer_dynamic |
-| test.cpp:881:64:881:83 | *indirect_source(2) | test.cpp:885:10:885:45 | *static_local_array_static_indirect_2 |
-| test.cpp:881:64:881:83 | *indirect_source(2) | test.cpp:886:19:886:54 | *static_local_array_static_indirect_2 |
+| test.cpp:879:53:879:60 | source | test.cpp:882:10:882:34 | *static_local_array_static |
+| test.cpp:880:64:880:83 | indirect_source(1) | test.cpp:883:10:883:45 | *static_local_array_static_indirect_1 |
+| test.cpp:880:64:880:83 | indirect_source(1) | test.cpp:884:19:884:54 | *static_local_array_static_indirect_1 |
 | test.cpp:891:65:891:84 | *indirect_source(1) | test.cpp:895:19:895:56 | *static_local_pointer_static_indirect_1 |
-| test.cpp:902:56:902:75 | *indirect_source(2) | test.cpp:911:19:911:48 | *global_array_static_indirect_2 |
+| test.cpp:900:45:900:52 | source | test.cpp:905:10:905:28 | *global_array_static |
+| test.cpp:900:45:900:52 | source | test.cpp:909:19:909:37 | *global_array_static |
+| test.cpp:901:56:901:75 | indirect_source(1) | test.cpp:907:10:907:39 | *global_array_static_indirect_1 |
+| test.cpp:901:56:901:75 | indirect_source(1) | test.cpp:910:19:910:48 | *global_array_static_indirect_1 |
 | test.cpp:915:57:915:76 | *indirect_source(1) | test.cpp:921:19:921:50 | *global_pointer_static_indirect_1 |
 | test.cpp:932:23:932:28 | call to source | test.cpp:937:10:937:24 | * ... |
 | test.cpp:958:18:958:32 | *call to indirect_source | test.cpp:961:19:961:28 | *translated |

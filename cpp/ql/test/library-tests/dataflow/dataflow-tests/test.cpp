@@ -879,11 +879,11 @@ namespace GlobalArrays {
     static const char static_local_array_static[] = "source";
     static const char static_local_array_static_indirect_1[] = "indirect_source(1)";
     static const char static_local_array_static_indirect_2[] = "indirect_source(2)";
-    sink(static_local_array_static); // clean
+    sink(static_local_array_static); // $ ir MISSING: ast
     sink(static_local_array_static_indirect_1); // $ ir MISSING: ast
-    indirect_sink(static_local_array_static_indirect_1); // clean
+    indirect_sink(static_local_array_static_indirect_1); // $ ir MISSING: ast
     sink(static_local_array_static_indirect_2); // clean
-    indirect_sink(static_local_array_static_indirect_2); // $ ir MISSING: ast
+    indirect_sink(static_local_array_static_indirect_2); // $ MISSING: ast
   }
 
   void test6() {
@@ -902,13 +902,13 @@ namespace GlobalArrays {
   static const char global_array_static_indirect_2[] = "indirect_source(2)";
 
   void test7() {
-    sink(global_array_static); // clean
+    sink(global_array_static); // $ ir MISSING: ast
     sink(*global_array_static); // clean
     sink(global_array_static_indirect_1); // $ ir MISSING: ast
     sink(*global_array_static_indirect_1); // clean
-    indirect_sink(global_array_static); // clean
-    indirect_sink(global_array_static_indirect_1); // clean
-    indirect_sink(global_array_static_indirect_2); // $ ir MISSING: ast
+    indirect_sink(global_array_static); // $ ir MISSING: ast
+    indirect_sink(global_array_static_indirect_1); // $ ir MISSING: ast
+    indirect_sink(global_array_static_indirect_2); // $ MISSING: ast
   }
 
   static const char* global_pointer_static = "source";

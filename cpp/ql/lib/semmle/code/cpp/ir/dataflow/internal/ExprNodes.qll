@@ -233,8 +233,29 @@ private module Cached {
    * So the value of such an expression is obtained after one load.
    */
   private predicate exprHasIndirection(Instruction def, Expr e, int n, int ind) {
-    e = getConvertedResultExpression(def, n) and
-    if getConvertedResultInstruction(def, n).isGLValue() then ind = 1 else ind = 0
+    exists(int ind0 |
+      e = getConvertedResultExpression(def, n) and
+      if getConvertedResultInstruction(def, n).isGLValue() then ind0 = 1 else ind0 = 0
+    |
+      // The dataflow library treats an array value as a pointer to its
+      // elements, so the elements of an array that is loaded as a whole are
+      // behind one additional indirection.
+      if ind0 = 1 and e.getUnspecifiedType() instanceof ArrayType and isLoadedArray(def)
+      then ind = 2
+      else ind = ind0
+    )
+  }
+
+  /**
+   * Holds if `def` computes the address of an array that is loaded as a whole,
+   * as in `char buf[] = "abc"`.
+   */
+  private predicate isLoadedArray(Instruction def) {
+    exists(LoadInstruction load, Type t |
+      load.getSourceAddressOperand() = getExprOperand(def) and
+      load.getResultLanguageType().hasType(t, false) and
+      t.getUnspecifiedType() instanceof ArrayType
+    )
   }
 
   /**
