@@ -4,7 +4,7 @@ void good1()
 {
 	// GOOD
 	boost::asio::ssl::context::method m = boost::asio::ssl::context::sslv23;
-	boost::asio::ssl::context ctx(m); // $ SPURIOUS: Alert[cpp/boost/tls-settings-misconfiguration]
+	boost::asio::ssl::context ctx(m);
 	ctx.set_options(boost::asio::ssl::context::no_tlsv1 | boost::asio::ssl::context::no_tlsv1_1 | boost::asio::ssl::context::no_sslv3);
 }
 
