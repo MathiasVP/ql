@@ -236,7 +236,9 @@ private module Cached {
   private predicate exprHasIndirection(Instruction def, Expr e, int n, int ind) {
     exists(int ind0 |
       e = getConvertedResultExpression(def, n) and
-      if getConvertedResultInstruction(def, n).isGLValue() or isReferenceExpr(e)
+      if
+        (getConvertedResultInstruction(def, n).isGLValue() or isReferenceExpr(e)) and
+        not e.getUnspecifiedType() instanceof RoutineType
       then ind0 = 1
       else ind0 = 0
     |
