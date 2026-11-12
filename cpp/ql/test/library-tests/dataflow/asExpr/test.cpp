@@ -2,7 +2,7 @@ void take_const_ref_int(const int &);
 
 void test_materialize_temp_int()
 {
-  take_const_ref_int(42); // $ asExpr=42 asIndirectExpr=42
+  take_const_ref_int(42); // $ asExpr=42(*42)
 }
 
 struct A {};
@@ -11,7 +11,7 @@ A get();
 void take_const_ref(const A &);
 
 void test1(){
-  take_const_ref(get()); // $ asExpr="call to get" asIndirectExpr="call to get"
+  take_const_ref(get()); // $ asExpr="call to get(*call to get)"
 }
 
 void take_ref(A &);
@@ -69,13 +69,13 @@ void test_qualifiers(
   Foo *&rp, // $ asParameter=rp(*rp) parameterNode=rp(*rp)
   Derived d, // $ asParameter=d parameterNode=d
   Derived &rd) { // $ asParameter=rd(*rd) parameterNode=rd(*rd)
-  x.f(); // $ asExpr=x asIndirectExpr=x
+  x.f(); // $ asExpr=x
   r.f(); // $ asExpr=r asIndirectExpr=r
   p->f(); // $ asExpr=p asIndirectExpr=p
-  (*p).f(); // $ asExpr="* ..." asExpr="p(* ...)" asIndirectExpr="* ..." asIndirectExpr="p(** ...)"
+  (*p).f(); // $ asExpr="* ..." asExpr="p(* ...)" asIndirectExpr="p(* ...)"
   rp->f(); // $ asExpr=rp asIndirectExpr=rp numberOfNodes="rp: 2" numberOfIndirectNodes="rp: 2"
-  (*rp).f(); // $ asExpr="* ..." asExpr="rp(* ...)" asIndirectExpr="* ..." asIndirectExpr="rp(** ...)" numberOfIndirectNodes="rp: 2" asIndirectExpr=rp
-  d.f(); // $ asExpr=d asIndirectExpr=d
+  (*rp).f(); // $ asExpr="* ..." asExpr="rp(* ...)" asIndirectExpr="rp(* ...)" numberOfIndirectNodes="rp: 2" asIndirectExpr=rp
+  d.f(); // $ asExpr=d
   rd.f(); // $ asExpr=rd asIndirectExpr=rd
 }
 
@@ -83,9 +83,9 @@ void test_inner_glvalue_qualifiers(
   Foo x, // $ asParameter=x parameterNode=x
   Foo &r) { // $ asParameter=r(*r) parameterNode=r(*r)
   Foo arr[2];
-  (*&x).f(); // $ asExpr="* ..." asExpr="& ...(* ...)" asExpr="x(* ...)" asIndirectExpr="* ..." asIndirectExpr="& ...(** ...)" asIndirectExpr="x(** ...)"
-  (*&r).f(); // $ asExpr="* ..." asExpr="& ...(* ...)" asExpr="r(* ...)" asIndirectExpr="* ..." asIndirectExpr="& ...(** ...)" asIndirectExpr="r(** ...)"
-  (*arr).f(); // $ asExpr="* ..." asExpr="arr(* ...)" asIndirectExpr="* ..." asIndirectExpr="arr(** ...)"
+  (*&x).f(); // $ asExpr="* ..." asExpr="& ...(* ...)" asIndirectExpr="& ...(* ...)" asExpr="x(* ...)"
+  (*&r).f(); // $ asExpr="* ..." asExpr="& ...(* ...)" asIndirectExpr="& ...(* ...)" asExpr="r(* ...)" asIndirectExpr="r(* ...)"
+  (*arr).f(); // $ asExpr="* ..." asExpr="arr(* ...)"
 }
 
 void take_ptr(char*);
@@ -99,14 +99,14 @@ struct HasField {
 
 void test_glvalues(Foo x, HasField h, int* ip) { // $ asParameter=x parameterNode=x asParameter=h parameterNode=h asParameter=ip parameterNode=ip
   char buf[10];
-  take_ptr(buf); // $ asIndirectExpr=buf asExpr=buf
-  take_const_ptr("abc"); // $ asIndirectExpr=abc asExpr=abc
+  take_ptr(buf); // $ asExpr=buf(*buf)
+  take_const_ptr("abc"); // $ asExpr=abc(*abc)
   char* ptrs[2];
-  take_ptr_ptr(ptrs); // $ asIndirectExpr=ptrs numberOfIndirectNodes="ptrs: 2" asExpr=ptrs
-  int i = h.field; // $ asExpr=h asExpr=field asIndirectExpr=h
-  take_foo_ref(x); // $ asExpr=x asIndirectExpr=x
-  Foo* q = &x; // $ asExpr="& ..." asIndirectExpr="& ..." asExpr="x(& ...)" asIndirectExpr="x(*& ...)"
-  *ip = 1; // $ asExpr="* ..." asExpr="ip(* ...)" asExpr=1 asIndirectExpr="* ..." asIndirectExpr="ip(** ...)"
+  take_ptr_ptr(ptrs); // $ asExpr=ptrs(*ptrs) asIndirectExpr=ptrs
+  int i = h.field; // $ asExpr=h asExpr=field
+  take_foo_ref(x); // $ asExpr=x(*x)
+  Foo* q = &x; // $ asExpr="& ..." asIndirectExpr="& ..." asExpr="x(*& ...)"
+  *ip = 1; // $ asExpr="* ..." asExpr="ip(* ...)" asIndirectExpr="ip(* ...)" asExpr=1
 }
 
 struct C {

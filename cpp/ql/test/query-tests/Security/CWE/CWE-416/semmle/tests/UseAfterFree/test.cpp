@@ -49,10 +49,10 @@ void test2()
 	myMalloc(&data);
 	use_if_nonzero(data); // GOOD
 	use(data); // GOOD
-	free(data);
+	free(data); // $ SPURIOUS: Source
 	myMalloc2(data);
 	use_if_nonzero(data); // GOOD
-	use(data); // GOOD
+	use(data); // $ SPURIOUS: Alert // GOOD
 }
 
 void test3()

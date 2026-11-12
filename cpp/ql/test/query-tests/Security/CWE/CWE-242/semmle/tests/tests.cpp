@@ -270,7 +270,7 @@ void test4()
 	char *buffer8_ptr = buffer8;
 
 	sprintf(buffer8, "12345678"); // $ Alert[cpp/very-likely-overrunning-write] // BAD: buffer overflow
-	sprintf(buffer8_ptr, "12345678"); // $ Alert[cpp/very-likely-overrunning-write] // BAD: buffer overflow
+	sprintf(buffer8_ptr, "12345678"); // $ MISSING: Alert[cpp/very-likely-overrunning-write] // BAD: buffer overflow
 }
 
 typedef void *va_list;

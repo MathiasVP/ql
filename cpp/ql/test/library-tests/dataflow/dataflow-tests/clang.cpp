@@ -49,8 +49,8 @@ void following_pointers( // $ ast-def=sourceStruct1_ptr ir-def=*cleanArray1 ir-d
 
   int stackArray[2] = { source(), source() };
   stackArray[0] = source();
-  sink(stackArray); // $ ast,ir
-  indirect_sink(stackArray); // $ ast ir=50:25 ir=50:35 ir=51:19
+  sink(stackArray); // $ ast ir=50:25 ir=50:35 ir=51:19
+  indirect_sink(stackArray); // $ ast MISSING: ir=50:25 ir=50:35 ir=51:19
 }
 
 void test_bitcast() {
