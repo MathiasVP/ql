@@ -80,7 +80,7 @@ void test_mad_arrays() {
 	{
 		int buf[10];
 		if(is_clean_pointer(buf)) {
-			sink(buf); // $ MISSING: external=int*
+			sink(buf); // $ external=int*
 		}
 	}
 }
