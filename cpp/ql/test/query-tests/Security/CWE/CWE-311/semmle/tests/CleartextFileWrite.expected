@@ -38,7 +38,6 @@ edges
 | test2.cpp:167:25:167:39 | call to copy_characters | test2.cpp:168:30:168:34 | *call to c_str | provenance | TaintFunction |
 | test2.cpp:167:41:167:60 | password | test2.cpp:157:41:157:41 | s | provenance |  |
 | test2.cpp:167:41:167:60 | password | test2.cpp:167:25:167:39 | call to copy_characters | provenance | TaintFunction |
-| test2.cpp:167:41:167:60 | password | test2.cpp:167:41:167:60 | password | provenance |  |
 | test2.cpp:173:28:173:35 | *password | test2.cpp:173:28:173:35 | *password | provenance |  |
 | test2.cpp:173:28:173:35 | *password | test2.cpp:174:26:174:30 | *call to c_str | provenance | TaintFunction |
 | test.cpp:70:38:70:48 | thePassword | test.cpp:73:43:73:53 | thePassword | provenance |  |
@@ -71,7 +70,6 @@ nodes
 | test2.cpp:162:9:162:14 | result | semmle.label | result |
 | test2.cpp:167:25:167:39 | call to copy_characters | semmle.label | call to copy_characters |
 | test2.cpp:167:25:167:39 | call to copy_characters | semmle.label | call to copy_characters |
-| test2.cpp:167:41:167:60 | password | semmle.label | password |
 | test2.cpp:167:41:167:60 | password | semmle.label | password |
 | test2.cpp:168:30:168:34 | *call to c_str | semmle.label | *call to c_str |
 | test2.cpp:173:28:173:35 | *password | semmle.label | *password |

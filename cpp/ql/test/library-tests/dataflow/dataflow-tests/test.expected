@@ -1,0 +1,10 @@
+| clang.cpp:53:30:53:64 | // $ ast ir=50:25 ir=50:35 ir=51:19 | Missing result: ir=50:25 |
+| clang.cpp:53:30:53:64 | // $ ast ir=50:25 ir=50:35 ir=51:19 | Missing result: ir=50:35 |
+| clang.cpp:53:30:53:64 | // $ ast ir=50:25 ir=50:35 ir=51:19 | Missing result: ir=51:19 |
+| test.cpp:629:26:629:36 | // $ ast,ir | Missing result: ir |
+| test.cpp:886:58:886:77 | // $ ir MISSING: ast | Missing result: ir |
+| test.cpp:895:60:895:79 | // $ ir MISSING: ast | Missing result: ir |
+| test.cpp:911:52:911:71 | // $ ir MISSING: ast | Missing result: ir |
+| test.cpp:921:54:921:73 | // $ ir MISSING: ast | Missing result: ir |
+| test.cpp:1234:38:1234:48 | // $ ir,ast | Missing result: ir |
+| test.cpp:1248:38:1248:57 | // $ ir MISSING: ast | Missing result: ir |

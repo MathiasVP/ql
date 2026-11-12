@@ -30,6 +30,8 @@
 | test.cpp:1632:2:1632:22 | ... += ... | test.cpp:1632:2:1632:22 | ... += ... | test.cpp:1632:2:1632:22 | ... += ... | Year field has been modified, but no appropriate check for LeapYear was found. |
 | test.cpp:1644:2:1644:22 | ... += ... | test.cpp:1644:2:1644:22 | ... += ... | test.cpp:1644:2:1644:22 | ... += ... | Year field has been modified, but no appropriate check for LeapYear was found. |
 | test.cpp:1677:2:1677:22 | ... += ... | test.cpp:1677:2:1677:22 | ... += ... | test.cpp:1677:2:1677:22 | ... += ... | Year field has been modified, but no appropriate check for LeapYear was found. |
+| test.cpp:1697:3:1697:25 | ... = ... | test.cpp:1694:14:1694:22 | ... + ... | test.cpp:1697:3:1697:25 | ... = ... | Year field has been modified, but no appropriate check for LeapYear was found. |
+| test.cpp:1706:3:1706:25 | ... = ... | test.cpp:1703:14:1703:22 | ... + ... | test.cpp:1706:3:1706:25 | ... = ... | Year field has been modified, but no appropriate check for LeapYear was found. |
 | test.cpp:1753:2:1753:22 | ... += ... | test.cpp:1753:2:1753:22 | ... += ... | test.cpp:1753:2:1753:22 | ... += ... | Year field has been modified, but no appropriate check for LeapYear was found. |
 edges
 | test.cpp:813:21:813:40 | ... + ... | test.cpp:813:2:813:40 | ... = ... | provenance |  |
@@ -68,6 +70,21 @@ edges
 | test.cpp:1458:9:1458:16 | ... + ... | test.cpp:1458:2:1458:16 | ... = ... | provenance |  |
 | test.cpp:1464:12:1464:15 | year | test.cpp:1338:20:1338:23 | year | provenance |  |
 | test.cpp:1512:2:1512:10 | ... += ... | test.cpp:1515:2:1515:15 | ... = ... | provenance |  |
+| test.cpp:1688:24:1688:24 | *d | test.cpp:1688:24:1688:24 | *d | provenance |  |
+| test.cpp:1688:24:1688:24 | *d | test.cpp:1689:2:1689:9 | ... = ... | provenance |  |
+| test.cpp:1689:2:1689:9 | ... = ... | test.cpp:1688:24:1688:24 | *d | provenance |  |
+| test.cpp:1694:14:1694:22 | ... + ... | test.cpp:1694:14:1694:22 | ... + ... | provenance |  |
+| test.cpp:1694:14:1694:22 | ... + ... | test.cpp:1696:17:1696:21 | *& ... | provenance |  |
+| test.cpp:1694:14:1694:22 | ... + ... | test.cpp:1697:3:1697:25 | ... = ... | provenance |  |
+| test.cpp:1696:17:1696:21 | *& ... | test.cpp:1688:24:1688:24 | *d | provenance |  |
+| test.cpp:1696:17:1696:21 | *& ... | test.cpp:1696:17:1696:21 | data_killer output argument | provenance |  |
+| test.cpp:1696:17:1696:21 | data_killer output argument | test.cpp:1697:3:1697:25 | ... = ... | provenance |  |
+| test.cpp:1703:14:1703:22 | ... + ... | test.cpp:1703:14:1703:22 | ... + ... | provenance |  |
+| test.cpp:1703:14:1703:22 | ... + ... | test.cpp:1705:17:1705:21 | *& ... | provenance |  |
+| test.cpp:1703:14:1703:22 | ... + ... | test.cpp:1706:3:1706:25 | ... = ... | provenance |  |
+| test.cpp:1705:17:1705:21 | *& ... | test.cpp:1688:24:1688:24 | *d | provenance |  |
+| test.cpp:1705:17:1705:21 | *& ... | test.cpp:1705:17:1705:21 | data_killer output argument | provenance |  |
+| test.cpp:1705:17:1705:21 | data_killer output argument | test.cpp:1706:3:1706:25 | ... = ... | provenance |  |
 nodes
 | test.cpp:422:2:422:14 | ... += ... | semmle.label | ... += ... |
 | test.cpp:440:2:440:11 | ... ++ | semmle.label | ... ++ |
@@ -139,5 +156,25 @@ nodes
 | test.cpp:1632:2:1632:22 | ... += ... | semmle.label | ... += ... |
 | test.cpp:1644:2:1644:22 | ... += ... | semmle.label | ... += ... |
 | test.cpp:1677:2:1677:22 | ... += ... | semmle.label | ... += ... |
+| test.cpp:1688:24:1688:24 | *d | semmle.label | *d |
+| test.cpp:1688:24:1688:24 | *d | semmle.label | *d |
+| test.cpp:1689:2:1689:9 | ... = ... | semmle.label | ... = ... |
+| test.cpp:1694:14:1694:22 | ... + ... | semmle.label | ... + ... |
+| test.cpp:1694:14:1694:22 | ... + ... | semmle.label | ... + ... |
+| test.cpp:1696:17:1696:21 | *& ... | semmle.label | *& ... |
+| test.cpp:1696:17:1696:21 | data_killer output argument | semmle.label | data_killer output argument |
+| test.cpp:1697:3:1697:25 | ... = ... | semmle.label | ... = ... |
+| test.cpp:1703:14:1703:22 | ... + ... | semmle.label | ... + ... |
+| test.cpp:1703:14:1703:22 | ... + ... | semmle.label | ... + ... |
+| test.cpp:1705:17:1705:21 | *& ... | semmle.label | *& ... |
+| test.cpp:1705:17:1705:21 | data_killer output argument | semmle.label | data_killer output argument |
+| test.cpp:1706:3:1706:25 | ... = ... | semmle.label | ... = ... |
 | test.cpp:1753:2:1753:22 | ... += ... | semmle.label | ... += ... |
 subpaths
+| test.cpp:1696:17:1696:21 | *& ... | test.cpp:1688:24:1688:24 | *d | test.cpp:1688:24:1688:24 | *d | test.cpp:1696:17:1696:21 | data_killer output argument |
+| test.cpp:1705:17:1705:21 | *& ... | test.cpp:1688:24:1688:24 | *d | test.cpp:1688:24:1688:24 | *d | test.cpp:1705:17:1705:21 | data_killer output argument |
+testFailures
+| test.cpp:1694:14:1694:22 | ... + ... | Unexpected result: Source |
+| test.cpp:1697:3:1697:25 | ... = ... | Unexpected result: Alert |
+| test.cpp:1703:14:1703:22 | ... + ... | Unexpected result: Source |
+| test.cpp:1706:3:1706:25 | ... = ... | Unexpected result: Alert |

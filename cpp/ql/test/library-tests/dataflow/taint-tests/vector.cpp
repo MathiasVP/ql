@@ -366,7 +366,7 @@ void test_vector_output_iterator(int b) {
 	*i6 = source();
 	sink(v6); // $ ir,ast
 	v6 = std::vector<int>(10);
-	sink(v6); // $ SPURIOUS: ast,ir
+	sink(v6); // $ SPURIOUS: ast
 
 	std::vector<int>::iterator i7 = v7.begin();
 	if(b) {

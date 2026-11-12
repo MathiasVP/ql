@@ -890,7 +890,7 @@ namespace GlobalArrays {
     static const char* static_local_pointer_static = "source";
     static const char* static_local_pointer_static_indirect_1 = "indirect_source(1)";
     static const char* static_local_pointer_static_indirect_2 = "indirect_source(2)";
-    sink(static_local_pointer_static); // $ ir MISSING: ast
+    sink(static_local_pointer_static); // clean
     sink(static_local_pointer_static_indirect_1); // clean
     indirect_sink(static_local_pointer_static_indirect_1); // $ ir MISSING: ast
     sink(static_local_pointer_static_indirect_2); // clean: static_local_pointer_static_indirect_2 does not have 2 indirections
@@ -916,7 +916,7 @@ namespace GlobalArrays {
   static const char* global_pointer_static_indirect_2 = "indirect_source(2)";
 
   void test8() {
-    sink(global_pointer_static); // $ ir MISSING: ast
+    sink(global_pointer_static); // clean
     sink(global_pointer_static_indirect_1); // clean
     indirect_sink(global_pointer_static_indirect_1); // $ ir MISSING: ast
     sink(global_pointer_static_indirect_2); // clean: global_pointer_static_indirect_2 does not have 2 indirections
@@ -1114,7 +1114,7 @@ template<typename T>
 void indirect_sink_const_ref(const T&);
 
 void test_temp_with_conversion_from_materialization() {
-  indirect_sink_const_ref(source()); // $ ir MISSING: ast
+  indirect_sink_const_ref(source()); // clean
 }
 
 void reads_input(int x) {

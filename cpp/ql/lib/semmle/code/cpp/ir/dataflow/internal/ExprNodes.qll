@@ -185,12 +185,24 @@ private module Cached {
     result = asDefinitionImpl0(store)
   }
 
+  /**
+   * Gets the instruction that computes the `n`'th expression in the conversion
+   * chain of `instr` (see `getConvertedResultExpression`).
+   */
+  private Instruction getConvertedResultInstruction(Instruction instr, int n) {
+    result = instr and n = 0
+    or
+    exists(Operand operand | conversionFlow(operand, instr, false, false) |
+      result = getConvertedResultInstruction(operand.getDef(), n - 1)
+    )
+  }
+
   /** Holds if `node` is an `OperandNode` that should map `node.asExpr()` to `e`. */
   private predicate exprNodeShouldBeOperand(OperandNode node, Expr e, int n) {
     not exprNodeShouldBeIndirectOperand(_, e, n, _) and
     exists(Instruction def |
-      unique( | | getAUse(def)) = node.getOperand() and
-      e = getConvertedResultExpression(def, n)
+      getExprOperand(def) = node.getOperand() and
+      exprHasIndirection(def, e, n, 0)
     )
   }
 
@@ -198,10 +210,11 @@ private module Cached {
   private predicate indirectExprNodeShouldBeIndirectOperand(
     IndirectOperand node, Expr e, int n, int indirectionIndex, int ind
   ) {
-    exists(Instruction def |
-      node.hasOperandAndIndirectionIndex(unique( | | getAUse(def)), indirectionIndex) and
-      e = getConvertedResultExpression(def, n) and
-      ind = 0
+    exists(Instruction def, int nodeIndex |
+      node.hasOperandAndIndirectionIndex(getExprOperand(def), nodeIndex) and
+      exprHasIndirection(def, e, n, ind) and
+      indirectionIndex = nodeIndex - ind and
+      indirectionIndex > 0
     )
   }
 
@@ -211,53 +224,38 @@ private module Cached {
   }
 
   /**
-   * Holds if `node` is an indirect operand whose operand is an argument, and
-   * the `n`'th expression associated with the operand is `e`.
+   * Holds if `e` is the `n`'th expression in the conversion chain of `def`, and
+   * the value of `e` is obtained after `ind` number of loads from the result of
+   * `def`.
+   *
+   * The instruction that computes an expression that denotes an object (for
+   * example, the qualifier `x` in `x.f()`) produces the address of the object.
+   * So the value of such an expression is obtained after one load.
    */
-  private predicate isIndirectOperandOfArgument(
-    IndirectOperand node, ArgumentOperand operand, Expr e, int n
-  ) {
-    node.hasOperandAndIndirectionIndex(operand, 1) and
-    e = getConvertedResultExpression(operand.getDef(), n)
+  private predicate exprHasIndirection(Instruction def, Expr e, int n, int ind) {
+    e = getConvertedResultExpression(def, n) and
+    if getConvertedResultInstruction(def, n).isGLValue() then ind = 1 else ind = 0
   }
 
   /**
-   * Holds if `opFrom` is an operand to a conversion, and `opTo` is the unique
-   * use of the conversion.
+   * Gets the operand that uses the result of `def`. When a prvalue argument is
+   * bound to a reference parameter IR construction introduces a temporary
+   * whose address is used both to initialize it and as the argument.
    */
-  private predicate isConversionStep(Operand opFrom, Operand opTo) {
-    exists(Instruction mid |
-      conversionFlow(opFrom, mid, false, false) and
-      opTo = unique( | | getAUse(mid))
-    )
-  }
-
-  /**
-   * Holds if an operand that satisfies `isIRTempVariable` flows to `op`
-   * through a (possibly empty) sequence of conversions.
-   */
-  private predicate irTempOperandConversionFlows(Operand op) {
-    isIRTempVariable(op)
+  private Operand getExprOperand(Instruction def) {
+    result = unique( | | getAUse(def))
     or
-    exists(Operand mid |
-      irTempOperandConversionFlows(mid) and
-      isConversionStep(mid, op)
-    )
+    not exists(unique( | | getAUse(def))) and
+    result = unique(ArgumentOperand arg | arg = getAUse(def)) and
+    isIRTempVariable(result)
   }
 
   /** Holds if `node` should be an `IndirectOperand` that maps `node.asExpr()` to `e`. */
   private predicate exprNodeShouldBeIndirectOperand(IndirectOperand node, Expr e, int n, int ind) {
-    ind = 1 and
-    exists(ArgumentOperand operand |
-      // When an argument (qualifier or positional) is a prvalue and the
-      // parameter (qualifier or positional) is a (const) reference, IR
-      // construction introduces a temporary `IRVariable`. The `VariableAddress`
-      // instruction has the argument as its `getConvertedResultExpression`
-      // result. However, the instruction actually represents the _address_ of
-      // the argument. So to fix this mismatch, we have the indirection of the
-      // `VariableAddressInstruction` map to the expression.
-      isIndirectOperandOfArgument(node, operand, e, n) and
-      irTempOperandConversionFlows(operand)
+    exists(Instruction def |
+      ind > 0 and
+      node.hasOperandAndIndirectionIndex(getExprOperand(def), ind) and
+      exprHasIndirection(def, e, n, ind)
     )
   }
 
@@ -276,7 +274,7 @@ private module Cached {
     not exprNodeShouldBeOperand(_, e, n) and
     not exprNodeShouldBeIndirectOutNode(_, e, n) and
     not exprNodeShouldBeIndirectOperand(_, e, n, _) and
-    e = getConvertedResultExpression(node.asInstruction(), n)
+    exprHasIndirection(node.asInstruction(), e, n, 0)
   }
 
   /**
@@ -314,15 +312,30 @@ private module Cached {
     n = 0
   }
 
+  /** Holds if `node` should be an `IndirectInstruction` that maps `node.asExpr()` to `e`. */
+  private predicate exprNodeShouldBeIndirectInstruction(
+    IndirectInstruction node, Expr e, int n, int ind
+  ) {
+    not exprNodeShouldBeOperand(_, e, n) and
+    not exprNodeShouldBeIndirectOutNode(_, e, n) and
+    not exprNodeShouldBeIndirectOperand(_, e, n, _) and
+    exists(Instruction def |
+      ind > 0 and
+      node.hasInstructionAndIndirectionIndex(def, ind) and
+      exprHasIndirection(def, e, n, ind)
+    )
+  }
+
   /** Holds if `node` should be an `IndirectInstruction` that maps `node.asIndirectExpr()` to `e`. */
   private predicate indirectExprNodeShouldBeIndirectInstruction(
     IndirectInstruction node, Expr e, int n, int indirectionIndex, int ind
   ) {
     not indirectExprNodeShouldBeIndirectOperand(_, e, n, indirectionIndex, _) and
-    exists(Instruction instr |
-      node.hasInstructionAndIndirectionIndex(instr, indirectionIndex) and
-      e = getConvertedResultExpression(instr, n) and
-      ind = 0
+    exists(Instruction instr, int nodeIndex |
+      node.hasInstructionAndIndirectionIndex(instr, nodeIndex) and
+      exprHasIndirection(instr, e, n, ind) and
+      indirectionIndex = nodeIndex - ind and
+      indirectionIndex > 0
     )
   }
 
@@ -341,7 +354,13 @@ private module Cached {
     final Expr getConvertedExpr(int n) { this.hasConvertedExpr(result, n, _) }
 
     /** Gets the non-conversion expression corresponding to this node, if any. */
-    final Expr getExpr(int n) { result = this.getConvertedExpr(n).getUnconverted() }
+    final Expr getExpr(int n) {
+      exists(Expr e, int ind |
+        this.hasConvertedExpr(e, n, ind) and
+        result = e.getUnconverted() and
+        isLeastConvertedIndirection(result, ind)
+      )
+    }
   }
 
   /**
@@ -358,6 +377,8 @@ private module Cached {
     ind = 0
     or
     exprNodeShouldBeIndirectOperand(_, e, n, ind)
+    or
+    exprNodeShouldBeIndirectInstruction(_, e, n, ind)
   }
 
   pragma[nomagic]
@@ -365,11 +386,24 @@ private module Cached {
     exists(Expr e | exprNodeShouldBe(e, n, ind) and u = e.getUnconverted())
   }
 
+  /**
+   * Holds if the value of the least converted expression whose unconverted
+   * expression is `u` is obtained after `ind` number of loads. For example, if
+   * `buf` is an array then its array-to-pointer conversion maps to the pointer,
+   * but `buf` itself maps to the contents of `buf`.
+   */
+  private predicate isLeastConvertedIndirection(Expr u, int ind) {
+    exists(int n |
+      unconvertedExprNodeShouldBe(u, n, ind) and
+      not unconvertedExprNodeShouldBe(u, n + 1, _)
+    )
+  }
+
   private class InstructionExprNode extends ExprNodeBase, InstructionNode {
     InstructionExprNode() {
       exists(Expr e, int n |
         exprNodeShouldBeInstruction(this, e, n) and
-        not unconvertedExprNodeShouldBe(e.getUnconverted(), n + 1, _)
+        not unconvertedExprNodeShouldBe(e.getUnconverted(), n + 1, 0)
       )
     }
 
@@ -382,7 +416,7 @@ private module Cached {
     OperandExprNode() {
       exists(Expr e, int n |
         exprNodeShouldBeOperand(this, e, n) and
-        not unconvertedExprNodeShouldBe(e.getUnconverted(), n + 1, _)
+        not unconvertedExprNodeShouldBe(e.getUnconverted(), n + 1, 0)
       )
     }
 
@@ -409,7 +443,11 @@ private module Cached {
 
     /** Gets the non-conversion expression corresponding to this node, if any. */
     final Expr getExpr(int n, int indirectionIndex) {
-      result = this.getConvertedExpr(n, indirectionIndex).getUnconverted()
+      exists(Expr e, int ind |
+        this.hasConvertedExpr(e, n, indirectionIndex, ind) and
+        result = e.getUnconverted() and
+        isLeastConvertedIndirection(result, ind)
+      )
     }
   }
 
@@ -516,10 +554,28 @@ private module Cached {
   }
 
   private class IndirectOperandExprNode extends ExprNodeBase instanceof IndirectOperand {
-    IndirectOperandExprNode() { exprNodeShouldBeIndirectOperand(this, _, _, _) }
+    IndirectOperandExprNode() {
+      exists(Expr e, int n, int ind |
+        exprNodeShouldBeIndirectOperand(this, e, n, ind) and
+        not unconvertedExprNodeShouldBe(e.getUnconverted(), n + 1, ind)
+      )
+    }
 
     final override predicate hasConvertedExpr(Expr e, int n, int ind) {
       exprNodeShouldBeIndirectOperand(this, e, n, ind)
+    }
+  }
+
+  private class IndirectInstructionExprNode extends ExprNodeBase instanceof IndirectInstruction {
+    IndirectInstructionExprNode() {
+      exists(Expr e, int n, int ind |
+        exprNodeShouldBeIndirectInstruction(this, e, n, ind) and
+        not unconvertedExprNodeShouldBe(e.getUnconverted(), n + 1, ind)
+      )
+    }
+
+    final override predicate hasConvertedExpr(Expr e, int n, int ind) {
+      exprNodeShouldBeIndirectInstruction(this, e, n, ind)
     }
   }
 

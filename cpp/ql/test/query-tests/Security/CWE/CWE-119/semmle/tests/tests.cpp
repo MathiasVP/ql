@@ -324,16 +324,16 @@ void test12()
 		myPtr2 = myPtr1;
 
 		memset(myPtr1, 0, sizeof(myStruct)); // GOOD
-		memset(myPtr1, 0, sizeof(myStruct) + 1); // BAD: overrun write of myVar
+		memset(myPtr1, 0, sizeof(myStruct) + 1); // $ Alert[cpp/overflow-buffer] // BAD: overrun write of myVar
 		memset(myPtr2, 0, sizeof(myStruct)); // GOOD
-		memset(myPtr2, 0, sizeof(myStruct) + 1); // BAD: overrun write of myVar
+		memset(myPtr2, 0, sizeof(myStruct) + 1); // $ Alert[cpp/overflow-buffer] // BAD: overrun write of myVar
 	}
 
 	{
 		void *myPtr3 = (void *)(&myVar);
 
 		memset(myPtr3, 0, sizeof(myStruct)); // GOOD
-		memset(myPtr3, 0, sizeof(myStruct) + 1); // BAD: overrun write of myVar
+		memset(myPtr3, 0, sizeof(myStruct) + 1); // $ Alert[cpp/overflow-buffer] // BAD: overrun write of myVar
 	}
 }
 
