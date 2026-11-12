@@ -19,7 +19,7 @@ void take_ref(A &);
 A& get_ref();
 
 void test2() {
-  take_ref(get_ref()); // $ asExpr="call to get_ref" asIndirectExpr="call to get_ref"
+  take_ref(get_ref()); // $ asExpr="call to get_ref(*call to get_ref)"
 }
 
 struct S {
@@ -70,13 +70,13 @@ void test_qualifiers(
   Derived d, // $ asParameter=d parameterNode=d
   Derived &rd) { // $ asParameter=rd(*rd) parameterNode=rd(*rd)
   x.f(); // $ asExpr=x
-  r.f(); // $ asExpr=r asIndirectExpr=r
+  r.f(); // $ asExpr=r
   p->f(); // $ asExpr=p asIndirectExpr=p
   (*p).f(); // $ asExpr="* ..." asExpr="p(* ...)" asIndirectExpr="p(* ...)"
-  rp->f(); // $ asExpr=rp asIndirectExpr=rp numberOfNodes="rp: 2" numberOfIndirectNodes="rp: 2"
-  (*rp).f(); // $ asExpr="* ..." asExpr="rp(* ...)" asIndirectExpr="rp(* ...)" numberOfIndirectNodes="rp: 2" asIndirectExpr=rp
+  rp->f(); // $ asExpr=rp asIndirectExpr=rp
+  (*rp).f(); // $ asExpr="* ..." asExpr="rp(* ...)" asIndirectExpr="rp(* ...)"
   d.f(); // $ asExpr=d
-  rd.f(); // $ asExpr=rd asIndirectExpr=rd
+  rd.f(); // $ asExpr=rd
 }
 
 void test_inner_glvalue_qualifiers(
@@ -84,7 +84,7 @@ void test_inner_glvalue_qualifiers(
   Foo &r) { // $ asParameter=r(*r) parameterNode=r(*r)
   Foo arr[2];
   (*&x).f(); // $ asExpr="* ..." asExpr="& ...(* ...)" asIndirectExpr="& ...(* ...)" asExpr="x(* ...)"
-  (*&r).f(); // $ asExpr="* ..." asExpr="& ...(* ...)" asIndirectExpr="& ...(* ...)" asExpr="r(* ...)" asIndirectExpr="r(* ...)"
+  (*&r).f(); // $ asExpr="* ..." asExpr="& ...(* ...)" asIndirectExpr="& ...(* ...)" asExpr="r(* ...)"
   (*arr).f(); // $ asExpr="* ..." asExpr="arr(* ...)" asIndirectExpr="arr(* ...)"
 }
 

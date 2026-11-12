@@ -229,12 +229,24 @@ private module Cached {
    * `def`.
    *
    * The instruction that computes an expression that denotes an object (for
-   * example, the qualifier `x` in `x.f()`) produces the address of the object.
-   * So the value of such an expression is obtained after one load.
+   * example, the qualifier `x` in `x.f()`) produces the address of the object,
+   * and likewise for an expression of reference type. So the value of such an
+   * expression is obtained after one load.
    */
   private predicate exprHasIndirection(Instruction def, Expr e, int n, int ind) {
     e = getConvertedResultExpression(def, n) and
-    if getConvertedResultInstruction(def, n).isGLValue() then ind = 1 else ind = 0
+    if getConvertedResultInstruction(def, n).isGLValue() or isReferenceExpr(e)
+    then ind = 1
+    else ind = 0
+  }
+
+  /**
+   * Holds if `e` has reference type and denotes the object it refers to. A
+   * `ReferenceToExpr` takes the address of its operand to bind a reference.
+   */
+  private predicate isReferenceExpr(Expr e) {
+    e.getUnspecifiedType() instanceof ReferenceType and
+    not e instanceof ReferenceToExpr
   }
 
   /**
