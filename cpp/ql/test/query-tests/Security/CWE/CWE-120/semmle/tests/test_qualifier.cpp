@@ -9,6 +9,6 @@ struct S {
 void test_object_qualifier(int sock, char *dest)
 {
 	S s;
-	recv(sock, &s, sizeof(s), 0); // $ MISSING: Source[cpp/unbounded-write]
-	strcpy(dest, s.buf); // $ MISSING: Alert[cpp/unbounded-write] // BAD
+	recv(sock, &s, sizeof(s), 0); // $ Source[cpp/unbounded-write]
+	strcpy(dest, s.buf); // $ Alert[cpp/unbounded-write] // BAD
 }
