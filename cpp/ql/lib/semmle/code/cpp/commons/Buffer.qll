@@ -155,6 +155,32 @@ private int isSource(Expr bufferExpr, Element why) {
 pragma[nomagic]
 int getBufferSizeProj(Expr bufferExpr) { result = getBufferSize(bufferExpr, _) }
 
+/** Holds if `n1` has no result for `asExpr` and flows to `n2` in one local step. */
+private predicate localStepFromNonExpr(DataFlow::Node n1, DataFlow::Node n2) {
+  not exists(n1.asExpr()) and
+  DataFlow::localFlowStep(n1, n2)
+}
+
+/**
+ * Holds if the pointer that `def` evaluates to flows to `bufferExpr` in one
+ * local step. For an array `def` this is the pointer that `def` decays to. An
+ * array `bufferExpr` represents the contents of the array, so it is excluded.
+ */
+private predicate bufferFlowStep(Expr def, Expr bufferExpr) {
+  not bufferExpr.getUnspecifiedType() instanceof ArrayType and
+  (
+    DataFlow::localExprFlowStep(def, bufferExpr) and
+    not def.getUnspecifiedType() instanceof ArrayType
+    or
+    def.getUnspecifiedType() instanceof ArrayType and
+    exists(DataFlow::Node n1, DataFlow::Node n2 |
+      n1.asConvertedExpr() = def.getFullyConverted() and
+      localStepFromNonExpr+(n1, n2) and
+      n2.asExpr() = bufferExpr
+    )
+  )
+}
+
 /**
  * Get the size in bytes of the buffer pointed to by an expression (if this can be determined).
  */
@@ -177,6 +203,6 @@ int getBufferSize(Expr bufferExpr, Element why) {
   )
   or
   // dataflow (all sources must be the same size)
-  result = unique(Expr def | DataFlow::localExprFlowStep(def, bufferExpr) | getBufferSizeProj(def)) and
-  exists(Expr def | DataFlow::localExprFlowStep(def, bufferExpr) | exists(getBufferSize(def, why)))
+  result = unique(Expr def | bufferFlowStep(def, bufferExpr) | getBufferSizeProj(def)) and
+  exists(Expr def | bufferFlowStep(def, bufferExpr) | exists(getBufferSize(def, why)))
 }
