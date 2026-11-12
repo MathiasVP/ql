@@ -1106,3 +1106,12 @@ int tests_main(int argc, char *argv[])
 
 	return 0;
 }
+
+void test_array_of_pointers()
+{
+	char buf[4];
+	char *ptrs[2];
+
+	ptrs[0] = buf;
+	memset(ptrs, 0, sizeof(ptrs)); // GOOD
+}
