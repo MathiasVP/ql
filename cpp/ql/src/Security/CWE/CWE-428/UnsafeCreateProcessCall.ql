@@ -88,7 +88,7 @@ module QuotedCommandInCreateProcessFunctionConfig implements DataFlow::ConfigSig
   }
 
   predicate isSink(DataFlow::Node sink) {
-    exists(CreateProcessFunctionCall call, Expr val | val = sink.asExpr() |
+    exists(CreateProcessFunctionCall call, Expr val | val = sink.asIndirectExpr() |
       val = call.getArgument(call.getCommandLineArgumentId())
     )
   }
@@ -99,7 +99,7 @@ module QuotedCommandInCreateProcessFunctionConfig implements DataFlow::ConfigSig
 
   Location getASelectedSinkLocation(DataFlow::Node sink) {
     exists(CreateProcessFunctionCall call | result = call.getLocation() |
-      sink.asExpr() = call.getArgument(call.getCommandLineArgumentId())
+      sink.asIndirectExpr() = call.getArgument(call.getCommandLineArgumentId())
     )
   }
 }
@@ -123,7 +123,7 @@ where
   ) and
   exists(Expr cmd |
     cmd = call.getArgument(call.getCommandLineArgumentId()) and
-    QuotedCommandInCreateProcessFunction::flowToExpr(cmd) and
+    QuotedCommandInCreateProcessFunction::flowTo(any(DataFlow::Node n | n.asIndirectExpr() = cmd)) and
     msg2 =
       " and with an unquoted lpCommandLine (" + cmd +
         ") introduces a security vulnerability if the path contains spaces."
