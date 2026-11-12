@@ -187,7 +187,7 @@ private module Cached {
 
   /** Holds if `node` is an `OperandNode` that should map `node.asExpr()` to `e`. */
   private predicate exprNodeShouldBeOperand(OperandNode node, Expr e, int n) {
-    not exprNodeShouldBeIndirectOperand(_, e, n) and
+    not exprNodeShouldBeIndirectOperand(_, e, n, _) and
     exists(Instruction def |
       unique( | | getAUse(def)) = node.getOperand() and
       e = getConvertedResultExpression(def, n)
@@ -196,11 +196,12 @@ private module Cached {
 
   /** Holds if `node` should be an `IndirectOperand` that maps `node.asIndirectExpr()` to `e`. */
   private predicate indirectExprNodeShouldBeIndirectOperand(
-    IndirectOperand node, Expr e, int n, int indirectionIndex
+    IndirectOperand node, Expr e, int n, int indirectionIndex, int ind
   ) {
     exists(Instruction def |
       node.hasOperandAndIndirectionIndex(unique( | | getAUse(def)), indirectionIndex) and
-      e = getConvertedResultExpression(def, n)
+      e = getConvertedResultExpression(def, n) and
+      ind = 0
     )
   }
 
@@ -245,7 +246,8 @@ private module Cached {
   }
 
   /** Holds if `node` should be an `IndirectOperand` that maps `node.asExpr()` to `e`. */
-  private predicate exprNodeShouldBeIndirectOperand(IndirectOperand node, Expr e, int n) {
+  private predicate exprNodeShouldBeIndirectOperand(IndirectOperand node, Expr e, int n, int ind) {
+    ind = 1 and
     exists(ArgumentOperand operand |
       // When an argument (qualifier or positional) is a prvalue and the
       // parameter (qualifier or positional) is a (const) reference, IR
@@ -273,7 +275,7 @@ private module Cached {
   private predicate exprNodeShouldBeInstruction(Node node, Expr e, int n) {
     not exprNodeShouldBeOperand(_, e, n) and
     not exprNodeShouldBeIndirectOutNode(_, e, n) and
-    not exprNodeShouldBeIndirectOperand(_, e, n) and
+    not exprNodeShouldBeIndirectOperand(_, e, n, _) and
     e = getConvertedResultExpression(node.asInstruction(), n)
   }
 
@@ -314,21 +316,29 @@ private module Cached {
 
   /** Holds if `node` should be an `IndirectInstruction` that maps `node.asIndirectExpr()` to `e`. */
   private predicate indirectExprNodeShouldBeIndirectInstruction(
-    IndirectInstruction node, Expr e, int n, int indirectionIndex
+    IndirectInstruction node, Expr e, int n, int indirectionIndex, int ind
   ) {
-    not indirectExprNodeShouldBeIndirectOperand(_, e, n, indirectionIndex) and
+    not indirectExprNodeShouldBeIndirectOperand(_, e, n, indirectionIndex, _) and
     exists(Instruction instr |
       node.hasInstructionAndIndirectionIndex(instr, indirectionIndex) and
-      e = getConvertedResultExpression(instr, n)
+      e = getConvertedResultExpression(instr, n) and
+      ind = 0
     )
   }
 
   abstract private class ExprNodeBase extends Node {
     /**
+     * Holds if `e` is the `n`'th expression corresponding to this node, and the
+     * value of `e` is obtained after `ind` number of loads. The expression may
+     * be a `Conversion`.
+     */
+    abstract predicate hasConvertedExpr(Expr e, int n, int ind);
+
+    /**
      * Gets the expression corresponding to this node, if any. The returned
      * expression may be a `Conversion`.
      */
-    abstract Expr getConvertedExpr(int n);
+    final Expr getConvertedExpr(int n) { this.hasConvertedExpr(result, n, _) }
 
     /** Gets the non-conversion expression corresponding to this node, if any. */
     final Expr getExpr(int n) { result = this.getConvertedExpr(n).getUnconverted() }
@@ -336,50 +346,66 @@ private module Cached {
 
   /**
    * Holds if there exists a dataflow node whose `asExpr(n)` should evaluate
-   * to `e`.
+   * to `e`, and the value of `e` is obtained after `ind` number of loads.
    */
-  private predicate exprNodeShouldBe(Expr e, int n) {
-    exprNodeShouldBeInstruction(_, e, n) or
-    exprNodeShouldBeOperand(_, e, n) or
-    exprNodeShouldBeIndirectOutNode(_, e, n) or
-    exprNodeShouldBeIndirectOperand(_, e, n) or
-    exprNodeShouldBePostUpdateNode(_, e, n)
+  private predicate exprNodeShouldBe(Expr e, int n, int ind) {
+    (
+      exprNodeShouldBeInstruction(_, e, n) or
+      exprNodeShouldBeOperand(_, e, n) or
+      exprNodeShouldBeIndirectOutNode(_, e, n) or
+      exprNodeShouldBePostUpdateNode(_, e, n)
+    ) and
+    ind = 0
+    or
+    exprNodeShouldBeIndirectOperand(_, e, n, ind)
+  }
+
+  pragma[nomagic]
+  private predicate unconvertedExprNodeShouldBe(Expr u, int n, int ind) {
+    exists(Expr e | exprNodeShouldBe(e, n, ind) and u = e.getUnconverted())
   }
 
   private class InstructionExprNode extends ExprNodeBase, InstructionNode {
     InstructionExprNode() {
       exists(Expr e, int n |
         exprNodeShouldBeInstruction(this, e, n) and
-        not exists(Expr conv |
-          exprNodeShouldBe(conv, n + 1) and
-          conv.getUnconverted() = e.getUnconverted()
-        )
+        not unconvertedExprNodeShouldBe(e.getUnconverted(), n + 1, _)
       )
     }
 
-    final override Expr getConvertedExpr(int n) { exprNodeShouldBeInstruction(this, result, n) }
+    final override predicate hasConvertedExpr(Expr e, int n, int ind) {
+      exprNodeShouldBeInstruction(this, e, n) and ind = 0
+    }
   }
 
   private class OperandExprNode extends ExprNodeBase, OperandNode {
     OperandExprNode() {
       exists(Expr e, int n |
         exprNodeShouldBeOperand(this, e, n) and
-        not exists(Expr conv |
-          exprNodeShouldBe(conv, n + 1) and
-          conv.getUnconverted() = e.getUnconverted()
-        )
+        not unconvertedExprNodeShouldBe(e.getUnconverted(), n + 1, _)
       )
     }
 
-    final override Expr getConvertedExpr(int n) { exprNodeShouldBeOperand(this, result, n) }
+    final override predicate hasConvertedExpr(Expr e, int n, int ind) {
+      exprNodeShouldBeOperand(this, e, n) and ind = 0
+    }
   }
 
   abstract private class IndirectExprNodeBase extends Node {
     /**
+     * Holds if `e` is the `n`'th expression corresponding to this node after
+     * `indirectionIndex` number of indirections, and the value of `e` is
+     * obtained after `ind` number of loads. The expression may be a `Conversion`.
+     */
+    abstract predicate hasConvertedExpr(Expr e, int n, int indirectionIndex, int ind);
+
+    /**
      * Gets the expression corresponding to this node, if any. The returned
      * expression may be a `Conversion`.
      */
-    abstract Expr getConvertedExpr(int n, int indirectionIndex);
+    final Expr getConvertedExpr(int n, int indirectionIndex) {
+      this.hasConvertedExpr(result, n, indirectionIndex, _)
+    }
 
     /** Gets the non-conversion expression corresponding to this node, if any. */
     final Expr getExpr(int n, int indirectionIndex) {
@@ -395,9 +421,11 @@ private module Cached {
     /**
      * Holds if the indirect expression at indirection index `indirectionIndex`
      * of `node` is `e`. The integer `n` specifies how many conversions has been
-     * applied to `node`.
+     * applied to `node`, and the value of `e` is obtained after `ind` loads.
      */
-    predicate indirectNodeHasIndirectExpr(IndirectNode node, Expr e, int n, int indirectionIndex);
+    predicate indirectNodeHasIndirectExpr(
+      IndirectNode node, Expr e, int n, int indirectionIndex, int ind
+    );
   }
 
   /**
@@ -428,25 +456,25 @@ private module Cached {
 
     /** Holds if `node` should be an `IndirectExprNode`. */
     predicate charpred(IndirectNode node) {
-      exists(Expr e, int n, int indirectionIndex |
-        indirectNodeHasIndirectExpr(node, e, n, indirectionIndex) and
+      exists(Expr e, int n, int indirectionIndex, int ind |
+        indirectNodeHasIndirectExpr(node, e, n, indirectionIndex, ind) and
         not exists(Expr conv, int adjustedIndirectionIndex |
           adjustForReference(e, indirectionIndex, conv, adjustedIndirectionIndex) and
-          indirectExprNodeShouldBe(conv, n + 1, adjustedIndirectionIndex)
+          indirectExprNodeShouldBe(conv, n + 1, adjustedIndirectionIndex, ind)
         )
       )
     }
   }
 
-  private predicate indirectExprNodeShouldBe(Expr e, int n, int indirectionIndex) {
-    indirectExprNodeShouldBeIndirectOperand(_, e, n, indirectionIndex) or
-    indirectExprNodeShouldBeIndirectInstruction(_, e, n, indirectionIndex)
+  private predicate indirectExprNodeShouldBe(Expr e, int n, int indirectionIndex, int ind) {
+    indirectExprNodeShouldBeIndirectOperand(_, e, n, indirectionIndex, ind) or
+    indirectExprNodeShouldBeIndirectInstruction(_, e, n, indirectionIndex, ind)
   }
 
   private module IndirectOperandIndirectExprNodeImpl implements IndirectNodeToIndirectExprSig {
     class IndirectNode = IndirectOperand;
 
-    predicate indirectNodeHasIndirectExpr = indirectExprNodeShouldBeIndirectOperand/4;
+    predicate indirectNodeHasIndirectExpr = indirectExprNodeShouldBeIndirectOperand/5;
   }
 
   module IndirectOperandToIndirectExpr =
@@ -456,15 +484,15 @@ private module Cached {
   {
     IndirectOperandIndirectExprNode() { IndirectOperandToIndirectExpr::charpred(this) }
 
-    final override Expr getConvertedExpr(int n, int index) {
-      IndirectOperandToIndirectExpr::indirectNodeHasIndirectExpr(this, result, n, index)
+    final override predicate hasConvertedExpr(Expr e, int n, int index, int ind) {
+      IndirectOperandToIndirectExpr::indirectNodeHasIndirectExpr(this, e, n, index, ind)
     }
   }
 
   private module IndirectInstructionIndirectExprNodeImpl implements IndirectNodeToIndirectExprSig {
     class IndirectNode = IndirectInstruction;
 
-    predicate indirectNodeHasIndirectExpr = indirectExprNodeShouldBeIndirectInstruction/4;
+    predicate indirectNodeHasIndirectExpr = indirectExprNodeShouldBeIndirectInstruction/5;
   }
 
   module IndirectInstructionToIndirectExpr =
@@ -474,27 +502,33 @@ private module Cached {
   {
     IndirectInstructionIndirectExprNode() { IndirectInstructionToIndirectExpr::charpred(this) }
 
-    final override Expr getConvertedExpr(int n, int index) {
-      IndirectInstructionToIndirectExpr::indirectNodeHasIndirectExpr(this, result, n, index)
+    final override predicate hasConvertedExpr(Expr e, int n, int index, int ind) {
+      IndirectInstructionToIndirectExpr::indirectNodeHasIndirectExpr(this, e, n, index, ind)
     }
   }
 
   private class IndirectArgumentOutExprNode extends ExprNodeBase, IndirectArgumentOutNode {
     IndirectArgumentOutExprNode() { exprNodeShouldBeIndirectOutNode(this, _, _) }
 
-    final override Expr getConvertedExpr(int n) { exprNodeShouldBeIndirectOutNode(this, result, n) }
+    final override predicate hasConvertedExpr(Expr e, int n, int ind) {
+      exprNodeShouldBeIndirectOutNode(this, e, n) and ind = 0
+    }
   }
 
   private class IndirectOperandExprNode extends ExprNodeBase instanceof IndirectOperand {
-    IndirectOperandExprNode() { exprNodeShouldBeIndirectOperand(this, _, _) }
+    IndirectOperandExprNode() { exprNodeShouldBeIndirectOperand(this, _, _, _) }
 
-    final override Expr getConvertedExpr(int n) { exprNodeShouldBeIndirectOperand(this, result, n) }
+    final override predicate hasConvertedExpr(Expr e, int n, int ind) {
+      exprNodeShouldBeIndirectOperand(this, e, n, ind)
+    }
   }
 
   private class PostUpdateExprNode extends ExprNodeBase instanceof PostUpdateNode {
     PostUpdateExprNode() { exprNodeShouldBePostUpdateNode(this, _, _) }
 
-    final override Expr getConvertedExpr(int n) { exprNodeShouldBePostUpdateNode(this, result, n) }
+    final override predicate hasConvertedExpr(Expr e, int n, int ind) {
+      exprNodeShouldBePostUpdateNode(this, e, n) and ind = 0
+    }
   }
 
   /**
