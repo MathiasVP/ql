@@ -879,11 +879,11 @@ namespace GlobalArrays {
     static const char static_local_array_static[] = "source";
     static const char static_local_array_static_indirect_1[] = "indirect_source(1)";
     static const char static_local_array_static_indirect_2[] = "indirect_source(2)";
-    sink(static_local_array_static); // clean
-    sink(static_local_array_static_indirect_1); // $ MISSING: ast,ir
-    indirect_sink(static_local_array_static_indirect_1); // clean
-    sink(static_local_array_static_indirect_2); // $ SPURIOUS: ir // clean
-    indirect_sink(static_local_array_static_indirect_2); // $ ir MISSING: ast
+    sink(static_local_array_static); // $ ir MISSING: ast
+    sink(static_local_array_static_indirect_1); // $ ir MISSING: ast
+    indirect_sink(static_local_array_static_indirect_1); // $ ir MISSING: ast
+    sink(static_local_array_static_indirect_2); // clean
+    indirect_sink(static_local_array_static_indirect_2); // $ MISSING: ast
   }
 
   void test6() {
@@ -902,13 +902,13 @@ namespace GlobalArrays {
   static const char global_array_static_indirect_2[] = "indirect_source(2)";
 
   void test7() {
-    sink(global_array_static); // clean
+    sink(global_array_static); // $ ir MISSING: ast
     sink(*global_array_static); // clean
-    sink(global_array_static_indirect_1); // $ MISSING: ast,ir
+    sink(global_array_static_indirect_1); // $ ir MISSING: ast
     sink(*global_array_static_indirect_1); // clean
-    indirect_sink(global_array_static); // clean
-    indirect_sink(global_array_static_indirect_1); // clean
-    indirect_sink(global_array_static_indirect_2); // $ ir MISSING: ast
+    indirect_sink(global_array_static); // $ ir MISSING: ast
+    indirect_sink(global_array_static_indirect_1); // $ ir MISSING: ast
+    indirect_sink(global_array_static_indirect_2); // $ MISSING: ast
   }
 
   static const char* global_pointer_static = "source";
@@ -1335,5 +1335,39 @@ void certain_def_uninitialized_instruction_test() {
     char buffer[10];
     sink(buffer[0]); // $ SPURIOUS: ast
     buffer[0] = source();
+  }
+}
+namespace ArraysInitializedWithStringLiterals {
+  void test1() {
+    char local_array[] = "source";
+    sink(local_array); // $ ir MISSING: ast
+    indirect_sink(local_array); // $ ir MISSING: ast
+  }
+
+  void test2() {
+    char local_array_larger[100] = "source";
+    sink(local_array_larger); // $ ir MISSING: ast
+    indirect_sink(local_array_larger); // $ ir MISSING: ast
+  }
+
+  struct S {
+    char buf[10];
+  };
+
+  void test3() {
+    S s = { "source" };
+    sink(s.buf); // $ ir MISSING: ast
+    indirect_sink(s.buf); // $ ir MISSING: ast
+  }
+
+  struct T {
+    char buf[10];
+    T() : buf("source") {}
+  };
+
+  void test4() {
+    T t;
+    sink(t.buf); // $ ir MISSING: ast
+    indirect_sink(t.buf); // $ ir MISSING: ast
   }
 }

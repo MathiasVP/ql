@@ -780,10 +780,21 @@ private module Cached {
       upper = countIndirectionsForCppType(type) and
       ind = ind0 + [lower .. upper] and
       indirectionIndex = ind - (ind0 + lower) and
-      lower = getMinIndirectionsForType(any(Type t | type.hasUnspecifiedType(t, _)))
+      if isArrayValueStore(value)
+      then lower = 1
+      else lower = getMinIndirectionsForType(any(Type t | type.hasUnspecifiedType(t, _)))
     |
       if writeIsCertain.isCertain(addressIsCertain) then certain = true else certain = false
     )
+  }
+
+  /** Holds if `value` is a store of an entire array, as in `char buf[] = "abc"`. */
+  private predicate isArrayValueStore(Node0Impl value) {
+    value
+        .asInstruction()
+        .(StoreInstruction)
+        .getResultLanguageType()
+        .hasUnspecifiedType(any(Cpp::ArrayType at), false)
   }
 
   /**
