@@ -20,7 +20,7 @@ void test1()
 	char bigbuffer[20];
 
 	memcpy(bigbuffer, smallbuffer, sizeof(smallbuffer)); // GOOD
-	memcpy(bigbuffer, smallbuffer, sizeof(bigbuffer)); // $ Alert[cpp/overflow-buffer] SPURIOUS: Alert[cpp/static-buffer-overflow] // BAD: over-read
+	memcpy(bigbuffer, smallbuffer, sizeof(bigbuffer)); // $ Alert[cpp/overflow-buffer] // BAD: over-read
 	memcpy(smallbuffer, bigbuffer, sizeof(smallbuffer)); // GOOD
 	memcpy(smallbuffer, bigbuffer, sizeof(bigbuffer)); // $ Alert[cpp/overflow-buffer] Alert[cpp/static-buffer-overflow] // BAD: over-write
 }
@@ -366,12 +366,12 @@ void test13(char *argArray)
 	charArray[9] = (char)intArray[9]; // GOOD
 	charArray[9] = (char)intArray[10]; // $ Alert[cpp/overflow-buffer] // BAD: overrun read
 
-	ptrArray[-2] = 1; // $ MISSING: Alert[cpp/overflow-buffer] // BAD: underrun write
-	ptrArray[-1] = 1; // $ MISSING: Alert[cpp/overflow-buffer] // BAD: underrun write
+	ptrArray[-2] = 1; // $ Alert[cpp/overflow-buffer] // BAD: underrun write
+	ptrArray[-1] = 1; // $ Alert[cpp/overflow-buffer] // BAD: underrun write
 	ptrArray[0] = 1; // GOOD
 	ptrArray[8] = 1; // GOOD
 	ptrArray[9] = 1; // GOOD
-	ptrArray[10] = 1; // $ MISSING: Alert[cpp/overflow-buffer] // BAD: overrun write
+	ptrArray[10] = 1; // $ Alert[cpp/overflow-buffer] // BAD: overrun write
 
 	ptrArrayOffset[-2] = 1; // BAD: underrun write [NOT DETECTED]
 	ptrArrayOffset[-1] = 1; // GOOD (there is room for this)
@@ -473,9 +473,9 @@ void test17(long long *longArray)
 		multi[5][5] = 0; // GOOD
 
 		multi[-5][5] = 0; // $ Alert[cpp/overflow-buffer] // BAD: underrun write [INCORRECT MESSAGE]
-		multi[5][-5] = 0; // $ SPURIOUS: Alert[cpp/overflow-buffer] // DUBIOUS: underrun write (this one is still within the bounds of the whole array)
+		multi[5][-5] = 0; // DUBIOUS: underrun write (this one is still within the bounds of the whole array)
 		multi[-5][-5] = 0; // $ Alert[cpp/overflow-buffer] // BAD: underrun write [INCORRECT MESSAGE]
-		multi[0][-5] = 0; // $ SPURIOUS: Alert[cpp/overflow-buffer] // BAD: underrun write [NOT DETECTED]
+		multi[0][-5] = 0; // BAD: underrun write [NOT DETECTED]
 
 		multi[15][5] = 0; // $ Alert[cpp/overflow-buffer] // BAD: overrun write
 		multi[5][15] = 0; // DUBIOUS: overrun write (this one is still within the bounds of the whole array)
@@ -494,12 +494,12 @@ void test18()
 	char *p4 = (char *)malloc(128);
 	char *p5 = (char *)malloc(128);
 
-	p1[-1] = 0; // $ MISSING: Alert[cpp/overflow-buffer] // BAD: underrun write
-	p2[-1] = 0; // $ MISSING: Alert[cpp/overflow-buffer] // BAD: underrun write
+	p1[-1] = 0; // $ Alert[cpp/overflow-buffer] // BAD: underrun write
+	p2[-1] = 0; // $ Alert[cpp/overflow-buffer] // BAD: underrun write
 	p2++;
 	p2[-1] = 0; // GOOD
 
-	p3[-1] = 0; // $ MISSING: Alert[cpp/overflow-buffer] // BAD
+	p3[-1] = 0; // $ Alert[cpp/overflow-buffer] // BAD
 	while (*p3 != 0) {
 		p3 = update(p3);
 	}
@@ -595,7 +595,7 @@ void test21(bool cond)
 		ptr++;
 		if (ptr[-1] == 0) { return; } // GOOD: accesses buffer[0]
 	} else {
-		if (ptr[-1] == 0) { return; } // $ MISSING: Alert[cpp/overflow-buffer] // BAD: accesses buffer[-1]
+		if (ptr[-1] == 0) { return; } // $ Alert[cpp/overflow-buffer] // BAD: accesses buffer[-1]
 	}
 	if (ptr[-1] == 0) { return; } // BAD: accesses buffer[-1] or buffer[0] [NOT DETECTED]
 
@@ -663,7 +663,7 @@ void test26(bool cond)
 		ptr += 1;
 		if (ptr[-1] == 0) { return; } // GOOD: accesses buffer[0]
 	} else {
-		if (ptr[-1] == 0) { return; } // $ MISSING: Alert[cpp/overflow-buffer] // BAD: accesses buffer[-1]
+		if (ptr[-1] == 0) { return; } // $ Alert[cpp/overflow-buffer] // BAD: accesses buffer[-1]
 	}
 	if (ptr[-1] == 0) { return; } // BAD: accesses buffer[-1] or buffer[0] [NOT DETECTED]
 
@@ -941,15 +941,15 @@ void test26() {
 	maa.ys[1].xs[100] = 0; // BAD: overrun write [NOT DETECTED]
 
 	char zs[2][2];
-	zs[0][-1] = 0; // $ SPURIOUS: Alert[cpp/overflow-buffer] // BAD: underrun write [NOT DETECTED]
+	zs[0][-1] = 0; // BAD: underrun write [NOT DETECTED]
 	zs[0][0] = 0; // GOOD
 	zs[0][1] = 0; // GOOD
 	zs[0][2] = 0; // GOOD
 	zs[0][3] = 0; // GOOD
-	zs[0][4] = 0; // $ SPURIOUS: Alert[cpp/overflow-buffer] // BAD: overrun write [NOT DETECTED]
-	zs[1][-3] = 0; // $ SPURIOUS: Alert[cpp/overflow-buffer] // BAD: underrun write [NOT DETECTED]
-	zs[1][-2] = 0; // $ SPURIOUS: Alert[cpp/overflow-buffer] // GOOD
-	zs[1][-1] = 0; // $ SPURIOUS: Alert[cpp/overflow-buffer] // GOOD
+	zs[0][4] = 0; // BAD: overrun write [NOT DETECTED]
+	zs[1][-3] = 0; // BAD: underrun write [NOT DETECTED]
+	zs[1][-2] = 0; // GOOD
+	zs[1][-1] = 0; // GOOD
 	zs[1][0] = 0; // GOOD
 	zs[1][1] = 0; // GOOD
 	zs[1][2] = 0; // BAD: overrun write [NOT DETECTED]
@@ -981,24 +981,24 @@ void test28() {
 	int arr[10];
 
 	int *ptr1 = arr;
-	ptr1[-1] = 0; // $ MISSING: Alert[cpp/overflow-buffer] // BAD: underrun write
+	ptr1[-1] = 0; // $ Alert[cpp/overflow-buffer] // BAD: underrun write
 	ptr1++;
 	ptr1[-1] = 0; // GOOD
 
 	int *ptr2 = arr;
-	ptr2[-1] = 0; // $ MISSING: Alert[cpp/overflow-buffer] // BAD: underrun write
+	ptr2[-1] = 0; // $ Alert[cpp/overflow-buffer] // BAD: underrun write
 	*ptr2++;
 	ptr2[-1] = 0; // GOOD
 
 	int *ptr3 = arr;
-	ptr3[-1] = 0; // $ MISSING: Alert[cpp/overflow-buffer] // BAD: underrun write
+	ptr3[-1] = 0; // $ Alert[cpp/overflow-buffer] // BAD: underrun write
 	if (cond()) {
 		ptr3++;
 	}
 	ptr3[-1] = 0; // GOOD (depending what cond() does)
 
 	int *ptr4 = arr;
-	ptr4[-1] = 0; // $ MISSING: Alert[cpp/overflow-buffer] // BAD: underrun write
+	ptr4[-1] = 0; // $ Alert[cpp/overflow-buffer] // BAD: underrun write
 	while (true) {
 		ptr4++;
 		if (cond()) break;
@@ -1006,7 +1006,7 @@ void test28() {
 	ptr4[-1] = 0; // GOOD
 
 	int *ptr5 = arr;
-	ptr5[-1] = 0; // $ MISSING: Alert[cpp/overflow-buffer] // BAD: underrun write
+	ptr5[-1] = 0; // $ Alert[cpp/overflow-buffer] // BAD: underrun write
 	while (true) {
 		if (cond()) ptr5++;
 		if (cond()) break;
