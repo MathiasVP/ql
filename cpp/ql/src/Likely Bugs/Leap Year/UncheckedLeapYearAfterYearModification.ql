@@ -376,7 +376,7 @@ module OperationToYearAssignmentConfig0 implements DataFlow::ConfigSig {
     // If as the flow progresses, the value holding a dangerous operation result
     // is apparently being passed by address to some function, it is more than likely
     // intended to be modified, and therefore, the definition is killed.
-    exists(Call c | c.getAnArgument().(AddressOfExpr).getAnOperand() = n.asIndirectExpr())
+    exists(Call c | c.getAnArgument().(AddressOfExpr).getAnOperand() = n.asExpr())
   }
 
   /** Block flow out of an operation source to get the "closest" operation to the sink */
