@@ -682,13 +682,13 @@ edges
 | complex.cpp:12:17:12:17 | b | complex.cpp:12:22:12:27 | ... = ... | provenance |  |
 | complex.cpp:12:22:12:23 | *this [post update] [b_] | complex.cpp:12:8:12:11 | *this [Return] [b_] | provenance |  |
 | complex.cpp:12:22:12:27 | ... = ... | complex.cpp:12:22:12:23 | *this [post update] [b_] | provenance |  |
-| complex.cpp:40:17:40:17 | *b [inner, f, a_] | complex.cpp:42:8:42:8 | *b [inner, f, a_] | provenance |  |
-| complex.cpp:40:17:40:17 | *b [inner, f, b_] | complex.cpp:43:8:43:8 | *b [inner, f, b_] | provenance |  |
-| complex.cpp:42:8:42:8 | *b [inner, f, a_] | complex.cpp:42:10:42:14 | inner [f, a_] | provenance |  |
+| complex.cpp:40:17:40:17 | *b [inner, f, a_] | complex.cpp:42:8:42:8 | b [inner, f, a_] | provenance |  |
+| complex.cpp:40:17:40:17 | *b [inner, f, b_] | complex.cpp:43:8:43:8 | b [inner, f, b_] | provenance |  |
+| complex.cpp:42:8:42:8 | b [inner, f, a_] | complex.cpp:42:10:42:14 | inner [f, a_] | provenance |  |
 | complex.cpp:42:10:42:14 | inner [f, a_] | complex.cpp:42:16:42:16 | f [a_] | provenance |  |
 | complex.cpp:42:16:42:16 | f [a_] | complex.cpp:9:7:9:7 | *this [a_] | provenance |  |
 | complex.cpp:42:16:42:16 | f [a_] | complex.cpp:42:18:42:18 | call to a | provenance |  |
-| complex.cpp:43:8:43:8 | *b [inner, f, b_] | complex.cpp:43:10:43:14 | inner [f, b_] | provenance |  |
+| complex.cpp:43:8:43:8 | b [inner, f, b_] | complex.cpp:43:10:43:14 | inner [f, b_] | provenance |  |
 | complex.cpp:43:10:43:14 | inner [f, b_] | complex.cpp:43:16:43:16 | f [b_] | provenance |  |
 | complex.cpp:43:16:43:16 | f [b_] | complex.cpp:10:7:10:7 | *this [b_] | provenance |  |
 | complex.cpp:43:16:43:16 | f [b_] | complex.cpp:43:18:43:18 | call to b | provenance |  |
@@ -717,9 +717,9 @@ edges
 | complex.cpp:65:7:65:8 | *b3 [inner, f, a_] | complex.cpp:40:17:40:17 | *b [inner, f, a_] | provenance |  |
 | complex.cpp:65:7:65:8 | *b3 [inner, f, b_] | complex.cpp:40:17:40:17 | *b [inner, f, b_] | provenance |  |
 | conflated.cpp:10:3:10:22 | ... = ... | conflated.cpp:10:4:10:5 | *ra [post update] [*p] | provenance |  |
-| conflated.cpp:10:4:10:5 | *ra [post update] [*p] | conflated.cpp:11:9:11:10 | *ra [*p] | provenance |  |
+| conflated.cpp:10:4:10:5 | *ra [post update] [*p] | conflated.cpp:11:9:11:10 | ra [*p] | provenance |  |
 | conflated.cpp:10:11:10:20 | call to user_input | conflated.cpp:10:3:10:22 | ... = ... | provenance |  |
-| conflated.cpp:11:9:11:10 | *ra [*p] | conflated.cpp:11:8:11:12 | * ... | provenance |  |
+| conflated.cpp:11:9:11:10 | ra [*p] | conflated.cpp:11:8:11:12 | * ... | provenance |  |
 | conflated.cpp:19:19:19:21 | argument_source output argument | conflated.cpp:20:8:20:10 | *raw | provenance |  |
 | conflated.cpp:29:3:29:4 | *pa [post update] [x] | conflated.cpp:30:8:30:9 | *pa [x] | provenance |  |
 | conflated.cpp:29:3:29:22 | ... = ... | conflated.cpp:29:3:29:4 | *pa [post update] [x] | provenance |  |
@@ -755,12 +755,12 @@ edges
 | constructors.cpp:23:20:23:20 | b | constructors.cpp:23:35:23:35 | b | provenance |  |
 | constructors.cpp:23:28:23:28 | a | constructors.cpp:23:5:23:7 | *Foo [post update] [a_] | provenance |  |
 | constructors.cpp:23:35:23:35 | b | constructors.cpp:23:5:23:7 | *Foo [post update] [b_] | provenance |  |
-| constructors.cpp:26:15:26:15 | *f [a_] | constructors.cpp:28:10:28:10 | *f [a_] | provenance |  |
-| constructors.cpp:26:15:26:15 | *f [b_] | constructors.cpp:29:10:29:10 | *f [b_] | provenance |  |
-| constructors.cpp:28:10:28:10 | *f [a_] | constructors.cpp:18:9:18:9 | *this [a_] | provenance |  |
-| constructors.cpp:28:10:28:10 | *f [a_] | constructors.cpp:28:12:28:12 | call to a | provenance |  |
-| constructors.cpp:29:10:29:10 | *f [b_] | constructors.cpp:19:9:19:9 | *this [b_] | provenance |  |
-| constructors.cpp:29:10:29:10 | *f [b_] | constructors.cpp:29:12:29:12 | call to b | provenance |  |
+| constructors.cpp:26:15:26:15 | *f [a_] | constructors.cpp:28:10:28:10 | f [a_] | provenance |  |
+| constructors.cpp:26:15:26:15 | *f [b_] | constructors.cpp:29:10:29:10 | f [b_] | provenance |  |
+| constructors.cpp:28:10:28:10 | f [a_] | constructors.cpp:18:9:18:9 | *this [a_] | provenance |  |
+| constructors.cpp:28:10:28:10 | f [a_] | constructors.cpp:28:12:28:12 | call to a | provenance |  |
+| constructors.cpp:29:10:29:10 | f [b_] | constructors.cpp:19:9:19:9 | *this [b_] | provenance |  |
+| constructors.cpp:29:10:29:10 | f [b_] | constructors.cpp:29:12:29:12 | call to b | provenance |  |
 | constructors.cpp:34:9:34:9 | call to Foo [a_] | constructors.cpp:40:9:40:9 | *f [a_] | provenance |  |
 | constructors.cpp:34:11:34:20 | call to user_input | constructors.cpp:23:13:23:13 | a | provenance |  |
 | constructors.cpp:34:11:34:20 | call to user_input | constructors.cpp:34:9:34:9 | call to Foo [a_] | provenance |  |
@@ -848,12 +848,12 @@ edges
 | simple.cpp:21:19:21:19 | b | simple.cpp:21:24:21:29 | ... = ... | provenance |  |
 | simple.cpp:21:24:21:25 | *this [post update] [b_] | simple.cpp:21:10:21:13 | *this [Return] [b_] | provenance |  |
 | simple.cpp:21:24:21:29 | ... = ... | simple.cpp:21:24:21:25 | *this [post update] [b_] | provenance |  |
-| simple.cpp:26:15:26:15 | *f [a_] | simple.cpp:28:10:28:10 | *f [a_] | provenance |  |
-| simple.cpp:26:15:26:15 | *f [b_] | simple.cpp:29:10:29:10 | *f [b_] | provenance |  |
-| simple.cpp:28:10:28:10 | *f [a_] | simple.cpp:18:9:18:9 | *this [a_] | provenance |  |
-| simple.cpp:28:10:28:10 | *f [a_] | simple.cpp:28:12:28:12 | call to a | provenance |  |
-| simple.cpp:29:10:29:10 | *f [b_] | simple.cpp:19:9:19:9 | *this [b_] | provenance |  |
-| simple.cpp:29:10:29:10 | *f [b_] | simple.cpp:29:12:29:12 | call to b | provenance |  |
+| simple.cpp:26:15:26:15 | *f [a_] | simple.cpp:28:10:28:10 | f [a_] | provenance |  |
+| simple.cpp:26:15:26:15 | *f [b_] | simple.cpp:29:10:29:10 | f [b_] | provenance |  |
+| simple.cpp:28:10:28:10 | f [a_] | simple.cpp:18:9:18:9 | *this [a_] | provenance |  |
+| simple.cpp:28:10:28:10 | f [a_] | simple.cpp:28:12:28:12 | call to a | provenance |  |
+| simple.cpp:29:10:29:10 | f [b_] | simple.cpp:19:9:19:9 | *this [b_] | provenance |  |
+| simple.cpp:29:10:29:10 | f [b_] | simple.cpp:29:12:29:12 | call to b | provenance |  |
 | simple.cpp:39:5:39:5 | setA output argument [a_] | simple.cpp:45:9:45:9 | *f [a_] | provenance |  |
 | simple.cpp:39:12:39:21 | call to user_input | simple.cpp:20:19:20:19 | a | provenance |  |
 | simple.cpp:39:12:39:21 | call to user_input | simple.cpp:39:5:39:5 | setA output argument [a_] | provenance |  |
@@ -1638,11 +1638,11 @@ nodes
 | complex.cpp:12:22:12:27 | ... = ... | semmle.label | ... = ... |
 | complex.cpp:40:17:40:17 | *b [inner, f, a_] | semmle.label | *b [inner, f, a_] |
 | complex.cpp:40:17:40:17 | *b [inner, f, b_] | semmle.label | *b [inner, f, b_] |
-| complex.cpp:42:8:42:8 | *b [inner, f, a_] | semmle.label | *b [inner, f, a_] |
+| complex.cpp:42:8:42:8 | b [inner, f, a_] | semmle.label | b [inner, f, a_] |
 | complex.cpp:42:10:42:14 | inner [f, a_] | semmle.label | inner [f, a_] |
 | complex.cpp:42:16:42:16 | f [a_] | semmle.label | f [a_] |
 | complex.cpp:42:18:42:18 | call to a | semmle.label | call to a |
-| complex.cpp:43:8:43:8 | *b [inner, f, b_] | semmle.label | *b [inner, f, b_] |
+| complex.cpp:43:8:43:8 | b [inner, f, b_] | semmle.label | b [inner, f, b_] |
 | complex.cpp:43:10:43:14 | inner [f, b_] | semmle.label | inner [f, b_] |
 | complex.cpp:43:16:43:16 | f [b_] | semmle.label | f [b_] |
 | complex.cpp:43:18:43:18 | call to b | semmle.label | call to b |
@@ -1670,7 +1670,7 @@ nodes
 | conflated.cpp:10:4:10:5 | *ra [post update] [*p] | semmle.label | *ra [post update] [*p] |
 | conflated.cpp:10:11:10:20 | call to user_input | semmle.label | call to user_input |
 | conflated.cpp:11:8:11:12 | * ... | semmle.label | * ... |
-| conflated.cpp:11:9:11:10 | *ra [*p] | semmle.label | *ra [*p] |
+| conflated.cpp:11:9:11:10 | ra [*p] | semmle.label | ra [*p] |
 | conflated.cpp:19:19:19:21 | argument_source output argument | semmle.label | argument_source output argument |
 | conflated.cpp:20:8:20:10 | *raw | semmle.label | *raw |
 | conflated.cpp:29:3:29:4 | *pa [post update] [x] | semmle.label | *pa [post update] [x] |
@@ -1717,9 +1717,9 @@ nodes
 | constructors.cpp:23:35:23:35 | b | semmle.label | b |
 | constructors.cpp:26:15:26:15 | *f [a_] | semmle.label | *f [a_] |
 | constructors.cpp:26:15:26:15 | *f [b_] | semmle.label | *f [b_] |
-| constructors.cpp:28:10:28:10 | *f [a_] | semmle.label | *f [a_] |
+| constructors.cpp:28:10:28:10 | f [a_] | semmle.label | f [a_] |
 | constructors.cpp:28:12:28:12 | call to a | semmle.label | call to a |
-| constructors.cpp:29:10:29:10 | *f [b_] | semmle.label | *f [b_] |
+| constructors.cpp:29:10:29:10 | f [b_] | semmle.label | f [b_] |
 | constructors.cpp:29:12:29:12 | call to b | semmle.label | call to b |
 | constructors.cpp:34:9:34:9 | call to Foo [a_] | semmle.label | call to Foo [a_] |
 | constructors.cpp:34:11:34:20 | call to user_input | semmle.label | call to user_input |
@@ -1817,9 +1817,9 @@ nodes
 | simple.cpp:21:24:21:29 | ... = ... | semmle.label | ... = ... |
 | simple.cpp:26:15:26:15 | *f [a_] | semmle.label | *f [a_] |
 | simple.cpp:26:15:26:15 | *f [b_] | semmle.label | *f [b_] |
-| simple.cpp:28:10:28:10 | *f [a_] | semmle.label | *f [a_] |
+| simple.cpp:28:10:28:10 | f [a_] | semmle.label | f [a_] |
 | simple.cpp:28:12:28:12 | call to a | semmle.label | call to a |
-| simple.cpp:29:10:29:10 | *f [b_] | semmle.label | *f [b_] |
+| simple.cpp:29:10:29:10 | f [b_] | semmle.label | f [b_] |
 | simple.cpp:29:12:29:12 | call to b | semmle.label | call to b |
 | simple.cpp:39:5:39:5 | setA output argument [a_] | semmle.label | setA output argument [a_] |
 | simple.cpp:39:12:39:21 | call to user_input | semmle.label | call to user_input |
@@ -1951,8 +1951,8 @@ subpaths
 | complex.cpp:54:19:54:28 | call to user_input | complex.cpp:12:17:12:17 | b | complex.cpp:12:8:12:11 | *this [Return] [b_] | complex.cpp:54:12:54:12 | setB output argument [b_] |
 | complex.cpp:55:19:55:28 | call to user_input | complex.cpp:11:17:11:17 | a | complex.cpp:11:8:11:11 | *this [Return] [a_] | complex.cpp:55:12:55:12 | setA output argument [a_] |
 | complex.cpp:56:19:56:28 | call to user_input | complex.cpp:12:17:12:17 | b | complex.cpp:12:8:12:11 | *this [Return] [b_] | complex.cpp:56:12:56:12 | setB output argument [b_] |
-| constructors.cpp:28:10:28:10 | *f [a_] | constructors.cpp:18:9:18:9 | *this [a_] | constructors.cpp:18:9:18:9 | *a | constructors.cpp:28:12:28:12 | call to a |
-| constructors.cpp:29:10:29:10 | *f [b_] | constructors.cpp:19:9:19:9 | *this [b_] | constructors.cpp:19:9:19:9 | *b | constructors.cpp:29:12:29:12 | call to b |
+| constructors.cpp:28:10:28:10 | f [a_] | constructors.cpp:18:9:18:9 | *this [a_] | constructors.cpp:18:9:18:9 | *a | constructors.cpp:28:12:28:12 | call to a |
+| constructors.cpp:29:10:29:10 | f [b_] | constructors.cpp:19:9:19:9 | *this [b_] | constructors.cpp:19:9:19:9 | *b | constructors.cpp:29:12:29:12 | call to b |
 | constructors.cpp:34:11:34:20 | call to user_input | constructors.cpp:23:13:23:13 | a | constructors.cpp:23:5:23:7 | *this [Return] [a_] | constructors.cpp:34:9:34:9 | call to Foo [a_] |
 | constructors.cpp:35:14:35:23 | call to user_input | constructors.cpp:23:20:23:20 | b | constructors.cpp:23:5:23:7 | *this [Return] [b_] | constructors.cpp:35:9:35:9 | call to Foo [b_] |
 | constructors.cpp:36:11:36:20 | call to user_input | constructors.cpp:23:13:23:13 | a | constructors.cpp:23:5:23:7 | *this [Return] [a_] | constructors.cpp:36:9:36:9 | call to Foo [a_] |
@@ -1962,8 +1962,8 @@ subpaths
 | qualifiers.cpp:32:35:32:44 | call to user_input | qualifiers.cpp:12:40:12:44 | value | qualifiers.cpp:12:27:12:31 | *inner [a] | qualifiers.cpp:32:23:32:30 | pointerSetA output argument [a] |
 | qualifiers.cpp:37:38:37:47 | call to user_input | qualifiers.cpp:13:42:13:46 | value | qualifiers.cpp:13:29:13:33 | *inner [Return] [a] | qualifiers.cpp:37:19:37:35 | referenceSetA output argument [a] |
 | qualifiers.cpp:37:38:37:47 | call to user_input | qualifiers.cpp:13:42:13:46 | value | qualifiers.cpp:13:29:13:33 | *inner [a] | qualifiers.cpp:37:19:37:35 | referenceSetA output argument [a] |
-| simple.cpp:28:10:28:10 | *f [a_] | simple.cpp:18:9:18:9 | *this [a_] | simple.cpp:18:9:18:9 | *a | simple.cpp:28:12:28:12 | call to a |
-| simple.cpp:29:10:29:10 | *f [b_] | simple.cpp:19:9:19:9 | *this [b_] | simple.cpp:19:9:19:9 | *b | simple.cpp:29:12:29:12 | call to b |
+| simple.cpp:28:10:28:10 | f [a_] | simple.cpp:18:9:18:9 | *this [a_] | simple.cpp:18:9:18:9 | *a | simple.cpp:28:12:28:12 | call to a |
+| simple.cpp:29:10:29:10 | f [b_] | simple.cpp:19:9:19:9 | *this [b_] | simple.cpp:19:9:19:9 | *b | simple.cpp:29:12:29:12 | call to b |
 | simple.cpp:39:12:39:21 | call to user_input | simple.cpp:20:19:20:19 | a | simple.cpp:20:10:20:13 | *this [Return] [a_] | simple.cpp:39:5:39:5 | setA output argument [a_] |
 | simple.cpp:40:12:40:21 | call to user_input | simple.cpp:21:19:21:19 | b | simple.cpp:21:10:21:13 | *this [Return] [b_] | simple.cpp:40:5:40:5 | setB output argument [b_] |
 | simple.cpp:41:12:41:21 | call to user_input | simple.cpp:20:19:20:19 | a | simple.cpp:20:10:20:13 | *this [Return] [a_] | simple.cpp:41:5:41:5 | setA output argument [a_] |

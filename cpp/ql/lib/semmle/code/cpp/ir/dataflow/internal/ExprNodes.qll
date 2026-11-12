@@ -229,13 +229,16 @@ private module Cached {
    * `def`.
    *
    * The instruction that computes an expression that denotes an object (for
-   * example, the qualifier `x` in `x.f()`) produces the address of the object.
-   * So the value of such an expression is obtained after one load.
+   * example, the qualifier `x` in `x.f()`) produces the address of the object,
+   * and likewise for an expression of reference type. So the value of such an
+   * expression is obtained after one load.
    */
   private predicate exprHasIndirection(Instruction def, Expr e, int n, int ind) {
     exists(int ind0 |
       e = getConvertedResultExpression(def, n) and
-      if getConvertedResultInstruction(def, n).isGLValue() then ind0 = 1 else ind0 = 0
+      if getConvertedResultInstruction(def, n).isGLValue() or isReferenceExpr(e)
+      then ind0 = 1
+      else ind0 = 0
     |
       // The dataflow library treats an array value as a pointer to its
       // elements, so the elements of an array that is loaded as a whole are
@@ -244,6 +247,15 @@ private module Cached {
       then ind = 2
       else ind = ind0
     )
+  }
+
+  /**
+   * Holds if `e` has reference type and denotes the object it refers to. A
+   * `ReferenceToExpr` takes the address of its operand to bind a reference.
+   */
+  private predicate isReferenceExpr(Expr e) {
+    e.getUnspecifiedType() instanceof ReferenceType and
+    not e instanceof ReferenceToExpr
   }
 
   /**
