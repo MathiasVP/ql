@@ -34,14 +34,15 @@ module XxeConfig implements DataFlow::StateConfigSig {
     DataFlow::Node node1, FlowState state1, DataFlow::Node node2, FlowState state2
   ) {
     // create additional flow steps for `XxeFlowStateTransformer`s
-    state2 = node2.asIndirectExpr().(XxeFlowStateTransformer).transform(state1) and
+    state2 = [node2.asExpr(), node2.asIndirectExpr()].(XxeFlowStateTransformer).transform(state1) and
     DataFlow::simpleLocalFlowStep(node1, node2, _)
   }
 
   predicate isBarrier(DataFlow::Node node, FlowState flowstate) {
     // when the flowstate is transformed at a call node, block the original
     // flowstate value.
-    node.asIndirectExpr().(XxeFlowStateTransformer).transform(flowstate) != flowstate
+    [node.asExpr(), node.asIndirectExpr()].(XxeFlowStateTransformer).transform(flowstate) !=
+      flowstate
   }
 
   predicate neverSkip(DataFlow::Node node) { none() }
