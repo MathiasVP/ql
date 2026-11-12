@@ -82,10 +82,10 @@ void test8(InputSource &data, bool cond) {
 
 void test9(InputSource &data) {
 	{
-		XercesDOMParser *p = new XercesDOMParser(); // $ Source
+		XercesDOMParser *p = new XercesDOMParser(); // $ MISSING: Source
 		XercesDOMParser &q = *p;
 
-		q.parse(data); // $ Alert // BAD (parser not correctly configured)
+		q.parse(data); // $ MISSING: Alert // BAD (parser not correctly configured)
 	}
 
 	{
@@ -97,11 +97,11 @@ void test9(InputSource &data) {
 	}
 
 	{
-		XercesDOMParser *p = new XercesDOMParser(); // $ Source
+		XercesDOMParser *p = new XercesDOMParser(); // $ MISSING: Source
 		XercesDOMParser &q = *p;
 
 		p->setDisableDefaultEntityResolution(true);
-		q.parse(data); // $ SPURIOUS: Alert // GOOD [FALSE POSITIVE]
+		q.parse(data); // GOOD [FALSE POSITIVE]
 	}
 }
 

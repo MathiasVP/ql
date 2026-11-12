@@ -1,9 +1,7 @@
 astTypeBugs
 irTypeBugs
 incorrectBaseType
-| test.cpp:67:28:67:37 | call to move | Expected 'Node.getType()' to be const int, but it was int * |
 | test.cpp:531:39:531:40 | **& ... | Expected 'Node.getType()' to be int, but it was const int |
 | test.cpp:615:13:615:21 | **& ... | Expected 'Node.getType()' to be int, but it was unknown |
-| test.cpp:848:23:848:25 | rpx | Expected 'Node.getType()' to be int, but it was int * |
 | test.cpp:854:10:854:36 | * ... | Expected 'Node.getType()' to be const int, but it was int |
 | test.cpp:867:10:867:30 | * ... | Expected 'Node.getType()' to be const int, but it was int |
