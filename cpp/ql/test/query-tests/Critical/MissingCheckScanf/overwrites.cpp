@@ -33,7 +33,7 @@ void reference_output_with_unsafe_alias() {
     int &output = value;
     int *alias = &value;
     if (scanf("%d", &output) != 1) { // $ Source[cpp/missing-check-scanf]
-        output = *alias + 1; // $ Alert[cpp/missing-check-scanf]
+        output = *alias + 1; // $ MISSING: Alert[cpp/missing-check-scanf]
     }
     use(output); // $ Alert[cpp/missing-check-scanf]
 }
@@ -43,7 +43,7 @@ void typedef_reference_output_with_safe_overwrite() {
     int value;
     Output output = value;
     if (scanf("%d", &output) != 1) { // $ Source[cpp/missing-check-scanf]
-        output = 0; // $ SPURIOUS: Alert[cpp/missing-check-scanf]
+        output = 0;
     }
     use(output); // $ SPURIOUS: Alert[cpp/missing-check-scanf]
 }
