@@ -32,7 +32,7 @@ Type getVariableType(Variable v) {
     then
       result = getDecayedType(declaredType)
       or
-      not exists(getDecayedType(declaredType)) and result = v.getType()
+      not exists(getDecayedType(v.getUnspecifiedType())) and result = v.getType()
     else
       if declaredType instanceof ArrayType and not declaredType.(ArrayType).hasArraySize()
       then
