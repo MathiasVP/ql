@@ -2,9 +2,9 @@ void sink(...);
 int source();
 
 int global_int = source(); // $ initializer
-const char global_array[] = "source"; // $ MISSING: initializer
+const char global_array[] = "source"; // $ initializer
 
 void read_globals() {
   sink(global_int); // $ asVariable=global_int
-  sink(global_array); // $ MISSING: asVariable=global_array
+  sink(global_array); // $ asVariable=global_array
 }

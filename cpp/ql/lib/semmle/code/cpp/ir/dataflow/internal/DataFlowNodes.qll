@@ -184,8 +184,7 @@ private module Cached {
   newtype TIRDataFlowNode =
     TNode0(Node0Impl node) { DataFlowImplCommon::forceCachingInSameStage() } or
     TGlobalLikeVariableNode(GlobalLikeVariable var, int indirectionIndex) {
-      indirectionIndex =
-        [getMinIndirectionsForType(var.getUnspecifiedType()) .. SsaImpl::getMaxIndirectionsForGLType(var.getUnspecifiedType())]
+      indirectionIndex = [1 .. SsaImpl::getMaxIndirectionsForGLType(var.getUnspecifiedType())]
     } or
     TPostUpdateNodeImpl(Operand operand, int indirectionIndex) {
       isPostUpdateNodeImpl(operand, indirectionIndex)
@@ -691,9 +690,7 @@ module Public {
      * Gets the variable corresponding to this node, if any. This can be used for
      * modeling flow in and out of global variables.
      */
-    Variable asVariable() {
-      this = TGlobalLikeVariableNode(result, getMinIndirectionsForType(result.getUnspecifiedType()))
-    }
+    Variable asVariable() { this = TGlobalLikeVariableNode(result, 1) }
 
     /**
      * Gets the `indirectionIndex`'th indirection of this node's underlying variable, if any.
@@ -701,7 +698,7 @@ module Public {
      * This can be used for modeling flow in and out of global variables.
      */
     Variable asIndirectVariable(int indirectionIndex) {
-      indirectionIndex > getMinIndirectionsForType(result.getUnspecifiedType()) and
+      indirectionIndex > 1 and
       this = TGlobalLikeVariableNode(result, indirectionIndex)
     }
 
